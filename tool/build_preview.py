@@ -2,7 +2,7 @@
 no external files) that runs the app in any browser or in the Claude Code
 file viewer.
 
-Embeds NanumSquareRound (OFL) subset to KS X 1001 Hangul + ASCII + every
+Embeds NanumSquareRound Bold/ExtraBold (OFL) subset to KS X 1001 Hangul + ASCII + every
 character used in the page, as base64 WOFF2.
 
 Run: python3 tool/build_preview.py   (needs: pip install fonttools brotli)
@@ -52,7 +52,7 @@ def woff2_b64(ttf: str, text: str) -> str:
 def main() -> None:
     html = open(SRC, encoding="utf-8").read()
     text = charset(html)
-    out = html.replace("/*FONT_R*/", woff2_b64("NanumSquareRoundR.ttf", text))
+    out = html.replace("/*FONT_B*/", woff2_b64("NanumSquareRoundB.ttf", text))
     out = out.replace("/*FONT_EB*/", woff2_b64("NanumSquareRoundEB.ttf", text))
     with open(OUT, "w", encoding="utf-8") as f:
         f.write(out)

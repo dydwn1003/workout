@@ -552,7 +552,7 @@ class _DayDot extends StatelessWidget {
           style: TextStyle(
             fontSize: 11.5,
             color: today ? AppColors.ink : AppColors.inkSoft,
-            fontWeight: today ? FontWeight.w800 : FontWeight.w400,
+            fontWeight: today ? FontWeight.w800 : bodyWeight,
           ),
         ),
       ],

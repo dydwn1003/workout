@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Adapt Coach</title>
 <style>
-@font-face { font-family: "NSR"; font-weight: 400; src: url(data:font/woff2;base64,/*FONT_R*/) format("woff2"); }
+@font-face { font-family: "NSR"; font-weight: 700; src: url(data:font/woff2;base64,/*FONT_B*/) format("woff2"); }
 @font-face { font-family: "NSR"; font-weight: 800; src: url(data:font/woff2;base64,/*FONT_EB*/) format("woff2"); }
 :root {
-  --bg: #FFF8F1; --card: #FFFFFF; --ink: #3B3340; --soft: #8A8190; --line: #F1E6DC;
+  --bg: #FFF8F1; --card: #FFFFFF; --ink: #3B3340; --soft: #766C7D; --line: #F1E6DC;
   --peach: #FF8E7F; --peach-soft: #FFE3DC; --mint: #4CC9A4; --mint-soft: #D9F5EC;
   --butter: #FFC34D; --butter-ink: #D49B1F; --butter-soft: #FFF0CC;
   --lilac: #A38BFF; --lilac-soft: #ECE6FF; --sky: #6EB7FF; --sky-soft: #E0F0FF; --over: #FF6B6B;
@@ -21,7 +21,7 @@
 html, body { height: 100%; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
-  font: 400 15px/1.5 "NSR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  font: 700 15px/1.5 "NSR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   letter-spacing: -0.1px;
 }
 button, input, textarea, select { font: inherit; color: inherit; }
@@ -130,7 +130,7 @@ textarea.input { resize: none; min-height: 84px; line-height: 1.5; }
 .chips { display: flex; gap: 8px; }
 .chip { border: 1.5px solid var(--line); background: #fff; border-radius: 14px; padding: 8px 16px; font-weight: 800; cursor: pointer; transition: background-color .3s var(--ease); }
 .chip.on { background: var(--peach-soft); }
-.chart text { fill: var(--soft); font-size: 11px; font-family: inherit; }
+.chart text { fill: var(--soft); font-size: 11px; font-family: inherit; font-weight: 700; }
 .chart .trend { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); animation: draw 1.2s var(--ease) .1s forwards; }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 .chart .pt { animation: pop .5s var(--spring) both; }
@@ -796,7 +796,7 @@ function viewTrend() {
     ${goal != null ? `<div ${st()}><div class="card row" style="padding:16px">${ic("flag", 22, "var(--mint)")}<b class="h num">목표 체중 ${f1(goal)}kg</b><span style="margin-left:auto">${pill(etaText(eta()), "var(--mint)", "var(--mint-soft)")}</span></div></div>` : ""}
     <h2 class="h sect" style="margin-bottom:0">체성분 추이</h2>
     ${muscleWarn() ? `<div class="row" style="align-items:flex-end">${mascot(48, "thinking")}<div class="bubble">최근 4주간 골격근량이 측정 오차보다 크게 줄었어요. 감량 속도를 낮추고 단백질 섭취를 확인해 보세요.</div></div>` : ""}
-    <div ${st()}><div class="card" style="padding:10px 20px">${comp.length ? `<table style="width:100%;border-collapse:collapse" class="num"><thead><tr class="muted small"><th></th><th style="text-align:right;font-weight:400;padding:6px 0">체지방률</th><th style="text-align:right;font-weight:400">골격근량</th></tr></thead><tbody>
+    <div ${st()}><div class="card" style="padding:10px 20px">${comp.length ? `<table style="width:100%;border-collapse:collapse" class="num"><thead><tr class="muted small"><th></th><th style="text-align:right;font-weight:700;padding:6px 0">체지방률</th><th style="text-align:right;font-weight:700">골격근량</th></tr></thead><tbody>
       ${comp.map(w => `<tr><td style="padding:6px 0">${pd(w.date).getMonth() + 1}월 ${pd(w.date).getDate()}일</td><td class="h" style="text-align:right">${w.bf == null ? "—" : f1(w.bf) + "%"}</td><td class="h" style="text-align:right">${w.smm == null ? "—" : f1(w.smm) + "kg"}</td></tr>`).join("")}</tbody></table>`
       : `<p class="muted" style="margin:6px 0">체성분을 입력하면 여기서 추이를 볼 수 있어요.</p>`}</div></div>
     <h2 class="h sect" style="margin-bottom:0">체중 기록</h2>

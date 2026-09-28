@@ -558,7 +558,12 @@ class WeightChartPainter extends CustomPainter {
     final tp = TextPainter(
       text: TextSpan(
         text: s,
-        style: TextStyle(fontSize: size, color: color, fontFamily: bodyFont),
+        style: TextStyle(
+          fontSize: size,
+          color: color,
+          fontFamily: bodyFont,
+          fontWeight: bodyWeight,
+        ),
       ),
       textDirection: TextDirection.ltr,
       textAlign: align,

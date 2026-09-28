@@ -8,7 +8,7 @@ class AppColors {
   static const bg = Color(0xFFFFF8F1);
   static const card = Colors.white;
   static const ink = Color(0xFF3B3340);
-  static const inkSoft = Color(0xFF8A8190);
+  static const inkSoft = Color(0xFF766C7D);
   static const line = Color(0xFFF1E6DC);
 
   static const peach = Color(0xFFFF8E7F); // primary / kcal
@@ -25,6 +25,7 @@ class AppColors {
 
 const headingFont = 'NanumSquareRound';
 const bodyFont = 'NanumSquareRound';
+const bodyWeight = FontWeight.w700;
 
 ThemeData buildTheme() {
   final scheme = ColorScheme.fromSeed(
@@ -60,9 +61,13 @@ ThemeData buildTheme() {
         TargetPlatform.fuchsia: SoftPageTransitionsBuilder(),
       },
     ),
-    textTheme: base.textTheme
-        .apply(bodyColor: AppColors.ink, displayColor: AppColors.ink)
-        .copyWith(
+    textTheme:
+        _bodyWeight(
+          base.textTheme.apply(
+            bodyColor: AppColors.ink,
+            displayColor: AppColors.ink,
+          ),
+        ).copyWith(
           displayLarge: h(50),
           displayMedium: h(40),
           displaySmall: h(30),
@@ -193,5 +198,20 @@ ThemeData buildTheme() {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     ),
     dividerTheme: const DividerThemeData(color: AppColors.line, thickness: 1),
+  );
+}
+
+/// NanumSquareRound Regular is quite thin, so body and label text use the
+/// Bold cut for better legibility.
+TextTheme _bodyWeight(TextTheme t) {
+  TextStyle? b(TextStyle? s) => s?.copyWith(fontWeight: bodyWeight);
+  return t.copyWith(
+    bodyLarge: b(t.bodyLarge),
+    bodyMedium: b(t.bodyMedium),
+    bodySmall: b(t.bodySmall),
+    labelLarge: b(t.labelLarge),
+    labelMedium: b(t.labelMedium),
+    labelSmall: b(t.labelSmall),
+    titleSmall: b(t.titleSmall),
   );
 }
