@@ -1,5 +1,7 @@
 import 'package:adapt_coach/core/coach_engine/coach_engine.dart';
 import 'package:adapt_coach/data/entities.dart';
+import 'package:adapt_coach/data/food.dart';
+import 'package:adapt_coach/data/food_db.g.dart';
 import 'package:adapt_coach/data/food_estimator.dart';
 import 'package:adapt_coach/data/repository.dart';
 import 'package:adapt_coach/state/app_state.dart';
@@ -93,6 +95,7 @@ void main() {
           fatG: 3,
           source: m.source,
           edited: true,
+          slot: m.slot,
         ),
       );
       expect(s.mealsOn(s.today).firstWhere((x) => x.id == m.id).kcal, 123);
@@ -182,25 +185,123 @@ void main() {
     });
   });
 
+  group('food logging', () {
+    test('slot defaults by time and is stored with portion', () async {
+      final s = AppState(MemoryCoachRepository(), clock: () => now); // 20:00
+      await s.load();
+      final rice = builtInFoods.firstWhere((f) => f.name == '현미밥');
+      await s.addMeal(
+        name: rice.name,
+        kcal: 300,
+        proteinG: 6,
+        carbsG: 63,
+        fatG: 2,
+        source: MealSource.search,
+        portion: '1공기 × 1 (210g)',
+        foodId: rice.id,
+      );
+      final m = s.mealsOn(s.today).single;
+      expect(m.slot, MealSlot.dinner);
+      expect(m.portion, '1공기 × 1 (210g)');
+      expect(s.recentFoods().single.id, rice.id);
+      expect(MealSlot.forTime(DateTime(2026, 1, 1, 7)), MealSlot.breakfast);
+      expect(MealSlot.forTime(DateTime(2026, 1, 1, 15, 30)), MealSlot.snack);
+    });
+
+    test('custom foods are searchable, persisted and deletable', () async {
+      final repo = MemoryCoachRepository();
+      final s = AppState(repo, clock: () => now);
+      await s.load();
+      final f = await s.addCustomFood(
+        name: '엄마표 김밥',
+        unitLabel: '1줄',
+        kcal: 420,
+        proteinG: 12,
+        carbsG: 60,
+        fatG: 14,
+      );
+      expect(s.searchAllFoods('엄마').first.id, f.id);
+      expect(
+        s.searchAllFoods('김밥').first.custom,
+        isFalse,
+      ); // exact built-in wins
+      final reloaded = AppState(repo, clock: () => now);
+      await reloaded.load();
+      expect(reloaded.customFoods.single.name, '엄마표 김밥');
+      await s.deleteCustomFood(s.customFoods.single.id);
+      expect(s.searchAllFoods('엄마'), isEmpty);
+    });
+
+    test('old meals without slot load with a time-based slot', () {
+      final m = Meal.fromJson({
+        'id': 'x',
+        'date': '2026-09-28',
+        'time': '2026-09-28T08:30:00.000',
+        'name': 'old',
+        'kcal': 100,
+        'source': 'manual',
+      });
+      expect(m.slot, MealSlot.breakfast);
+    });
+  });
+
   group('food estimator', () {
-    test('scales by grams and counts', () {
+    test('scales by grams and units', () {
       final e = estimateFromText('닭가슴살 200g, 계란 2개, 현미밥 1공기');
       expect(e.items.length, 3);
       expect(e.items.every((i) => i.matched), isTrue);
-      expect(e.kcal, closeTo(330 + 144 + 300, 1e-6));
+      expect(e.items[0].kcal, closeTo(330, 0.01)); // 165/100g
+      expect(e.items[1].kcal, closeTo(144, 0.01)); // 2 x 50 g
+      expect(e.items[2].grams, 210);
     });
 
-    test('english and unknown items', () {
-      final e = estimateFromText('2 eggs and mystery stew');
-      expect(e.items.first.kcal, closeTo(144, 1e-6));
+    test('english, korean number words and unknown items', () {
+      final e = estimateFromText('2 eggs and 사과 반 개, mystery stew');
+      expect(e.items[0].kcal, closeTo(144, 0.01));
+      expect(e.items[1].grams, 100);
       expect(e.hasUnmatched, isTrue);
     });
 
     test('prefers the longest matching food name', () {
       final e = estimateFromText('볶음밥, 초밥 10개, 크림치즈');
-      expect(e.items[0].kcal, 600); // not plain rice
-      expect(e.items[1].kcal, closeTo(500, 1e-6));
-      expect(e.items[2].kcal, 70); // not cheese
+      expect(e.items[0].food!.name, '볶음밥'); // not plain rice
+      expect(e.items[1].grams, 300);
+      expect(e.items[2].food!.name, '크림치즈'); // not cheese
+    });
+  });
+
+  group('food search', () {
+    test('prefix beats contains; aliases and english work', () {
+      final r = searchFoods(builtInFoods, '닭');
+      expect(r.first.name.startsWith('닭'), isTrue);
+      expect(searchFoods(builtInFoods, 'salmon').first.name, '연어');
+      expect(
+        searchFoods(builtInFoods, '치킨').map((f) => f.name),
+        contains('후라이드치킨'),
+      );
+    });
+
+    test('initial consonant search', () {
+      expect(choseongOf('닭가슴살'), 'ㄷㄱㅅㅅ');
+      expect(searchFoods(builtInFoods, 'ㄷㄱㅅㅅ').first.name, '닭가슴살');
+    });
+
+    test('portion math and custom foods', () {
+      final rice = builtInFoods.firstWhere((f) => f.name == '흰쌀밥');
+      final n = rice.forPortion(rice.units.first, 1.5);
+      expect(n.kcal, closeTo(148 * 2.1 * 1.5, 0.01));
+      expect(rice.allUnits.last.isGram, isTrue);
+      final c = Food.customPerServing(
+        id: 'c1',
+        name: '엄마 김밥',
+        unitLabel: '1줄',
+        kcal: 420,
+        proteinG: 12,
+        carbsG: 60,
+        fatG: 14,
+      );
+      expect(c.forPortion(c.units.first, 2).kcal, closeTo(840, 0.01));
+      expect(c.allUnits.length, 1); // no gram unit without a real weight
     });
   });
 }

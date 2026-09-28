@@ -374,7 +374,7 @@ class _DayBody extends StatelessWidget {
         ],
         const SizedBox(height: 10),
         SectionTitle(isToday ? t.mealsTitle : t.mealsOnDay),
-        if (meals.isEmpty)
+        if (meals.isEmpty) ...[
           enter(
             SoftCard(
               child: Column(
@@ -392,23 +392,101 @@ class _DayBody extends StatelessWidget {
                 ],
               ),
             ),
-          )
-        else
+          ),
+          const SizedBox(height: 10),
+        ],
+        for (final slot in MealSlot.values) ...[
           enter(
-            SoftCard(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Column(
-                children: [
-                  for (var j = 0; j < meals.length; j++) ...[
-                    if (j > 0)
-                      const Divider(height: 1, indent: 20, endIndent: 20),
-                    _MealRow(meal: meals[j]),
-                  ],
-                ],
-              ),
+            _SlotCard(
+              slot: slot,
+              date: date,
+              meals: meals
+                  .where((m) => m.slot == slot)
+                  .toList()
+                  .reversed
+                  .toList(),
             ),
           ),
+          const SizedBox(height: 10),
+        ],
       ],
+    );
+  }
+}
+
+class _SlotCard extends StatelessWidget {
+  final MealSlot slot;
+  final DateTime date;
+  final List<Meal> meals;
+  const _SlotCard({
+    required this.slot,
+    required this.date,
+    required this.meals,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L.of(context);
+    final kcal = meals.fold(0.0, (a, m) => a + m.kcal);
+    return SoftCard(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 6, 6, 6),
+            child: Row(
+              children: [
+                Icon(slotIcon(slot), size: 20, color: AppColors.peach),
+                const SizedBox(width: 8),
+                Text(
+                  slotLabel(t, slot),
+                  style: const TextStyle(
+                    fontFamily: headingFont,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+                const Spacer(),
+                AnimatedSwitcher(
+                  duration: Motion.medium,
+                  child: Text(
+                    meals.isEmpty ? '—' : '${fmt0(kcal)} kcal',
+                    key: ValueKey(kcal.round()),
+                    style: const TextStyle(
+                      fontFamily: headingFont,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.inkSoft,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: t.addMeal,
+                  onPressed: () =>
+                      showAddMealSheet(context, date: date, slot: slot),
+                  icon: const Icon(
+                    Icons.add_circle_rounded,
+                    color: AppColors.peach,
+                    size: 28,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          AnimatedSize(
+            duration: Motion.medium,
+            curve: Motion.ease,
+            alignment: Alignment.topCenter,
+            child: Column(
+              children: [
+                for (final m in meals) ...[
+                  const Divider(height: 1, indent: 20, endIndent: 20),
+                  _MealRow(meal: m),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -746,6 +824,7 @@ class _MealRow extends StatelessWidget {
     MealSource.text => Icons.edit_note_rounded,
     MealSource.saved => Icons.bookmark_rounded,
     MealSource.manual => Icons.restaurant_rounded,
+    MealSource.search => Icons.search_rounded,
   };
 
   @override
@@ -792,7 +871,7 @@ class _MealRow extends StatelessWidget {
         ),
         title: Text(meal.name, maxLines: 1, overflow: TextOverflow.ellipsis),
         subtitle: Text(
-          '${DateFormat.Hm().format(meal.time)} · ${t.protein} ${fmt0(meal.proteinG)}g · ${t.carbs} ${fmt0(meal.carbsG)}g · ${t.fat} ${fmt0(meal.fatG)}g',
+          '${meal.portion ?? DateFormat.Hm().format(meal.time)} · ${t.protein} ${fmt0(meal.proteinG)}g · ${t.carbs} ${fmt0(meal.carbsG)}g · ${t.fat} ${fmt0(meal.fatG)}g',
           style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,

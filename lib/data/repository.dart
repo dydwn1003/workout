@@ -12,6 +12,7 @@ class AppData {
   List<Meal> meals;
   List<SavedMeal> savedMeals;
   List<Workout> workouts;
+  List<CustomFood> customFoods;
   List<Plan> plans;
 
   AppData({
@@ -21,11 +22,13 @@ class AppData {
     List<Meal>? meals,
     List<SavedMeal>? savedMeals,
     List<Workout>? workouts,
+    List<CustomFood>? customFoods,
     List<Plan>? plans,
   }) : weights = weights ?? [],
        meals = meals ?? [],
        savedMeals = savedMeals ?? [],
        workouts = workouts ?? [],
+       customFoods = customFoods ?? [],
        plans = plans ?? [];
 }
 
@@ -39,6 +42,7 @@ abstract class CoachRepository {
   Future<void> saveMeals(List<Meal> meals);
   Future<void> saveSavedMeals(List<SavedMeal> savedMeals);
   Future<void> saveWorkouts(List<Workout> workouts);
+  Future<void> saveCustomFoods(List<CustomFood> foods);
   Future<void> savePlans(List<Plan> plans);
   Future<void> deleteAll();
 }
@@ -91,6 +95,7 @@ class LocalCoachRepository implements CoachRepository {
       meals: _list(await _read('meals'), Meal.fromJson),
       savedMeals: _list(await _read('savedMeals'), SavedMeal.fromJson),
       workouts: _list(await _read('workouts'), Workout.fromJson),
+      customFoods: _list(await _read('customFoods'), CustomFood.fromJson),
       plans: _list(await _read('plans'), Plan.fromJson),
     );
   }
@@ -118,6 +123,10 @@ class LocalCoachRepository implements CoachRepository {
   @override
   Future<void> saveWorkouts(List<Workout> workouts) =>
       _write('workouts', workouts.map((e) => e.toJson()).toList());
+
+  @override
+  Future<void> saveCustomFoods(List<CustomFood> foods) =>
+      _write('customFoods', foods.map((e) => e.toJson()).toList());
 
   @override
   Future<void> savePlans(List<Plan> plans) =>
@@ -157,6 +166,9 @@ class MemoryCoachRepository implements CoachRepository {
   @override
   Future<void> saveWorkouts(List<Workout> workouts) async =>
       data.workouts = [...workouts];
+  @override
+  Future<void> saveCustomFoods(List<CustomFood> foods) async =>
+      data.customFoods = [...foods];
   @override
   Future<void> savePlans(List<Plan> plans) async => data.plans = [...plans];
   @override

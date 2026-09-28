@@ -4,6 +4,8 @@ import 'package:flutter/widgets.dart';
 
 import '../core/coach_engine/coach_engine.dart';
 import '../data/entities.dart';
+import '../data/food.dart';
+import '../data/food_db.g.dart';
 import '../data/repository.dart';
 
 class WorkoutWeek {
@@ -54,6 +56,68 @@ class AppState extends ChangeNotifier {
   List<Meal> get meals => List.unmodifiable(_data.meals);
   List<SavedMeal> get savedMeals => List.unmodifiable(_data.savedMeals);
   List<Workout> get workouts => List.unmodifiable(_data.workouts);
+  List<CustomFood> get customFoods => List.unmodifiable(_data.customFoods);
+
+  /// Custom foods first so they win ties in search.
+  List<Food> get allFoods => [
+    for (final c in _data.customFoods) c.toFood(),
+    ...builtInFoods,
+  ];
+
+  Food? foodById(String id) {
+    for (final f in allFoods) {
+      if (f.id == id) return f;
+    }
+    return null;
+  }
+
+  /// Distinct foods logged from search recently (newest first).
+  List<Food> recentFoods({int limit = 8}) {
+    final seen = <String>{};
+    final out = <Food>[];
+    for (final m in _data.meals.reversed) {
+      final id = m.foodId;
+      if (id == null || !seen.add(id)) continue;
+      final f = foodById(id);
+      if (f != null) out.add(f);
+      if (out.length >= limit) break;
+    }
+    return out;
+  }
+
+  List<Food> searchAllFoods(String q) => searchFoods(allFoods, q);
+
+  Future<Food> addCustomFood({
+    required String name,
+    required String unitLabel,
+    double? grams,
+    required double kcal,
+    required double proteinG,
+    required double carbsG,
+    required double fatG,
+  }) async {
+    final c = CustomFood(
+      id: 'c${clock().microsecondsSinceEpoch}',
+      name: name,
+      unitLabel: unitLabel,
+      grams: grams,
+      kcal: kcal,
+      proteinG: proteinG,
+      carbsG: carbsG,
+      fatG: fatG,
+    );
+    _data.customFoods.add(c);
+    await repo.saveCustomFoods(_data.customFoods);
+    notifyListeners();
+    return c.toFood();
+  }
+
+  Future<void> deleteCustomFood(String id) async {
+    _data.customFoods.removeWhere((c) => c.id == id);
+    await repo.saveCustomFoods(_data.customFoods);
+    notifyListeners();
+  }
+
   List<Plan> get plans => List.unmodifiable(_data.plans);
   bool get onboarded => _data.profile != null && _data.plans.isNotEmpty;
 
@@ -467,6 +531,9 @@ class AppState extends ChangeNotifier {
     required MealSource source,
     bool edited = false,
     DateTime? date,
+    MealSlot? slot,
+    String? portion,
+    String? foodId,
   }) async {
     final now = clock();
     final d = date ?? today;
@@ -489,6 +556,9 @@ class AppState extends ChangeNotifier {
         fatG: fatG,
         source: source,
         edited: edited,
+        slot: slot ?? MealSlot.forTime(now),
+        portion: portion,
+        foodId: foodId,
       ),
     );
     _sort();
@@ -732,6 +802,7 @@ class AppState extends ChangeNotifier {
                 rng.nextInt(50),
               ),
               name: list[rng.nextInt(list.length)],
+              slot: MealSlot.values[j],
               kcal: k,
               proteinG: (k * 0.3 / 4).roundToDouble(),
               carbsG: (k * 0.42 / 4).roundToDouble(),
@@ -818,6 +889,7 @@ class AppState extends ChangeNotifier {
           carbsG: m.$4,
           fatG: m.$5,
           source: MealSource.saved,
+          slot: MealSlot.values[j],
         ),
       );
     }

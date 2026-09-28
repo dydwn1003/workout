@@ -1370,6 +1370,156 @@ abstract class L {
   /// **'분'**
   String get minutesField;
 
+  /// No description provided for @slotBreakfast.
+  ///
+  /// In ko, this message translates to:
+  /// **'아침'**
+  String get slotBreakfast;
+
+  /// No description provided for @slotLunch.
+  ///
+  /// In ko, this message translates to:
+  /// **'점심'**
+  String get slotLunch;
+
+  /// No description provided for @slotDinner.
+  ///
+  /// In ko, this message translates to:
+  /// **'저녁'**
+  String get slotDinner;
+
+  /// No description provided for @slotSnack.
+  ///
+  /// In ko, this message translates to:
+  /// **'간식'**
+  String get slotSnack;
+
+  /// No description provided for @tabSearch.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색'**
+  String get tabSearch;
+
+  /// No description provided for @searchHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'음식 검색 (예: 닭가슴살, ㄷㄱㅅㅅ)'**
+  String get searchHint;
+
+  /// No description provided for @recentFoodsChip.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근'**
+  String get recentFoodsChip;
+
+  /// No description provided for @noRecentFoods.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색해서 기록한 음식이 여기에 모여요'**
+  String get noRecentFoods;
+
+  /// No description provided for @noResults.
+  ///
+  /// In ko, this message translates to:
+  /// **'\'{query}\' 검색 결과가 없어요'**
+  String noResults(String query);
+
+  /// No description provided for @createFood.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 음식 만들기'**
+  String get createFood;
+
+  /// No description provided for @createFoodDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'찾는 음식이 없으면 직접 만들어 저장해요'**
+  String get createFoodDesc;
+
+  /// No description provided for @foodRefNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'영양정보는 일반적인 참고값이에요. 제품·조리법에 따라 다를 수 있어요.'**
+  String get foodRefNote;
+
+  /// No description provided for @unitLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'단위'**
+  String get unitLabel;
+
+  /// No description provided for @quantity.
+  ///
+  /// In ko, this message translates to:
+  /// **'수량'**
+  String get quantity;
+
+  /// No description provided for @addToSlot.
+  ///
+  /// In ko, this message translates to:
+  /// **'{slot}에 추가'**
+  String addToSlot(String slot);
+
+  /// No description provided for @addedCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}개 추가됨'**
+  String addedCount(String n);
+
+  /// No description provided for @done.
+  ///
+  /// In ko, this message translates to:
+  /// **'완료'**
+  String get done;
+
+  /// No description provided for @foodName.
+  ///
+  /// In ko, this message translates to:
+  /// **'음식 이름'**
+  String get foodName;
+
+  /// No description provided for @servingLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'1회 제공 단위'**
+  String get servingLabel;
+
+  /// No description provided for @servingGrams.
+  ///
+  /// In ko, this message translates to:
+  /// **'중량 g (선택)'**
+  String get servingGrams;
+
+  /// No description provided for @perServing.
+  ///
+  /// In ko, this message translates to:
+  /// **'1회 제공량 기준 영양정보'**
+  String get perServing;
+
+  /// No description provided for @customSaved.
+  ///
+  /// In ko, this message translates to:
+  /// **'\'{name}\'을(를) 내 음식에 저장했어요'**
+  String customSaved(String name);
+
+  /// No description provided for @photoSoonShort.
+  ///
+  /// In ko, this message translates to:
+  /// **'사진 분석은 곧 제공돼요'**
+  String get photoSoonShort;
+
+  /// No description provided for @mealSlotLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'끼니'**
+  String get mealSlotLabel;
+
+  /// No description provided for @addedToSlot.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name} → {slot}'**
+  String addedToSlot(String name, String slot);
+
   /// No description provided for @settingsTitle.
   ///
   /// In ko, this message translates to:

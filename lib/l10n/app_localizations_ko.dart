@@ -727,6 +727,91 @@ class LKo extends L {
   String get minutesField => '분';
 
   @override
+  String get slotBreakfast => '아침';
+
+  @override
+  String get slotLunch => '점심';
+
+  @override
+  String get slotDinner => '저녁';
+
+  @override
+  String get slotSnack => '간식';
+
+  @override
+  String get tabSearch => '검색';
+
+  @override
+  String get searchHint => '음식 검색 (예: 닭가슴살, ㄷㄱㅅㅅ)';
+
+  @override
+  String get recentFoodsChip => '최근';
+
+  @override
+  String get noRecentFoods => '검색해서 기록한 음식이 여기에 모여요';
+
+  @override
+  String noResults(String query) {
+    return '\'$query\' 검색 결과가 없어요';
+  }
+
+  @override
+  String get createFood => '내 음식 만들기';
+
+  @override
+  String get createFoodDesc => '찾는 음식이 없으면 직접 만들어 저장해요';
+
+  @override
+  String get foodRefNote => '영양정보는 일반적인 참고값이에요. 제품·조리법에 따라 다를 수 있어요.';
+
+  @override
+  String get unitLabel => '단위';
+
+  @override
+  String get quantity => '수량';
+
+  @override
+  String addToSlot(String slot) {
+    return '$slot에 추가';
+  }
+
+  @override
+  String addedCount(String n) {
+    return '$n개 추가됨';
+  }
+
+  @override
+  String get done => '완료';
+
+  @override
+  String get foodName => '음식 이름';
+
+  @override
+  String get servingLabel => '1회 제공 단위';
+
+  @override
+  String get servingGrams => '중량 g (선택)';
+
+  @override
+  String get perServing => '1회 제공량 기준 영양정보';
+
+  @override
+  String customSaved(String name) {
+    return '\'$name\'을(를) 내 음식에 저장했어요';
+  }
+
+  @override
+  String get photoSoonShort => '사진 분석은 곧 제공돼요';
+
+  @override
+  String get mealSlotLabel => '끼니';
+
+  @override
+  String addedToSlot(String name, String slot) {
+    return '$name → $slot';
+  }
+
+  @override
   String get settingsTitle => '설정';
 
   @override

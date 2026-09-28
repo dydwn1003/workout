@@ -504,6 +504,69 @@
   },
   "workoutFeedbackTitle": "이번 주 운동 피드백",
   "minutesField": "분",
+  "slotBreakfast": "아침",
+  "slotLunch": "점심",
+  "slotDinner": "저녁",
+  "slotSnack": "간식",
+  "tabSearch": "검색",
+  "searchHint": "음식 검색 (예: 닭가슴살, ㄷㄱㅅㅅ)",
+  "recentFoodsChip": "최근",
+  "noRecentFoods": "검색해서 기록한 음식이 여기에 모여요",
+  "noResults": "'{query}' 검색 결과가 없어요",
+  "@noResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "createFood": "내 음식 만들기",
+  "createFoodDesc": "찾는 음식이 없으면 직접 만들어 저장해요",
+  "foodRefNote": "영양정보는 일반적인 참고값이에요. 제품·조리법에 따라 다를 수 있어요.",
+  "unitLabel": "단위",
+  "quantity": "수량",
+  "addToSlot": "{slot}에 추가",
+  "@addToSlot": {
+    "placeholders": {
+      "slot": {
+        "type": "String"
+      }
+    }
+  },
+  "addedCount": "{n}개 추가됨",
+  "@addedCount": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "done": "완료",
+  "foodName": "음식 이름",
+  "servingLabel": "1회 제공 단위",
+  "servingGrams": "중량 g (선택)",
+  "perServing": "1회 제공량 기준 영양정보",
+  "customSaved": "'{name}'을(를) 내 음식에 저장했어요",
+  "@customSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "photoSoonShort": "사진 분석은 곧 제공돼요",
+  "mealSlotLabel": "끼니",
+  "addedToSlot": "{name} → {slot}",
+  "@addedToSlot": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "slot": {
+        "type": "String"
+      }
+    }
+  },
   "settingsTitle": "설정",
   "sectionProfile": "내 정보",
   "profileSummary": "{sex} · {age}세 · {height}cm",

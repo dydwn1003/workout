@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../data/entities.dart';
+import '../../data/food.dart';
 import '../../data/food_estimator.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
@@ -9,16 +10,33 @@ import '../motion.dart';
 import '../theme.dart';
 import '../widgets.dart';
 
-Future<void> showAddMealSheet(BuildContext context, {DateTime? date}) =>
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      sheetAnimationStyle: Motion.sheet,
-      builder: (_) => FractionallySizedBox(
-        heightFactor: 0.9,
-        child: AddMealSheet(date: date),
-      ),
-    );
+String slotLabel(L t, MealSlot s) => switch (s) {
+  MealSlot.breakfast => t.slotBreakfast,
+  MealSlot.lunch => t.slotLunch,
+  MealSlot.dinner => t.slotDinner,
+  MealSlot.snack => t.slotSnack,
+};
+
+IconData slotIcon(MealSlot s) => switch (s) {
+  MealSlot.breakfast => Icons.wb_twilight_rounded,
+  MealSlot.lunch => Icons.wb_sunny_rounded,
+  MealSlot.dinner => Icons.nightlight_round,
+  MealSlot.snack => Icons.cookie_rounded,
+};
+
+Future<void> showAddMealSheet(
+  BuildContext context, {
+  DateTime? date,
+  MealSlot? slot,
+}) => showModalBottomSheet(
+  context: context,
+  isScrollControlled: true,
+  sheetAnimationStyle: Motion.sheet,
+  builder: (_) => FractionallySizedBox(
+    heightFactor: 0.92,
+    child: AddMealSheet(date: date, slot: slot),
+  ),
+);
 
 Future<void> showEditMealSheet(BuildContext context, Meal meal) =>
     showModalBottomSheet(
@@ -26,7 +44,7 @@ Future<void> showEditMealSheet(BuildContext context, Meal meal) =>
       isScrollControlled: true,
       sheetAnimationStyle: Motion.sheet,
       builder: (ctx) => FractionallySizedBox(
-        heightFactor: 0.75,
+        heightFactor: 0.8,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -37,15 +55,55 @@ Future<void> showEditMealSheet(BuildContext context, Meal meal) =>
                 style: Theme.of(ctx).textTheme.headlineSmall,
               ),
             ),
-            Expanded(child: _MealForm(withText: false, editing: meal)),
+            Expanded(
+              child: _MealForm(
+                withText: false,
+                editing: meal,
+                slot: meal.slot,
+                onAdded: (_) {},
+              ),
+            ),
           ],
         ),
       ),
     );
 
+/// Slot picker chips (아침/점심/저녁/간식).
+class SlotChips extends StatelessWidget {
+  final MealSlot value;
+  final ValueChanged<MealSlot> onChanged;
+  const SlotChips({super.key, required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L.of(context);
+    return Row(
+      children: [
+        for (final s in MealSlot.values) ...[
+          Expanded(
+            child: Squish(
+              child: ChoiceChip(
+                label: SizedBox(
+                  width: double.infinity,
+                  child: Text(slotLabel(t, s), textAlign: TextAlign.center),
+                ),
+                selected: value == s,
+                showCheckmark: false,
+                onSelected: (_) => onChanged(s),
+              ),
+            ),
+          ),
+          if (s != MealSlot.snack) const SizedBox(width: 6),
+        ],
+      ],
+    );
+  }
+}
+
 class AddMealSheet extends StatefulWidget {
   final DateTime? date;
-  const AddMealSheet({super.key, this.date});
+  final MealSlot? slot;
+  const AddMealSheet({super.key, this.date, this.slot});
 
   @override
   State<AddMealSheet> createState() => _AddMealSheetState();
@@ -53,23 +111,32 @@ class AddMealSheet extends StatefulWidget {
 
 class _AddMealSheetState extends State<AddMealSheet>
     with SingleTickerProviderStateMixin {
-  late final TabController _tabs;
-
-  @override
-  void initState() {
-    super.initState();
-    final hasSaved = AppScope.read(context).savedMeals.isNotEmpty;
-    _tabs = TabController(
-      length: 4,
-      vsync: this,
-      initialIndex: hasSaved ? 1 : 0,
-    );
-  }
+  late final TabController _tabs = TabController(length: 4, vsync: this);
+  late MealSlot _slot = widget.slot ?? MealSlot.forTime(DateTime.now());
+  final _added = <String>[];
 
   @override
   void dispose() {
     _tabs.dispose();
     super.dispose();
+  }
+
+  /// Search keeps the sheet open for more items; other tabs close it.
+  void _onAdded(String name, {bool close = false}) {
+    final t = L.of(context);
+    if (close) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(t.added(name))));
+      return;
+    }
+    setState(() => _added.add(name));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(t.addedToSlot(name, slotLabel(t, _slot))),
+        duration: const Duration(milliseconds: 1400),
+      ),
+    );
   }
 
   @override
@@ -79,13 +146,50 @@ class _AddMealSheetState extends State<AddMealSheet>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Text(
-            t.addMeal,
-            style: Theme.of(context).textTheme.headlineSmall,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  t.addMeal,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+              ),
+              AnimatedSwitcher(
+                duration: Motion.medium,
+                transitionBuilder: (c, a) =>
+                    ScaleTransition(scale: a, child: c),
+                child: _added.isEmpty
+                    ? const SizedBox.shrink()
+                    : Row(
+                        key: ValueKey(_added.length),
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Pill(
+                            text: t.addedCount('${_added.length}'),
+                            color: AppColors.mint,
+                            soft: AppColors.mintSoft,
+                            icon: Icons.check_rounded,
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(t.done),
+                          ),
+                        ],
+                      ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: SlotChips(
+            value: _slot,
+            onChanged: (s) => setState(() => _slot = s),
+          ),
+        ),
+        const SizedBox(height: 4),
         TabBar(
           controller: _tabs,
           labelStyle: const TextStyle(
@@ -99,20 +203,38 @@ class _AddMealSheetState extends State<AddMealSheet>
           indicatorSize: TabBarIndicatorSize.label,
           dividerColor: AppColors.line,
           tabs: [
+            Tab(text: t.tabSearch),
             Tab(text: t.tabText),
             Tab(text: t.tabSaved),
             Tab(text: t.tabManual),
-            Tab(text: t.tabPhoto),
           ],
         ),
         Expanded(
           child: TabBarView(
             controller: _tabs,
             children: [
-              _MealForm(withText: true, date: widget.date),
-              _SavedList(date: widget.date),
-              _MealForm(withText: false, date: widget.date),
-              _PhotoSoon(),
+              _SearchTab(
+                date: widget.date,
+                slot: _slot,
+                onAdded: (n) => _onAdded(n),
+              ),
+              _MealForm(
+                withText: true,
+                date: widget.date,
+                slot: _slot,
+                onAdded: (n) => _onAdded(n, close: true),
+              ),
+              _SavedList(
+                date: widget.date,
+                slot: _slot,
+                onAdded: (n) => _onAdded(n),
+              ),
+              _MealForm(
+                withText: false,
+                date: widget.date,
+                slot: _slot,
+                onAdded: (n) => _onAdded(n, close: true),
+              ),
             ],
           ),
         ),
@@ -121,13 +243,705 @@ class _AddMealSheetState extends State<AddMealSheet>
   }
 }
 
+// ---------------------------------------------------------------------------
+// Search tab: list -> detail -> add, or create a custom food.
+// ---------------------------------------------------------------------------
+
+class _SearchTab extends StatefulWidget {
+  final DateTime? date;
+  final MealSlot slot;
+  final ValueChanged<String> onAdded;
+  const _SearchTab({
+    required this.date,
+    required this.slot,
+    required this.onAdded,
+  });
+
+  @override
+  State<_SearchTab> createState() => _SearchTabState();
+}
+
+enum _View { list, detail, create }
+
+class _SearchTabState extends State<_SearchTab>
+    with AutomaticKeepAliveClientMixin {
+  final _query = TextEditingController();
+  String? _category; // null = recent
+  Food? _food;
+  var _view = _View.list;
+  var _forward = true;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _query.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _query.dispose();
+    super.dispose();
+  }
+
+  void _go(_View v, {Food? food}) {
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _forward = v != _View.list;
+      _view = v;
+      if (food != null) _food = food;
+    });
+  }
+
+  Future<void> _log(Food f, FoodUnit unit, double qty) async {
+    final n = f.forPortion(unit, qty);
+    final grams = unit.grams * qty;
+    final q = qty == qty.roundToDouble() ? qty.round().toString() : '$qty';
+    final portion = unit.isGram
+        ? '${grams.round()}g'
+        : f.custom
+        ? '${unit.label} × $q'
+        : '${unit.label} × $q (${grams.round()}g)';
+    await AppScope.read(context).addMeal(
+      name: f.name,
+      kcal: n.kcal,
+      proteinG: n.proteinG,
+      carbsG: n.carbsG,
+      fatG: n.fatG,
+      source: MealSource.search,
+      date: widget.date,
+      slot: widget.slot,
+      portion: portion,
+      foodId: f.id,
+    );
+    widget.onAdded(f.name);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    final child = switch (_view) {
+      _View.list => _list(context),
+      _View.detail => _FoodDetail(
+        key: ValueKey(_food!.id),
+        food: _food!,
+        slot: widget.slot,
+        onBack: () => _go(_View.list),
+        onAdd: (u, q) async {
+          await _log(_food!, u, q);
+          if (mounted) _go(_View.list);
+        },
+      ),
+      _View.create => _CustomFoodForm(
+        initialName: _query.text.trim(),
+        onBack: () => _go(_View.list),
+        onCreated: (f) => _go(_View.detail, food: f),
+      ),
+    };
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 380),
+      reverseDuration: const Duration(milliseconds: 160),
+      switchInCurve: Motion.ease,
+      layoutBuilder: (cur, prev) =>
+          Stack(alignment: Alignment.topCenter, children: [...prev, ?cur]),
+      transitionBuilder: (c, a) => FadeTransition(
+        opacity: a,
+        child: SlideTransition(
+          position: Tween(
+            begin: Offset(_forward ? 0.06 : -0.06, 0),
+            end: Offset.zero,
+          ).animate(a),
+          child: c,
+        ),
+      ),
+      child: KeyedSubtree(key: ValueKey(_view), child: child),
+    );
+  }
+
+  Widget _list(BuildContext context) {
+    final t = L.of(context);
+    final s = AppScope.of(context);
+    final q = _query.text.trim();
+    final cats = categoriesOf(s.allFoods);
+    final recent = s.recentFoods();
+    // With no history yet, open on the first category instead of an empty list.
+    final showRecent = recent.isNotEmpty;
+    final category = _category ?? (showRecent ? null : cats.first);
+    final List<Food> foods = q.isNotEmpty
+        ? s.searchAllFoods(q)
+        : category == null
+        ? recent
+        : s.allFoods.where((f) => f.category == category).toList();
+    return ListView(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        14,
+        20,
+        24 + MediaQuery.of(context).viewInsets.bottom,
+      ),
+      children: [
+        TextField(
+          controller: _query,
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            hintText: t.searchHint,
+            prefixIcon: const Icon(Icons.search_rounded),
+            suffixIcon: q.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => _query.clear(),
+                  )
+                : IconButton(
+                    icon: const Icon(Icons.photo_camera_rounded),
+                    tooltip: t.photoSoonShort,
+                    onPressed: () => ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(t.photoSoonShort))),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (q.isEmpty)
+          SizedBox(
+            height: 40,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                for (final c in [if (showRecent) null, ...cats])
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      label: Text(c ?? t.recentFoodsChip),
+                      selected: category == c,
+                      showCheckmark: false,
+                      onSelected: (_) => setState(() => _category = c),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 8),
+        if (foods.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Text(
+              q.isNotEmpty ? t.noResults(q) : t.noRecentFoods,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.inkSoft),
+            ),
+          ),
+        for (final (i, f) in foods.indexed)
+          FadeSlideIn(
+            key: ValueKey('${f.id}-$q-$category'),
+            delay: stagger(i),
+            dy: 8,
+            child: _FoodRow(
+              food: f,
+              onTap: () => _go(_View.detail, food: f),
+              onQuickAdd: () => _log(f, f.units.first, 1),
+            ),
+          ),
+        const SizedBox(height: 6),
+        SoftCard(
+          color: AppColors.lilacSoft,
+          padding: const EdgeInsets.all(14),
+          onTap: () => _go(_View.create),
+          child: Row(
+            children: [
+              const Icon(Icons.add_circle_rounded, color: AppColors.lilac),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.createFood,
+                      style: const TextStyle(
+                        fontFamily: headingFont,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      t.createFoodDesc,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: AppColors.inkSoft,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.lilac),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FoodRow extends StatelessWidget {
+  final Food food;
+  final VoidCallback onTap;
+  final VoidCallback onQuickAdd;
+  const _FoodRow({
+    required this.food,
+    required this.onTap,
+    required this.onQuickAdd,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final u = food.units.first;
+    final n = food.forPortion(u, 1);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: SoftCard(
+        padding: const EdgeInsets.fromLTRB(16, 10, 6, 10),
+        onTap: onTap,
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    food.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: headingFont,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15.5,
+                    ),
+                  ),
+                  Text(
+                    food.custom
+                        ? '${food.category} · ${u.label}'
+                        : '${food.category} · ${u.label} (${u.grams.round()}g)',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.inkSoft,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              '${fmt0(n.kcal)} kcal',
+              style: const TextStyle(
+                fontFamily: headingFont,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            IconButton(
+              onPressed: onQuickAdd,
+              icon: const Icon(
+                Icons.add_circle_rounded,
+                color: AppColors.peach,
+                size: 28,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FoodDetail extends StatefulWidget {
+  final Food food;
+  final MealSlot slot;
+  final VoidCallback onBack;
+  final Future<void> Function(FoodUnit unit, double qty) onAdd;
+  const _FoodDetail({
+    super.key,
+    required this.food,
+    required this.slot,
+    required this.onBack,
+    required this.onAdd,
+  });
+
+  @override
+  State<_FoodDetail> createState() => _FoodDetailState();
+}
+
+class _FoodDetailState extends State<_FoodDetail> {
+  late FoodUnit _unit = widget.food.units.first;
+  var _qty = 1.0;
+  final _qtyCtrl = TextEditingController(text: '1');
+  var _busy = false;
+
+  @override
+  void dispose() {
+    _qtyCtrl.dispose();
+    super.dispose();
+  }
+
+  double get _step => _unit.isGram ? 10 : 0.5;
+
+  String _fmtQty(double q) =>
+      q == q.roundToDouble() ? q.round().toString() : q.toStringAsFixed(1);
+
+  void _setQty(double q) {
+    setState(() => _qty = q.clamp(0, _unit.isGram ? 5000 : 50).toDouble());
+    _qtyCtrl.text = _fmtQty(_qty);
+  }
+
+  void _setUnit(FoodUnit u) {
+    if (u == _unit) return;
+    // Keep the same amount of food when switching units.
+    final grams = _unit.grams * _qty;
+    setState(() => _unit = u);
+    final q = u.isGram
+        ? grams.roundToDouble()
+        : (grams / u.grams * 2).round() / 2;
+    _setQty(q == 0 ? (u.isGram ? 100 : 1) : q);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L.of(context);
+    final f = widget.food;
+    final n = f.forPortion(_unit, _qty);
+    Widget macro(String label, double g, Color c, Color soft) => Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: soft,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: headingFont,
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+                color: c,
+              ),
+            ),
+            CountUp(
+              value: g,
+              duration: Motion.medium,
+              format: (v) => '${fmt1(v)}g',
+              style: const TextStyle(
+                fontFamily: headingFont,
+                fontWeight: FontWeight.w800,
+                fontSize: 17,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    return ListView(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        6,
+        20,
+        24 + MediaQuery.of(context).viewInsets.bottom,
+      ),
+      children: [
+        Row(
+          children: [
+            IconButton(
+              onPressed: widget.onBack,
+              icon: const Icon(Icons.arrow_back_rounded),
+            ),
+            Expanded(
+              child: Text(
+                f.name,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            Pill(
+              text: f.category,
+              color: AppColors.inkSoft,
+              soft: AppColors.line,
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SoftCard(
+          padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+          child: Column(
+            children: [
+              CountUp(
+                value: n.kcal,
+                duration: Motion.medium,
+                format: (v) => '${fmt0(v)} kcal',
+                style: Theme.of(context).textTheme.displaySmall,
+              ),
+              if (!f.custom)
+                Text(
+                  '${fmt0(_unit.grams * _qty)}g',
+                  style: const TextStyle(color: AppColors.inkSoft),
+                ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  macro(
+                    t.protein,
+                    n.proteinG,
+                    AppColors.mint,
+                    AppColors.mintSoft,
+                  ),
+                  const SizedBox(width: 6),
+                  macro(
+                    t.carbs,
+                    n.carbsG,
+                    const Color(0xFFD49B1F),
+                    AppColors.butterSoft,
+                  ),
+                  const SizedBox(width: 6),
+                  macro(t.fat, n.fatG, AppColors.lilac, AppColors.lilacSoft),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          t.unitLabel,
+          style: const TextStyle(fontSize: 13, color: AppColors.inkSoft),
+        ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            for (final u in f.allUnits)
+              ChoiceChip(
+                label: Text(
+                  u.isGram || f.custom
+                      ? u.label
+                      : '${u.label} (${u.grams.round()}g)',
+                ),
+                selected: u == _unit,
+                showCheckmark: false,
+                onSelected: (_) => _setUnit(u),
+              ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Text(
+          t.quantity,
+          style: const TextStyle(fontSize: 13, color: AppColors.inkSoft),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton.filledTonal(
+              onPressed: _qty > _step ? () => _setQty(_qty - _step) : null,
+              icon: const Icon(Icons.remove_rounded),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 120,
+              child: TextField(
+                controller: _qtyCtrl,
+                textAlign: TextAlign.center,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                ],
+                style: Theme.of(context).textTheme.headlineSmall,
+                decoration: InputDecoration(
+                  suffixText: _unit.isGram ? 'g' : null,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+                onChanged: (v) =>
+                    setState(() => _qty = double.tryParse(v) ?? 0),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton.filledTonal(
+              onPressed: () => _setQty(_qty + _step),
+              icon: const Icon(Icons.add_rounded),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Text(
+          t.foodRefNote,
+          style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),
+        ),
+        const SizedBox(height: 14),
+        FilledButton.icon(
+          onPressed: _qty > 0 && !_busy
+              ? () async {
+                  setState(() => _busy = true);
+                  await widget.onAdd(_unit, _qty);
+                }
+              : null,
+          icon: Icon(slotIcon(widget.slot)),
+          label: Text(t.addToSlot(slotLabel(t, widget.slot))),
+        ),
+      ],
+    );
+  }
+}
+
+class _CustomFoodForm extends StatefulWidget {
+  final String initialName;
+  final VoidCallback onBack;
+  final ValueChanged<Food> onCreated;
+  const _CustomFoodForm({
+    required this.initialName,
+    required this.onBack,
+    required this.onCreated,
+  });
+
+  @override
+  State<_CustomFoodForm> createState() => _CustomFoodFormState();
+}
+
+class _CustomFoodFormState extends State<_CustomFoodForm> {
+  late final _name = TextEditingController(text: widget.initialName);
+  final _unit = TextEditingController(text: '1인분');
+  final _grams = TextEditingController();
+  final _kcal = TextEditingController();
+  final _p = TextEditingController();
+  final _c = TextEditingController();
+  final _f = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    for (final c in [_name, _unit, _kcal]) {
+      c.addListener(() => setState(() {}));
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final c in [_name, _unit, _grams, _kcal, _p, _c, _f]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  double? _v(TextEditingController c) =>
+      double.tryParse(c.text.replaceAll(',', '.'));
+
+  bool get _valid =>
+      _name.text.trim().isNotEmpty &&
+      _unit.text.trim().isNotEmpty &&
+      (_v(_kcal) ?? 0) > 0;
+
+  Future<void> _save() async {
+    final t = L.of(context);
+    final grams = _v(_grams);
+    final food = await AppScope.read(context).addCustomFood(
+      name: _name.text.trim(),
+      unitLabel: _unit.text.trim(),
+      grams: grams != null && grams > 0 ? grams : null,
+      kcal: _v(_kcal)!,
+      proteinG: _v(_p) ?? 0,
+      carbsG: _v(_c) ?? 0,
+      fatG: _v(_f) ?? 0,
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(t.customSaved(food.name))));
+    widget.onCreated(food);
+  }
+
+  Widget _num(TextEditingController c, String label) => TextField(
+    controller: c,
+    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
+    decoration: InputDecoration(labelText: label),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L.of(context);
+    return ListView(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        6,
+        20,
+        24 + MediaQuery.of(context).viewInsets.bottom,
+      ),
+      children: [
+        Row(
+          children: [
+            IconButton(
+              onPressed: widget.onBack,
+              icon: const Icon(Icons.arrow_back_rounded),
+            ),
+            Text(t.createFood, style: Theme.of(context).textTheme.titleLarge),
+          ],
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _name,
+          decoration: InputDecoration(labelText: t.foodName),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _unit,
+                decoration: InputDecoration(labelText: t.servingLabel),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(child: _num(_grams, t.servingGrams)),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Text(
+          t.perServing,
+          style: const TextStyle(fontSize: 13, color: AppColors.inkSoft),
+        ),
+        const SizedBox(height: 8),
+        _num(_kcal, t.kcalField),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: _num(_p, t.proteinField)),
+            const SizedBox(width: 8),
+            Expanded(child: _num(_c, t.carbsField)),
+            const SizedBox(width: 8),
+            Expanded(child: _num(_f, t.fatField)),
+          ],
+        ),
+        const SizedBox(height: 18),
+        FilledButton(onPressed: _valid ? _save : null, child: Text(t.save)),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Text estimate / manual entry / edit
+// ---------------------------------------------------------------------------
+
 class _MealForm extends StatefulWidget {
   final bool withText;
   final DateTime? date;
+  final MealSlot slot;
+  final ValueChanged<String> onAdded;
 
   /// When set, the form edits this meal instead of adding a new one.
   final Meal? editing;
-  const _MealForm({required this.withText, this.date, this.editing});
+  const _MealForm({
+    required this.withText,
+    this.date,
+    required this.slot,
+    required this.onAdded,
+    this.editing,
+  });
 
   @override
   State<_MealForm> createState() => _MealFormState();
@@ -144,6 +958,7 @@ class _MealFormState extends State<_MealForm>
   var _saveTemplate = false;
   Estimate? _estimate;
   var _edited = false;
+  late MealSlot _editSlot = widget.slot;
 
   @override
   bool get wantKeepAlive => true;
@@ -177,7 +992,10 @@ class _MealFormState extends State<_MealForm>
 
   void _runEstimate() {
     FocusScope.of(context).unfocus();
-    final e = estimateFromText(_text.text);
+    final e = estimateFromText(
+      _text.text,
+      foods: AppScope.read(context).allFoods,
+    );
     setState(() {
       _estimate = e;
       _edited = false;
@@ -197,18 +1015,23 @@ class _MealFormState extends State<_MealForm>
     final name = _name.text.trim();
     final editing = widget.editing;
     if (editing != null) {
+      final changed =
+          name != editing.name ||
+          _v(_kcal).round() != editing.kcal.round() ||
+          _v(_p).round() != editing.proteinG.round() ||
+          _v(_c).round() != editing.carbsG.round() ||
+          _v(_f).round() != editing.fatG.round();
       await s.updateMeal(
-        Meal(
-          id: editing.id,
-          date: editing.date,
-          time: editing.time,
+        editing.copyWith(
           name: name,
           kcal: _v(_kcal),
           proteinG: _v(_p),
           carbsG: _v(_c),
           fatG: _v(_f),
-          source: editing.source,
-          edited: true,
+          slot: _editSlot,
+          edited: editing.edited || changed,
+          // A hand-edited amount no longer matches the stored portion.
+          portion: changed ? () => null : null,
         ),
       );
       if (!mounted) return;
@@ -219,6 +1042,7 @@ class _MealFormState extends State<_MealForm>
     }
     await s.addMeal(
       date: widget.date,
+      slot: widget.slot,
       name: name,
       kcal: _v(_kcal),
       proteinG: _v(_p),
@@ -239,9 +1063,7 @@ class _MealFormState extends State<_MealForm>
       );
     }
     if (!mounted) return;
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(t.added(name))));
+    widget.onAdded(name);
   }
 
   Widget _num(TextEditingController c, String label) => TextField(
@@ -266,6 +1088,25 @@ class _MealFormState extends State<_MealForm>
         24 + MediaQuery.of(context).viewInsets.bottom,
       ),
       children: [
+        if (widget.editing != null) ...[
+          Text(
+            t.mealSlotLabel,
+            style: const TextStyle(fontSize: 13, color: AppColors.inkSoft),
+          ),
+          const SizedBox(height: 6),
+          SlotChips(
+            value: _editSlot,
+            onChanged: (s) => setState(() => _editSlot = s),
+          ),
+          if (widget.editing!.portion != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              widget.editing!.portion!,
+              style: const TextStyle(fontSize: 13, color: AppColors.inkSoft),
+            ),
+          ],
+          const SizedBox(height: 4),
+        ],
         if (widget.withText) ...[
           TextField(
             controller: _text,
@@ -285,58 +1126,69 @@ class _MealFormState extends State<_MealForm>
         ],
         if (e != null) ...[
           const SizedBox(height: 14),
-          SoftCard(
-            padding: const EdgeInsets.all(14),
-            color: AppColors.mintSoft,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final i in e.items)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Row(
-                      children: [
-                        Icon(
-                          i.matched
-                              ? Icons.check_circle_rounded
-                              : Icons.help_rounded,
-                          size: 16,
-                          color: i.matched ? AppColors.mint : AppColors.inkSoft,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(child: Text(i.name)),
-                        Text(
-                          '${fmt0(i.kcal)} kcal',
-                          style: const TextStyle(
-                            fontFamily: headingFont,
-                            fontWeight: FontWeight.w800,
+          FadeSlideIn(
+            key: ValueKey(e),
+            child: SoftCard(
+              padding: const EdgeInsets.all(14),
+              color: AppColors.mintSoft,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final i in e.items)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Row(
+                        children: [
+                          Icon(
+                            i.matched
+                                ? Icons.check_circle_rounded
+                                : Icons.help_rounded,
+                            size: 16,
+                            color: i.matched
+                                ? AppColors.mint
+                                : AppColors.inkSoft,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              i.matched && i.food!.name != i.name
+                                  ? '${i.name} → ${i.food!.name}'
+                                  : i.name,
+                            ),
+                          ),
+                          Text(
+                            '${fmt0(i.kcal)} kcal',
+                            style: const TextStyle(
+                              fontFamily: headingFont,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                const SizedBox(height: 6),
-                Text(
-                  t.estimateNote,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.inkSoft,
-                  ),
-                ),
-                if (e.hasUnmatched)
+                  const SizedBox(height: 6),
                   Text(
-                    t.unmatchedNote(
-                      e.items
-                          .where((i) => !i.matched)
-                          .map((i) => i.name)
-                          .join(', '),
-                    ),
+                    t.estimateNote,
                     style: const TextStyle(
                       fontSize: 12,
-                      color: AppColors.peach,
+                      color: AppColors.inkSoft,
                     ),
                   ),
-              ],
+                  if (e.hasUnmatched)
+                    Text(
+                      t.unmatchedNote(
+                        e.items
+                            .where((i) => !i.matched)
+                            .map((i) => i.name)
+                            .join(', '),
+                      ),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.peach,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ],
@@ -374,7 +1226,11 @@ class _MealFormState extends State<_MealForm>
           const SizedBox(height: 8),
           FilledButton(
             onPressed: _valid ? _add : null,
-            child: Text(widget.editing != null ? t.save : t.addToToday),
+            child: Text(
+              widget.editing != null
+                  ? t.save
+                  : t.addToSlot(slotLabel(t, widget.slot)),
+            ),
           ),
         ],
       ],
@@ -382,9 +1238,15 @@ class _MealFormState extends State<_MealForm>
   }
 }
 
+// ---------------------------------------------------------------------------
+// Saved + recent meals (one tap)
+// ---------------------------------------------------------------------------
+
 class _SavedList extends StatelessWidget {
   final DateTime? date;
-  const _SavedList({this.date});
+  final MealSlot slot;
+  final ValueChanged<String> onAdded;
+  const _SavedList({this.date, required this.slot, required this.onAdded});
 
   Future<void> _quickAdd(
     BuildContext context,
@@ -394,10 +1256,9 @@ class _SavedList extends StatelessWidget {
     double c,
     double f,
   ) async {
-    final s = AppScope.read(context);
-    final t = L.of(context);
-    await s.addMeal(
+    await AppScope.read(context).addMeal(
       date: date,
+      slot: slot,
       name: name,
       kcal: kcal,
       proteinG: p,
@@ -405,10 +1266,7 @@ class _SavedList extends StatelessWidget {
       fatG: f,
       source: MealSource.saved,
     );
-    if (!context.mounted) return;
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(t.added(name))));
+    onAdded(name);
   }
 
   @override
@@ -533,46 +1391,6 @@ class _SavedList extends StatelessWidget {
             ),
         ],
       ],
-    );
-  }
-}
-
-class _PhotoSoon extends StatelessWidget {
-  const _PhotoSoon();
-
-  @override
-  Widget build(BuildContext context) {
-    final t = L.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(
-                color: AppColors.peachSoft,
-                borderRadius: BorderRadius.circular(32),
-              ),
-              child: const Icon(
-                Icons.photo_camera_rounded,
-                size: 44,
-                color: AppColors.peach,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(t.photoSoon, style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            Text(
-              t.photoSoonDesc,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.inkSoft, height: 1.5),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

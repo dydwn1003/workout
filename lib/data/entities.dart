@@ -1,4 +1,5 @@
 import '../core/coach_engine/coach_engine.dart';
+import 'food.dart';
 
 String dateKey(DateTime d) =>
     '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -111,7 +112,23 @@ class WeightEntry {
   );
 }
 
-enum MealSource { photo, text, saved, manual }
+enum MealSource { photo, text, saved, manual, search }
+
+enum MealSlot {
+  breakfast,
+  lunch,
+  dinner,
+  snack;
+
+  /// Default slot for a time of day.
+  static MealSlot forTime(DateTime t) {
+    final h = t.hour;
+    if (h >= 5 && h < 11) return MealSlot.breakfast;
+    if (h >= 11 && h < 15) return MealSlot.lunch;
+    if (h >= 17 && h < 22) return MealSlot.dinner;
+    return MealSlot.snack;
+  }
+}
 
 class Meal {
   final String id;
@@ -124,6 +141,13 @@ class Meal {
   final double fatG;
   final MealSource source;
   final bool edited;
+  final MealSlot slot;
+
+  /// Human-readable amount, e.g. "1공기 × 1.5 (315g)".
+  final String? portion;
+
+  /// Food table id when logged from search.
+  final String? foodId;
 
   const Meal({
     required this.id,
@@ -136,7 +160,35 @@ class Meal {
     required this.fatG,
     required this.source,
     this.edited = false,
+    required this.slot,
+    this.portion,
+    this.foodId,
   });
+
+  Meal copyWith({
+    String? name,
+    double? kcal,
+    double? proteinG,
+    double? carbsG,
+    double? fatG,
+    MealSlot? slot,
+    bool? edited,
+    String? Function()? portion,
+  }) => Meal(
+    id: id,
+    date: date,
+    time: time,
+    name: name ?? this.name,
+    kcal: kcal ?? this.kcal,
+    proteinG: proteinG ?? this.proteinG,
+    carbsG: carbsG ?? this.carbsG,
+    fatG: fatG ?? this.fatG,
+    source: source,
+    edited: edited ?? this.edited,
+    slot: slot ?? this.slot,
+    portion: portion != null ? portion() : this.portion,
+    foodId: foodId,
+  );
 
   Map<String, Object?> toJson() => {
     'id': id,
@@ -149,6 +201,9 @@ class Meal {
     'fatG': fatG,
     'source': source.name,
     'edited': edited,
+    'slot': slot.name,
+    'portion': portion,
+    'foodId': foodId,
   };
 
   factory Meal.fromJson(Map<String, Object?> j) => Meal(
@@ -162,6 +217,67 @@ class Meal {
     fatG: _d(j['fatG']) ?? 0,
     source: _enumByName(MealSource.values, j['source'], MealSource.manual),
     edited: j['edited'] as bool? ?? false,
+    slot: j['slot'] == null
+        ? MealSlot.forTime(DateTime.parse(j['time'] as String))
+        : _enumByName(MealSlot.values, j['slot'], MealSlot.snack),
+    portion: j['portion'] as String?,
+    foodId: j['foodId'] as String?,
+  );
+}
+
+/// A user-created food, stored per serving.
+class CustomFood {
+  final String id;
+  final String name;
+  final String unitLabel;
+  final double? grams;
+  final double kcal;
+  final double proteinG;
+  final double carbsG;
+  final double fatG;
+
+  const CustomFood({
+    required this.id,
+    required this.name,
+    required this.unitLabel,
+    this.grams,
+    required this.kcal,
+    required this.proteinG,
+    required this.carbsG,
+    required this.fatG,
+  });
+
+  Food toFood() => Food.customPerServing(
+    id: id,
+    name: name,
+    unitLabel: unitLabel,
+    grams: grams,
+    kcal: kcal,
+    proteinG: proteinG,
+    carbsG: carbsG,
+    fatG: fatG,
+  );
+
+  Map<String, Object?> toJson() => {
+    'id': id,
+    'name': name,
+    'unitLabel': unitLabel,
+    'grams': grams,
+    'kcal': kcal,
+    'proteinG': proteinG,
+    'carbsG': carbsG,
+    'fatG': fatG,
+  };
+
+  factory CustomFood.fromJson(Map<String, Object?> j) => CustomFood(
+    id: j['id'] as String,
+    name: j['name'] as String,
+    unitLabel: j['unitLabel'] as String? ?? '1인분',
+    grams: _d(j['grams']),
+    kcal: _d(j['kcal']) ?? 0,
+    proteinG: _d(j['proteinG']) ?? 0,
+    carbsG: _d(j['carbsG']) ?? 0,
+    fatG: _d(j['fatG']) ?? 0,
   );
 }
 

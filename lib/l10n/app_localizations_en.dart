@@ -742,6 +742,92 @@ class LEn extends L {
   String get minutesField => 'min';
 
   @override
+  String get slotBreakfast => 'Breakfast';
+
+  @override
+  String get slotLunch => 'Lunch';
+
+  @override
+  String get slotDinner => 'Dinner';
+
+  @override
+  String get slotSnack => 'Snacks';
+
+  @override
+  String get tabSearch => 'Search';
+
+  @override
+  String get searchHint => 'Search foods (e.g. chicken breast)';
+
+  @override
+  String get recentFoodsChip => 'Recent';
+
+  @override
+  String get noRecentFoods => 'Foods you log from search show up here';
+
+  @override
+  String noResults(String query) {
+    return 'No results for \'$query\'';
+  }
+
+  @override
+  String get createFood => 'Create a food';
+
+  @override
+  String get createFoodDesc => 'Can\'t find it? Save your own';
+
+  @override
+  String get foodRefNote =>
+      'Nutrition values are typical estimates and vary by product and recipe.';
+
+  @override
+  String get unitLabel => 'Unit';
+
+  @override
+  String get quantity => 'Amount';
+
+  @override
+  String addToSlot(String slot) {
+    return 'Add to $slot';
+  }
+
+  @override
+  String addedCount(String n) {
+    return '$n added';
+  }
+
+  @override
+  String get done => 'Done';
+
+  @override
+  String get foodName => 'Food name';
+
+  @override
+  String get servingLabel => 'Serving name';
+
+  @override
+  String get servingGrams => 'Weight g (optional)';
+
+  @override
+  String get perServing => 'Nutrition per serving';
+
+  @override
+  String customSaved(String name) {
+    return 'Saved \'$name\' to your foods';
+  }
+
+  @override
+  String get photoSoonShort => 'Photo analysis is coming soon';
+
+  @override
+  String get mealSlotLabel => 'Meal';
+
+  @override
+  String addedToSlot(String name, String slot) {
+    return '$name → $slot';
+  }
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override
