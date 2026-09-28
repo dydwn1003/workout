@@ -4,10 +4,14 @@ and writes a CSV that tool/import_mfds.py understands.
 The API key is read from the DATA_GO_KR_KEY environment variable and is never
 written to disk. Do not commit keys.
 
+Datasets (same host, same key):
+  food     tn_pubr_public_nutri_food_info_api     음식 (dishes, eating out)
+  process  tn_pubr_public_nutri_process_info_api  가공식품 (packaged products)
+
 Usage:
-  DATA_GO_KR_KEY=... python3 tool/fetch_mfds_api.py [--out data/mfds_api.csv]
-      [--endpoint tn_pubr_public_nutri_food_info_api] [--rows 1000]
-  python3 tool/import_mfds.py data/mfds_api.csv [--include-processed]
+  DATA_GO_KR_KEY=... python3 tool/fetch_mfds_api.py            # both datasets
+  DATA_GO_KR_KEY=... python3 tool/fetch_mfds_api.py food       # one dataset
+  python3 tool/import_mfds.py data/mfds_api_food.csv data/mfds_api_process.csv --include-processed
 """
 import csv
 import json
@@ -18,6 +22,10 @@ import urllib.parse
 import urllib.request
 
 BASE = "https://api.data.go.kr/openapi/"
+DATASETS = {
+    "food": "tn_pubr_public_nutri_food_info_api",
+    "process": "tn_pubr_public_nutri_process_info_api",
+}
 
 # API field -> Korean header used by import_mfds.py. Unknown fields are kept
 # under their API name so nothing is lost; the mapping is matched loosely
@@ -71,10 +79,14 @@ def main():
         sys.exit("set DATA_GO_KR_KEY")
     args = sys.argv[1:]
     opt = lambda name, default: args[args.index(name) + 1] if name in args else default
-    endpoint = opt("--endpoint", "tn_pubr_public_nutri_food_info_api")
-    out = opt("--out", os.path.join("data", "mfds_api.csv"))
     rows = int(opt("--rows", "1000"))
+    names = [a for a in args if a in DATASETS] or list(DATASETS)
+    for name in names:
+        print(f"== {name} ({DATASETS[name]})")
+        fetch(key, DATASETS[name], os.path.join("data", f"mfds_api_{name}.csv"), rows)
 
+
+def fetch(key, endpoint, out, rows):
     all_items, page, total = [], 1, None
     while True:
         q = urllib.parse.urlencode({"serviceKey": key, "pageNo": page, "numOfRows": rows, "type": "json"})
