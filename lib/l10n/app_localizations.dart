@@ -1,0 +1,1267 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_en.dart';
+import 'app_localizations_ko.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of L
+/// returned by `L.of(context)`.
+///
+/// Applications need to include `L.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: L.localizationsDelegates,
+///   supportedLocales: L.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the L.supportedLocales
+/// property.
+abstract class L {
+  L(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static L of(BuildContext context) {
+    return Localizations.of<L>(context, L)!;
+  }
+
+  static const LocalizationsDelegate<L> delegate = _LDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('ko'),
+  ];
+
+  /// No description provided for @appName.
+  ///
+  /// In ko, this message translates to:
+  /// **'Adapt'**
+  String get appName;
+
+  /// No description provided for @next.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음'**
+  String get next;
+
+  /// No description provided for @back.
+  ///
+  /// In ko, this message translates to:
+  /// **'이전'**
+  String get back;
+
+  /// No description provided for @save.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get save;
+
+  /// No description provided for @cancel.
+  ///
+  /// In ko, this message translates to:
+  /// **'취소'**
+  String get cancel;
+
+  /// No description provided for @delete.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제'**
+  String get delete;
+
+  /// No description provided for @confirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인'**
+  String get confirm;
+
+  /// No description provided for @undo.
+  ///
+  /// In ko, this message translates to:
+  /// **'되돌리기'**
+  String get undo;
+
+  /// No description provided for @kcal.
+  ///
+  /// In ko, this message translates to:
+  /// **'kcal'**
+  String get kcal;
+
+  /// No description provided for @navToday.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘'**
+  String get navToday;
+
+  /// No description provided for @navTrend.
+  ///
+  /// In ko, this message translates to:
+  /// **'트렌드'**
+  String get navTrend;
+
+  /// No description provided for @navCheckin.
+  ///
+  /// In ko, this message translates to:
+  /// **'체크인'**
+  String get navCheckin;
+
+  /// No description provided for @navSettings.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정'**
+  String get navSettings;
+
+  /// No description provided for @welcomeTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'매주 알아서 맞춰주는\n칼로리 코치'**
+  String get welcomeTitle;
+
+  /// No description provided for @welcomeBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중과 식사만 기록하세요. 실제로 쓰는 에너지를 계산해서 매주 목표 칼로리를 다시 맞춰 드릴게요.'**
+  String get welcomeBody;
+
+  /// No description provided for @disclaimer.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 앱은 의학적 조언을 제공하지 않아요. 질환이 있거나 임신·수유 중이라면 먼저 전문가와 상담해 주세요.'**
+  String get disclaimer;
+
+  /// No description provided for @consentLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중·체성분 같은 건강 정보를 이 기기에 저장하는 데 동의해요 (민감정보)'**
+  String get consentLabel;
+
+  /// No description provided for @getStarted.
+  ///
+  /// In ko, this message translates to:
+  /// **'시작해볼까요?'**
+  String get getStarted;
+
+  /// No description provided for @tryDemo.
+  ///
+  /// In ko, this message translates to:
+  /// **'샘플 데이터로 먼저 둘러보기'**
+  String get tryDemo;
+
+  /// No description provided for @stepGoalTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'어떤 목표를 가지고 있나요?'**
+  String get stepGoalTitle;
+
+  /// No description provided for @goalLose.
+  ///
+  /// In ko, this message translates to:
+  /// **'감량'**
+  String get goalLose;
+
+  /// No description provided for @goalLoseDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중을 천천히 줄여요'**
+  String get goalLoseDesc;
+
+  /// No description provided for @goalMaintain.
+  ///
+  /// In ko, this message translates to:
+  /// **'유지'**
+  String get goalMaintain;
+
+  /// No description provided for @goalMaintainDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 체중을 지켜요'**
+  String get goalMaintainDesc;
+
+  /// No description provided for @goalGain.
+  ///
+  /// In ko, this message translates to:
+  /// **'증량'**
+  String get goalGain;
+
+  /// No description provided for @goalGainDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'근육과 체중을 늘려요'**
+  String get goalGainDesc;
+
+  /// No description provided for @goalRecomp.
+  ///
+  /// In ko, this message translates to:
+  /// **'체성분 개선'**
+  String get goalRecomp;
+
+  /// No description provided for @goalRecompDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'체지방은 줄이고 근육은 지켜요'**
+  String get goalRecompDesc;
+
+  /// No description provided for @stepBodyTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 몸 상태를 알려주세요'**
+  String get stepBodyTitle;
+
+  /// No description provided for @male.
+  ///
+  /// In ko, this message translates to:
+  /// **'남성'**
+  String get male;
+
+  /// No description provided for @female.
+  ///
+  /// In ko, this message translates to:
+  /// **'여성'**
+  String get female;
+
+  /// No description provided for @birthYear.
+  ///
+  /// In ko, this message translates to:
+  /// **'출생연도'**
+  String get birthYear;
+
+  /// No description provided for @heightCm.
+  ///
+  /// In ko, this message translates to:
+  /// **'키 (cm)'**
+  String get heightCm;
+
+  /// No description provided for @weightKg.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중 (kg)'**
+  String get weightKg;
+
+  /// No description provided for @bodyFatOptional.
+  ///
+  /// In ko, this message translates to:
+  /// **'체지방 %(선택)'**
+  String get bodyFatOptional;
+
+  /// No description provided for @smmOptional.
+  ///
+  /// In ko, this message translates to:
+  /// **'골격근 kg(선택)'**
+  String get smmOptional;
+
+  /// No description provided for @bodyCompHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'체성분은 같은 기기, 같은 조건(주 1회, 아침 공복)에서 재면 가장 정확해요.'**
+  String get bodyCompHint;
+
+  /// No description provided for @stepTargetTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표를 정해볼까요?'**
+  String get stepTargetTitle;
+
+  /// No description provided for @targetByWeight.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표 체중'**
+  String get targetByWeight;
+
+  /// No description provided for @targetByBodyFat.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표 체지방률'**
+  String get targetByBodyFat;
+
+  /// No description provided for @targetWeightField.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표 체중 (kg)'**
+  String get targetWeightField;
+
+  /// No description provided for @targetBodyFatField.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표 체지방률 (%)'**
+  String get targetBodyFatField;
+
+  /// No description provided for @targetBfResult.
+  ///
+  /// In ko, this message translates to:
+  /// **'근육(제지방량)을 유지하면 목표 체중은 약 {kg}kg이에요'**
+  String targetBfResult(String kg);
+
+  /// No description provided for @targetBfNeedsCurrent.
+  ///
+  /// In ko, this message translates to:
+  /// **'체지방률 목표는 현재 체지방률을 입력해야 쓸 수 있어요'**
+  String get targetBfNeedsCurrent;
+
+  /// No description provided for @maintainNoTarget.
+  ///
+  /// In ko, this message translates to:
+  /// **'유지 목표는 따로 목표값이 필요 없어요. 지금 체중 근처를 지켜드릴게요.'**
+  String get maintainNoTarget;
+
+  /// No description provided for @stepPaceTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'어떤 속도로 갈까요?'**
+  String get stepPaceTitle;
+
+  /// No description provided for @paceRelaxed.
+  ///
+  /// In ko, this message translates to:
+  /// **'여유롭게'**
+  String get paceRelaxed;
+
+  /// No description provided for @paceNormal.
+  ///
+  /// In ko, this message translates to:
+  /// **'보통'**
+  String get paceNormal;
+
+  /// No description provided for @paceFast.
+  ///
+  /// In ko, this message translates to:
+  /// **'빠르게'**
+  String get paceFast;
+
+  /// No description provided for @paceDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'주당 약 {kg}kg ({pct}%)'**
+  String paceDesc(String kg, String pct);
+
+  /// No description provided for @paceHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'처음이라면 \'보통\'을 추천해요. 너무 빠르면 근손실과 요요 위험이 커져요.'**
+  String get paceHint;
+
+  /// No description provided for @stepActivityTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'일주일에 운동을 얼마나 하나요?'**
+  String get stepActivityTitle;
+
+  /// No description provided for @strength.
+  ///
+  /// In ko, this message translates to:
+  /// **'근력운동'**
+  String get strength;
+
+  /// No description provided for @cardio.
+  ///
+  /// In ko, this message translates to:
+  /// **'유산소'**
+  String get cardio;
+
+  /// No description provided for @timesPerWeek.
+  ///
+  /// In ko, this message translates to:
+  /// **'회 / 주'**
+  String get timesPerWeek;
+
+  /// No description provided for @activityHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'처음 목표를 계산할 때만 써요. 이후엔 실제 기록으로 맞춰져요.'**
+  String get activityHint;
+
+  /// No description provided for @stepResultTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'첫 번째 목표가 나왔어요!'**
+  String get stepResultTitle;
+
+  /// No description provided for @dailyTarget.
+  ///
+  /// In ko, this message translates to:
+  /// **'하루 목표'**
+  String get dailyTarget;
+
+  /// No description provided for @protein.
+  ///
+  /// In ko, this message translates to:
+  /// **'단백질'**
+  String get protein;
+
+  /// No description provided for @carbs.
+  ///
+  /// In ko, this message translates to:
+  /// **'탄수화물'**
+  String get carbs;
+
+  /// No description provided for @fat.
+  ///
+  /// In ko, this message translates to:
+  /// **'지방'**
+  String get fat;
+
+  /// No description provided for @estTdee.
+  ///
+  /// In ko, this message translates to:
+  /// **'추정 소비량'**
+  String get estTdee;
+
+  /// No description provided for @etaLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표 도달 예상'**
+  String get etaLabel;
+
+  /// No description provided for @etaWeeks.
+  ///
+  /// In ko, this message translates to:
+  /// **'약 {min}~{max}주 후'**
+  String etaWeeks(String min, String max);
+
+  /// No description provided for @etaReached.
+  ///
+  /// In ko, this message translates to:
+  /// **'거의 도착했어요!'**
+  String get etaReached;
+
+  /// No description provided for @etaUnknown.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 예측하기 어려워요'**
+  String get etaUnknown;
+
+  /// No description provided for @floorNotice.
+  ///
+  /// In ko, this message translates to:
+  /// **'안전 하한({kcal} kcal)에 맞췄어요. 속도를 한 단계 낮추는 걸 추천해요.'**
+  String floorNotice(String kcal);
+
+  /// No description provided for @resultNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'첫 목표는 공식으로 계산한 추정치예요. 2~4주 기록이 쌓이면 내 몸에 맞게 매주 조정돼요.'**
+  String get resultNote;
+
+  /// No description provided for @issueUnderage.
+  ///
+  /// In ko, this message translates to:
+  /// **'만 18세 미만은 사용할 수 없어요.'**
+  String get issueUnderage;
+
+  /// No description provided for @issueBmiLow.
+  ///
+  /// In ko, this message translates to:
+  /// **'현재 체중에서는 감량 목표를 만들 수 없어요. 유지를 선택해 주세요.'**
+  String get issueBmiLow;
+
+  /// No description provided for @issueTargetBmiLow.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표 체중이 건강 범위보다 낮아요. 목표를 조금 올려주세요.'**
+  String get issueTargetBmiLow;
+
+  /// No description provided for @issueTargetDirection.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표 체중이 선택한 목표와 방향이 맞지 않아요.'**
+  String get issueTargetDirection;
+
+  /// No description provided for @startApp.
+  ///
+  /// In ko, this message translates to:
+  /// **'시작하기'**
+  String get startApp;
+
+  /// No description provided for @todayGreeting.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘도 차근차근!'**
+  String get todayGreeting;
+
+  /// No description provided for @kcalLeft.
+  ///
+  /// In ko, this message translates to:
+  /// **'남은 칼로리'**
+  String get kcalLeft;
+
+  /// No description provided for @kcalOver.
+  ///
+  /// In ko, this message translates to:
+  /// **'초과'**
+  String get kcalOver;
+
+  /// No description provided for @eatenOfTarget.
+  ///
+  /// In ko, this message translates to:
+  /// **'{eaten} / {target} kcal'**
+  String eatenOfTarget(String eaten, String target);
+
+  /// No description provided for @weightToday.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘 체중'**
+  String get weightToday;
+
+  /// No description provided for @logWeight.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중 기록하기'**
+  String get logWeight;
+
+  /// No description provided for @trendKg.
+  ///
+  /// In ko, this message translates to:
+  /// **'추세 {kg}kg'**
+  String trendKg(String kg);
+
+  /// No description provided for @checkinDueBanner.
+  ///
+  /// In ko, this message translates to:
+  /// **'주간 체크인 시간이에요! 이번 주 목표를 확인해 보세요'**
+  String get checkinDueBanner;
+
+  /// No description provided for @checkinGo.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인하기'**
+  String get checkinGo;
+
+  /// No description provided for @mealsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘 먹은 것'**
+  String get mealsTitle;
+
+  /// No description provided for @noMealsYet.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 기록이 없어요.\n아래 버튼으로 첫 끼를 남겨보세요!'**
+  String get noMealsYet;
+
+  /// No description provided for @addMeal.
+  ///
+  /// In ko, this message translates to:
+  /// **'식사 기록'**
+  String get addMeal;
+
+  /// No description provided for @mealDeleted.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제했어요'**
+  String get mealDeleted;
+
+  /// No description provided for @tabText.
+  ///
+  /// In ko, this message translates to:
+  /// **'텍스트'**
+  String get tabText;
+
+  /// No description provided for @tabSaved.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 식사'**
+  String get tabSaved;
+
+  /// No description provided for @tabManual.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 입력'**
+  String get tabManual;
+
+  /// No description provided for @tabPhoto.
+  ///
+  /// In ko, this message translates to:
+  /// **'사진'**
+  String get tabPhoto;
+
+  /// No description provided for @textHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'예: 현미밥 1공기, 닭가슴살 150g, 계란 2개'**
+  String get textHint;
+
+  /// No description provided for @estimate.
+  ///
+  /// In ko, this message translates to:
+  /// **'계산하기'**
+  String get estimate;
+
+  /// No description provided for @estimateNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'간이 음식 사전으로 추정했어요. 값은 자유롭게 고칠 수 있어요.'**
+  String get estimateNote;
+
+  /// No description provided for @unmatchedNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'모르는 음식은 0 kcal로 두었어요: {items}'**
+  String unmatchedNote(String items);
+
+  /// No description provided for @mealName.
+  ///
+  /// In ko, this message translates to:
+  /// **'이름'**
+  String get mealName;
+
+  /// No description provided for @kcalField.
+  ///
+  /// In ko, this message translates to:
+  /// **'칼로리 (kcal)'**
+  String get kcalField;
+
+  /// No description provided for @proteinField.
+  ///
+  /// In ko, this message translates to:
+  /// **'단백질 (g)'**
+  String get proteinField;
+
+  /// No description provided for @carbsField.
+  ///
+  /// In ko, this message translates to:
+  /// **'탄수화물 (g)'**
+  String get carbsField;
+
+  /// No description provided for @fatField.
+  ///
+  /// In ko, this message translates to:
+  /// **'지방 (g)'**
+  String get fatField;
+
+  /// No description provided for @saveAsMyMeal.
+  ///
+  /// In ko, this message translates to:
+  /// **'\'내 식사\'에도 저장하기'**
+  String get saveAsMyMeal;
+
+  /// No description provided for @addToToday.
+  ///
+  /// In ko, this message translates to:
+  /// **'추가하기'**
+  String get addToToday;
+
+  /// No description provided for @noSavedMeals.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장된 식사가 없어요.\n자주 먹는 식사를 저장하면 한 번에 추가할 수 있어요.'**
+  String get noSavedMeals;
+
+  /// No description provided for @added.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name} 추가!'**
+  String added(String name);
+
+  /// No description provided for @photoSoon.
+  ///
+  /// In ko, this message translates to:
+  /// **'사진 분석은 곧 만나요'**
+  String get photoSoon;
+
+  /// No description provided for @photoSoonDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버가 연결되면 사진 한 장으로 음식과 칼로리를 추정해 드릴게요. (무료 하루 3장, 사진은 분석 후 바로 폐기)'**
+  String get photoSoonDesc;
+
+  /// No description provided for @weightTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중 기록'**
+  String get weightTitle;
+
+  /// No description provided for @bodyFatField.
+  ///
+  /// In ko, this message translates to:
+  /// **'체지방률 (%)'**
+  String get bodyFatField;
+
+  /// No description provided for @smmField.
+  ///
+  /// In ko, this message translates to:
+  /// **'골격근량 (kg)'**
+  String get smmField;
+
+  /// No description provided for @moreBodyComp.
+  ///
+  /// In ko, this message translates to:
+  /// **'체성분도 입력하기'**
+  String get moreBodyComp;
+
+  /// No description provided for @healthSync.
+  ///
+  /// In ko, this message translates to:
+  /// **'건강앱 자동 연동'**
+  String get healthSync;
+
+  /// No description provided for @healthSyncSoon.
+  ///
+  /// In ko, this message translates to:
+  /// **'준비 중 · 모바일 앱에서 지원 예정'**
+  String get healthSyncSoon;
+
+  /// No description provided for @weightSaved.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중을 기록했어요'**
+  String get weightSaved;
+
+  /// No description provided for @trendTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'트렌드'**
+  String get trendTitle;
+
+  /// No description provided for @range4w.
+  ///
+  /// In ko, this message translates to:
+  /// **'4주'**
+  String get range4w;
+
+  /// No description provided for @range12w.
+  ///
+  /// In ko, this message translates to:
+  /// **'12주'**
+  String get range12w;
+
+  /// No description provided for @rangeAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체'**
+  String get rangeAll;
+
+  /// No description provided for @legendRaw.
+  ///
+  /// In ko, this message translates to:
+  /// **'측정값'**
+  String get legendRaw;
+
+  /// No description provided for @legendTrend.
+  ///
+  /// In ko, this message translates to:
+  /// **'추세'**
+  String get legendTrend;
+
+  /// No description provided for @legendGoal.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표'**
+  String get legendGoal;
+
+  /// No description provided for @currentTrend.
+  ///
+  /// In ko, this message translates to:
+  /// **'현재 추세'**
+  String get currentTrend;
+
+  /// No description provided for @weeklyChange.
+  ///
+  /// In ko, this message translates to:
+  /// **'지난 7일'**
+  String get weeklyChange;
+
+  /// No description provided for @goalWeight.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표 체중'**
+  String get goalWeight;
+
+  /// No description provided for @bodyCompTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'체성분 추이'**
+  String get bodyCompTitle;
+
+  /// No description provided for @noBodyComp.
+  ///
+  /// In ko, this message translates to:
+  /// **'체성분을 입력하면 여기서 추이를 볼 수 있어요.'**
+  String get noBodyComp;
+
+  /// No description provided for @muscleWarn.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 4주간 골격근량이 측정 오차보다 크게 줄었어요. 감량 속도를 낮추고 단백질 섭취를 확인해 보세요.'**
+  String get muscleWarn;
+
+  /// No description provided for @notEnoughData.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중을 2일 이상 기록하면 그래프가 나타나요'**
+  String get notEnoughData;
+
+  /// No description provided for @weightHistory.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중 기록'**
+  String get weightHistory;
+
+  /// No description provided for @trendExplain.
+  ///
+  /// In ko, this message translates to:
+  /// **'매일 체중은 수분 때문에 오르락내리락해요. 추세선은 그 흔들림을 걸러낸 진짜 방향이에요.'**
+  String get trendExplain;
+
+  /// No description provided for @checkinTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'주간 체크인'**
+  String get checkinTitle;
+
+  /// No description provided for @nextCheckin.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음 체크인: {date}'**
+  String nextCheckin(String date);
+
+  /// No description provided for @checkinPreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 체크인 날은 아니지만 미리 볼 수 있어요'**
+  String get checkinPreview;
+
+  /// No description provided for @avgIntake.
+  ///
+  /// In ko, this message translates to:
+  /// **'평균 섭취'**
+  String get avgIntake;
+
+  /// No description provided for @lastNDays.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 {days}일'**
+  String lastNDays(String days);
+
+  /// No description provided for @trendChange.
+  ///
+  /// In ko, this message translates to:
+  /// **'추세 체중 변화'**
+  String get trendChange;
+
+  /// No description provided for @confidence.
+  ///
+  /// In ko, this message translates to:
+  /// **'신뢰도'**
+  String get confidence;
+
+  /// No description provided for @confHigh.
+  ///
+  /// In ko, this message translates to:
+  /// **'높음'**
+  String get confHigh;
+
+  /// No description provided for @confMedium.
+  ///
+  /// In ko, this message translates to:
+  /// **'보통'**
+  String get confMedium;
+
+  /// No description provided for @confLow.
+  ///
+  /// In ko, this message translates to:
+  /// **'낮음'**
+  String get confLow;
+
+  /// No description provided for @currentTarget.
+  ///
+  /// In ko, this message translates to:
+  /// **'현재 목표'**
+  String get currentTarget;
+
+  /// No description provided for @newTarget.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 목표 제안'**
+  String get newTarget;
+
+  /// No description provided for @reasonLowConfidence.
+  ///
+  /// In ko, this message translates to:
+  /// **'이번 주는 기록이 조금 부족해요 (식사 {logged}/7일, 체중 {weighs}회). 목표는 그대로 둘게요. 식사 5일, 체중 3회 이상이면 조정할 수 있어요.'**
+  String reasonLowConfidence(String logged, String weighs);
+
+  /// No description provided for @reasonPlateau.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중 추세가 2주째 거의 그대로예요. 계산해 보니 소비량이 약 {tdee} kcal로 낮아진 것 같아요. 목표를 살짝 낮춰볼까요?'**
+  String reasonPlateau(String tdee);
+
+  /// No description provided for @reasonTdeeUp.
+  ///
+  /// In ko, this message translates to:
+  /// **'생각보다 에너지를 더 쓰고 있어요! 추정 소비량을 {tdee} kcal로 올렸어요.'**
+  String reasonTdeeUp(String tdee);
+
+  /// No description provided for @reasonTdeeDown.
+  ///
+  /// In ko, this message translates to:
+  /// **'추정 소비량이 {tdee} kcal로 조금 내려갔어요. 목표를 그에 맞게 조정할게요.'**
+  String reasonTdeeDown(String tdee);
+
+  /// No description provided for @reasonOnTrack.
+  ///
+  /// In ko, this message translates to:
+  /// **'계획대로 잘 가고 있어요! 목표는 거의 그대로예요.'**
+  String get reasonOnTrack;
+
+  /// No description provided for @floorHitCheckin.
+  ///
+  /// In ko, this message translates to:
+  /// **'안전 하한 때문에 {kcal} kcal 아래로는 내리지 않았어요. 속도를 낮추는 걸 고려해 보세요.'**
+  String floorHitCheckin(String kcal);
+
+  /// No description provided for @accept.
+  ///
+  /// In ko, this message translates to:
+  /// **'수락'**
+  String get accept;
+
+  /// No description provided for @keep.
+  ///
+  /// In ko, this message translates to:
+  /// **'유지'**
+  String get keep;
+
+  /// No description provided for @adjust.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 조정'**
+  String get adjust;
+
+  /// No description provided for @manualKcalTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표 칼로리 직접 입력'**
+  String get manualKcalTitle;
+
+  /// No description provided for @manualKcalFloor.
+  ///
+  /// In ko, this message translates to:
+  /// **'최소 {kcal} kcal 이상이어야 해요'**
+  String manualKcalFloor(String kcal);
+
+  /// No description provided for @appliedAccept.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 목표를 적용했어요!'**
+  String get appliedAccept;
+
+  /// No description provided for @appliedKeep.
+  ///
+  /// In ko, this message translates to:
+  /// **'기존 목표를 유지해요'**
+  String get appliedKeep;
+
+  /// No description provided for @appliedManual.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 정한 목표를 적용했어요'**
+  String get appliedManual;
+
+  /// No description provided for @howCalculated.
+  ///
+  /// In ko, this message translates to:
+  /// **'어떻게 계산했나요?'**
+  String get howCalculated;
+
+  /// No description provided for @howCalculatedBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 {window}일 동안 평균 {intake} kcal를 먹었고 추세 체중이 {delta}kg 변했어요. 1kg ≈ 7,700 kcal로 환산하면 실제 소비량은 약 {obs} kcal예요. 이를 공식 추정치({formula} kcal)와 섞고, 한 주 변화폭을 ±150 kcal로 제한해서 {est} kcal로 정했어요.'**
+  String howCalculatedBody(
+    String window,
+    String intake,
+    String delta,
+    String obs,
+    String formula,
+    String est,
+  );
+
+  /// No description provided for @noObservedYet.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 실측 데이터가 부족해서 공식 추정치({formula} kcal)를 기준으로 해요. 2주 정도 꾸준히 기록하면 실제 소비량을 계산할 수 있어요.'**
+  String noObservedYet(String formula);
+
+  /// No description provided for @planHistory.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표 변화 기록'**
+  String get planHistory;
+
+  /// No description provided for @statusInitial.
+  ///
+  /// In ko, this message translates to:
+  /// **'시작'**
+  String get statusInitial;
+
+  /// No description provided for @statusAccepted.
+  ///
+  /// In ko, this message translates to:
+  /// **'수락'**
+  String get statusAccepted;
+
+  /// No description provided for @statusKept.
+  ///
+  /// In ko, this message translates to:
+  /// **'유지'**
+  String get statusKept;
+
+  /// No description provided for @statusManual.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접'**
+  String get statusManual;
+
+  /// No description provided for @checkinDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'이번 주 체크인 완료!'**
+  String get checkinDone;
+
+  /// No description provided for @checkinDoneDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음 체크인까지 꾸준히 기록해 주세요. 기록이 많을수록 정확해져요.'**
+  String get checkinDoneDesc;
+
+  /// No description provided for @checkinAnyway.
+  ///
+  /// In ko, this message translates to:
+  /// **'그래도 지금 다시 계산해 보기'**
+  String get checkinAnyway;
+
+  /// No description provided for @settingsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정'**
+  String get settingsTitle;
+
+  /// No description provided for @sectionProfile.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 정보'**
+  String get sectionProfile;
+
+  /// No description provided for @profileSummary.
+  ///
+  /// In ko, this message translates to:
+  /// **'{sex} · {age}세 · {height}cm'**
+  String profileSummary(String sex, String age, String height);
+
+  /// No description provided for @editGoal.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표 다시 설정'**
+  String get editGoal;
+
+  /// No description provided for @editGoalDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록은 그대로 두고 목표만 바꿔요'**
+  String get editGoalDesc;
+
+  /// No description provided for @sectionApp.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱'**
+  String get sectionApp;
+
+  /// No description provided for @language.
+  ///
+  /// In ko, this message translates to:
+  /// **'언어'**
+  String get language;
+
+  /// No description provided for @langSystem.
+  ///
+  /// In ko, this message translates to:
+  /// **'시스템 설정'**
+  String get langSystem;
+
+  /// No description provided for @checkinDay.
+  ///
+  /// In ko, this message translates to:
+  /// **'체크인 요일'**
+  String get checkinDay;
+
+  /// No description provided for @notifications.
+  ///
+  /// In ko, this message translates to:
+  /// **'체크인 알림'**
+  String get notifications;
+
+  /// No description provided for @notificationsDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'모바일 앱에서 지원 예정'**
+  String get notificationsDesc;
+
+  /// No description provided for @units.
+  ///
+  /// In ko, this message translates to:
+  /// **'단위'**
+  String get units;
+
+  /// No description provided for @sectionData.
+  ///
+  /// In ko, this message translates to:
+  /// **'데이터'**
+  String get sectionData;
+
+  /// No description provided for @demoData.
+  ///
+  /// In ko, this message translates to:
+  /// **'샘플 데이터 채우기'**
+  String get demoData;
+
+  /// No description provided for @demoDataDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'5주치 예시 기록으로 체크인과 그래프를 체험해요'**
+  String get demoDataDesc;
+
+  /// No description provided for @demoConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 기록이 샘플 데이터로 바뀌어요. 계속할까요?'**
+  String get demoConfirm;
+
+  /// No description provided for @demoLoaded.
+  ///
+  /// In ko, this message translates to:
+  /// **'샘플 데이터를 채웠어요. 체크인 탭을 확인해 보세요!'**
+  String get demoLoaded;
+
+  /// No description provided for @consentGiven.
+  ///
+  /// In ko, this message translates to:
+  /// **'민감정보 저장 동의일: {date}'**
+  String consentGiven(String date);
+
+  /// No description provided for @deleteAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 데이터 삭제'**
+  String get deleteAll;
+
+  /// No description provided for @deleteAllConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중, 식사, 목표 기록이 모두 지워지고 처음 화면으로 돌아가요. 되돌릴 수 없어요.'**
+  String get deleteAllConfirm;
+
+  /// No description provided for @sectionAbout.
+  ///
+  /// In ko, this message translates to:
+  /// **'정보'**
+  String get sectionAbout;
+
+  /// No description provided for @version.
+  ///
+  /// In ko, this message translates to:
+  /// **'버전'**
+  String get version;
+
+  /// No description provided for @savedMealsManage.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 식사 관리'**
+  String get savedMealsManage;
+}
+
+class _LDelegate extends LocalizationsDelegate<L> {
+  const _LDelegate();
+
+  @override
+  Future<L> load(Locale locale) {
+    return SynchronousFuture<L>(lookupL(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) =>
+      <String>['en', 'ko'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_LDelegate old) => false;
+}
+
+L lookupL(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'en':
+      return LEn();
+    case 'ko':
+      return LKo();
+  }
+
+  throw FlutterError(
+    'L.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
+}

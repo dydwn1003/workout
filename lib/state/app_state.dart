@@ -1,0 +1,641 @@
+import 'dart:math' as math;
+
+import 'package:flutter/widgets.dart';
+
+import '../core/coach_engine/coach_engine.dart';
+import '../data/entities.dart';
+import '../data/repository.dart';
+
+class AppState extends ChangeNotifier {
+  final CoachRepository repo;
+  final DateTime Function() clock;
+  AppData _data = AppData();
+  bool loaded = false;
+
+  AppState(this.repo, {DateTime Function()? clock})
+    : clock = clock ?? DateTime.now;
+
+  Future<void> load() async {
+    _data = await repo.load();
+    _sort();
+    loaded = true;
+    notifyListeners();
+  }
+
+  void _sort() {
+    _data.weights.sort((a, b) => a.date.compareTo(b.date));
+    _data.meals.sort((a, b) => a.time.compareTo(b.time));
+    _data.plans.sort((a, b) => a.weekStart.compareTo(b.weekStart));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Read model
+  // ---------------------------------------------------------------------------
+
+  DateTime get today => dayOnly(clock());
+  UserProfile? get profile => _data.profile;
+  AppSettings get settings => _data.settings;
+  List<WeightEntry> get weights => List.unmodifiable(_data.weights);
+  List<Meal> get meals => List.unmodifiable(_data.meals);
+  List<SavedMeal> get savedMeals => List.unmodifiable(_data.savedMeals);
+  List<Plan> get plans => List.unmodifiable(_data.plans);
+  bool get onboarded => _data.profile != null && _data.plans.isNotEmpty;
+
+  Plan? get currentPlan => _data.plans.isEmpty ? null : _data.plans.last;
+
+  WeightEntry? weightOn(DateTime d) {
+    final k = dateKey(d);
+    for (final w in _data.weights) {
+      if (w.date == k) return w;
+    }
+    return null;
+  }
+
+  WeightEntry? get latestWeight =>
+      _data.weights.isEmpty ? null : _data.weights.last;
+
+  double? get latestBodyFat {
+    for (final w in _data.weights.reversed) {
+      if (w.bodyFatPct != null) return w.bodyFatPct;
+    }
+    return null;
+  }
+
+  List<Meal> mealsOn(DateTime d) {
+    final k = dateKey(d);
+    return _data.meals.where((m) => m.date == k).toList();
+  }
+
+  Macros totalsOn(DateTime d) {
+    final ms = mealsOn(d);
+    return Macros(
+      kcal: ms.fold(0, (a, m) => a + m.kcal),
+      proteinG: ms.fold(0, (a, m) => a + m.proteinG),
+      carbsG: ms.fold(0, (a, m) => a + m.carbsG),
+      fatG: ms.fold(0, (a, m) => a + m.fatG),
+    );
+  }
+
+  DateTime? get _firstDataDay {
+    DateTime? first;
+    if (_data.weights.isNotEmpty) {
+      first = parseDateKey(_data.weights.first.date);
+    }
+    if (_data.meals.isNotEmpty) {
+      final m = parseDateKey(_data.meals.first.date);
+      if (first == null || m.isBefore(first)) first = m;
+    }
+    return first;
+  }
+
+  /// Contiguous day logs from the first data day to today.
+  List<DayLog> dayLogs() {
+    final first = _firstDataDay;
+    if (first == null) return [];
+    final weightsByDay = {for (final w in _data.weights) w.date: w.kg};
+    final intakeByDay = <String, double>{};
+    for (final m in _data.meals) {
+      intakeByDay[m.date] = (intakeByDay[m.date] ?? 0) + m.kcal;
+    }
+    final out = <DayLog>[];
+    for (var d = first; !d.isAfter(today); d = _addDays(d, 1)) {
+      final k = dateKey(d);
+      out.add(
+        DayLog(date: d, weightKg: weightsByDay[k], intakeKcal: intakeByDay[k]),
+      );
+    }
+    return out;
+  }
+
+  static DateTime _addDays(DateTime d, int n) =>
+      DateTime(d.year, d.month, d.day + n);
+
+  /// (date, raw weight, trend) for each day.
+  List<(DateTime, double?, double?)> trendPoints() {
+    final logs = dayLogs();
+    final trend = trendSeries(logs.map((d) => d.weightKg).toList());
+    return [
+      for (var i = 0; i < logs.length; i++)
+        (logs[i].date, logs[i].weightKg, trend[i]),
+    ];
+  }
+
+  double? get trendWeight {
+    final pts = trendPoints();
+    return pts.isEmpty ? null : pts.last.$3;
+  }
+
+  /// Trend change over the last 7 days (kg).
+  double? get weeklyTrendChange {
+    final pts = trendPoints();
+    if (pts.length < 8 ||
+        pts.last.$3 == null ||
+        pts[pts.length - 8].$3 == null) {
+      return null;
+    }
+    return pts.last.$3! - pts[pts.length - 8].$3!;
+  }
+
+  EtaRange? get eta {
+    final p = profile;
+    final target = p?.targetWeightKg;
+    if (p == null || target == null) return null;
+    final pts = trendPoints();
+    return etaWeeks(
+      trend: pts.map((e) => e.$3).toList(),
+      targetKg: target,
+      plannedKgPerWeek: plannedKgPerWeek(
+        p.goalType,
+        p.pace,
+        trendWeight ?? latestWeight?.kg ?? 70,
+      ),
+    );
+  }
+
+  bool get muscleWarning {
+    if (profile?.goalType == GoalType.maintain ||
+        profile?.goalType == GoalType.gain) {
+      return false;
+    }
+    return muscleLossWarning([
+      for (final w in _data.weights)
+        if (w.skeletalMuscleKg != null)
+          (parseDateKey(w.date), w.skeletalMuscleKg!),
+    ]);
+  }
+
+  /// Next scheduled check-in: the first configured weekday at least 4 days
+  /// after the current plan started.
+  DateTime? get nextCheckinDate {
+    final plan = currentPlan;
+    if (plan == null) return null;
+    var d = _addDays(parseDateKey(plan.weekStart), 4);
+    while (d.weekday != settings.checkinWeekday) {
+      d = _addDays(d, 1);
+    }
+    return d;
+  }
+
+  bool get checkinDue {
+    final next = nextCheckinDate;
+    return next != null && !today.isBefore(next);
+  }
+
+  CheckinResult? runCheckin() {
+    final p = profile;
+    final plan = currentPlan;
+    if (p == null || plan == null) return null;
+    // Today's meal log is usually incomplete, so only its weight is used.
+    final logs = [
+      for (final d in dayLogs())
+        d.date == today ? DayLog(date: d.date, weightKg: d.weightKg) : d,
+    ];
+    if (logs.isEmpty) return null;
+    return weeklyCheckin(
+      profile: p.coachProfile,
+      goal: p.coachGoal,
+      days: logs,
+      today: today,
+      previousTdee: plan.tdeeEst,
+      bodyFatPct: latestBodyFat,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Mutations
+  // ---------------------------------------------------------------------------
+
+  Future<void> completeOnboarding({
+    required UserProfile profile,
+    required double weightKg,
+    double? bodyFatPct,
+    double? skeletalMuscleKg,
+  }) async {
+    _data.profile = profile;
+    await repo.saveProfile(profile);
+    await upsertWeight(
+      WeightEntry(
+        date: dateKey(today),
+        kg: weightKg,
+        bodyFatPct: bodyFatPct,
+        skeletalMuscleKg: skeletalMuscleKg,
+      ),
+      notify: false,
+    );
+    final init = initialPlan(
+      profile: profile.coachProfile,
+      goal: profile.coachGoal,
+      weightKg: weightKg,
+      today: today,
+      bodyFatPct: bodyFatPct,
+    );
+    await _addPlan(
+      Plan(
+        weekStart: dateKey(today),
+        targetKcal: init.macros.kcal,
+        proteinG: init.macros.proteinG,
+        carbsG: init.macros.carbsG,
+        fatG: init.macros.fatG,
+        tdeeEst: init.tdee,
+        status: PlanStatus.initial,
+      ),
+    );
+    _data.settings = settings.copyWith(consentedAt: clock());
+    await repo.saveSettings(_data.settings);
+    notifyListeners();
+  }
+
+  Future<void> _addPlan(Plan plan) async {
+    _data.plans.removeWhere((p) => p.weekStart == plan.weekStart);
+    _data.plans.add(plan);
+    _sort();
+    await repo.savePlans(_data.plans);
+  }
+
+  Future<void> upsertWeight(WeightEntry e, {bool notify = true}) async {
+    _data.weights.removeWhere((w) => w.date == e.date);
+    _data.weights.add(e);
+    _sort();
+    await repo.saveWeights(_data.weights);
+    if (notify) notifyListeners();
+  }
+
+  Future<void> deleteWeight(String date) async {
+    _data.weights.removeWhere((w) => w.date == date);
+    await repo.saveWeights(_data.weights);
+    notifyListeners();
+  }
+
+  Future<void> addMeal({
+    required String name,
+    required double kcal,
+    required double proteinG,
+    required double carbsG,
+    required double fatG,
+    required MealSource source,
+    bool edited = false,
+    DateTime? date,
+  }) async {
+    final now = clock();
+    final d = date ?? today;
+    _data.meals.add(
+      Meal(
+        id: '${now.microsecondsSinceEpoch}-${math.Random().nextInt(1 << 20)}',
+        date: dateKey(d),
+        time: DateTime(
+          d.year,
+          d.month,
+          d.day,
+          now.hour,
+          now.minute,
+          now.second,
+        ),
+        name: name,
+        kcal: kcal,
+        proteinG: proteinG,
+        carbsG: carbsG,
+        fatG: fatG,
+        source: source,
+        edited: edited,
+      ),
+    );
+    _sort();
+    await repo.saveMeals(_data.meals);
+    notifyListeners();
+  }
+
+  Future<void> deleteMeal(String id) async {
+    _data.meals.removeWhere((m) => m.id == id);
+    await repo.saveMeals(_data.meals);
+    notifyListeners();
+  }
+
+  Future<void> saveMealTemplate({
+    required String name,
+    required double kcal,
+    required double proteinG,
+    required double carbsG,
+    required double fatG,
+  }) async {
+    _data.savedMeals.removeWhere((s) => s.name == name);
+    _data.savedMeals.add(
+      SavedMeal(
+        id: '${clock().microsecondsSinceEpoch}',
+        name: name,
+        kcal: kcal,
+        proteinG: proteinG,
+        carbsG: carbsG,
+        fatG: fatG,
+      ),
+    );
+    await repo.saveSavedMeals(_data.savedMeals);
+    notifyListeners();
+  }
+
+  Future<void> deleteSavedMeal(String id) async {
+    _data.savedMeals.removeWhere((s) => s.id == id);
+    await repo.saveSavedMeals(_data.savedMeals);
+    notifyListeners();
+  }
+
+  Future<void> applyCheckin(
+    CheckinResult r,
+    PlanStatus status, {
+    double? manualKcal,
+  }) async {
+    final plan = currentPlan!;
+    final p = profile!;
+    late Macros m;
+    switch (status) {
+      case PlanStatus.accepted:
+        m = r.proposal;
+      case PlanStatus.manual:
+        m = macrosFor(
+          kcal: math.max(manualKcal!, kcalFloor(p.sex)),
+          weightKg: r.trendWeightKg ?? latestWeight!.kg,
+          goalType: p.goalType,
+          bodyFatPct: latestBodyFat,
+        );
+      default:
+        m = Macros(
+          kcal: plan.targetKcal,
+          proteinG: plan.proteinG,
+          carbsG: plan.carbsG,
+          fatG: plan.fatG,
+        );
+    }
+    await _addPlan(
+      Plan(
+        weekStart: dateKey(today),
+        targetKcal: m.kcal,
+        proteinG: m.proteinG,
+        carbsG: m.carbsG,
+        fatG: m.fatG,
+        tdeeEst: r.tdeeEstimate,
+        confidence: r.confidence,
+        reason: r.reason,
+        status: status,
+      ),
+    );
+    notifyListeners();
+  }
+
+  Future<void> updateProfile(UserProfile p) async {
+    _data.profile = p;
+    await repo.saveProfile(p);
+    notifyListeners();
+  }
+
+  Future<void> updateSettings(AppSettings s) async {
+    _data.settings = s;
+    await repo.saveSettings(s);
+    notifyListeners();
+  }
+
+  Future<void> deleteAll() async {
+    await repo.deleteAll();
+    _data = AppData();
+    notifyListeners();
+  }
+
+  /// Fills ~5 weeks of realistic sample history so the trend chart and
+  /// weekly check-in can be tried immediately. The last check-in is left due.
+  Future<void> loadDemoData({required bool korean}) async {
+    final rng = math.Random(7);
+    double gauss(double sd) {
+      final u1 = 1 - rng.nextDouble();
+      final u2 = rng.nextDouble();
+      return sd * math.sqrt(-2 * math.log(u1)) * math.cos(2 * math.pi * u2);
+    }
+
+    const weeks = 5;
+    final start = _addDays(today, -weeks * 7);
+    final profile =
+        _data.profile ??
+        UserProfile(
+          sex: Sex.male,
+          birthYear: today.year - 32,
+          heightCm: 176,
+          goalType: GoalType.lose,
+          pace: Pace.normal,
+          strengthPerWeek: 3,
+          cardioPerWeek: 1,
+          targetWeightKg: 74,
+          createdAt: start,
+        );
+    const startKg = 80.0;
+    const bf = 22.0;
+    final init = initialPlan(
+      profile: profile.coachProfile,
+      goal: profile.coachGoal,
+      weightKg: startKg,
+      today: start,
+      bodyFatPct: bf,
+    );
+    final trueTdee = init.tdee + 180;
+    final weights = <WeightEntry>[];
+    final meals = <Meal>[];
+    final plans = <Plan>[
+      Plan(
+        weekStart: dateKey(start),
+        targetKcal: init.macros.kcal,
+        proteinG: init.macros.proteinG,
+        carbsG: init.macros.carbsG,
+        fatG: init.macros.fatG,
+        tdeeEst: init.tdee,
+        status: PlanStatus.initial,
+      ),
+    ];
+    final names = korean
+        ? [
+            ['그릭요거트 + 바나나', '오트밀 + 우유', '계란 2개 + 식빵'],
+            ['닭가슴살 샐러드', '현미밥 + 제육볶음', '비빔밥', '김밥 1줄'],
+            ['연어 스테이크 + 고구마', '두부 된장찌개 + 밥', '소고기 + 현미밥', '닭가슴살 + 고구마'],
+          ]
+        : [
+            ['Greek yogurt + banana', 'Oatmeal + milk', '2 eggs + toast'],
+            [
+              'Chicken salad',
+              'Brown rice + spicy pork',
+              'Bibimbap',
+              'Gimbap roll',
+            ],
+            [
+              'Salmon + sweet potato',
+              'Tofu stew + rice',
+              'Beef + brown rice',
+              'Chicken + sweet potato',
+            ],
+          ];
+    var mass = startKg;
+    var target = init.macros.kcal;
+    var prevTdee = init.tdee;
+    for (var i = 0; i < weeks * 7; i++) {
+      final d = _addDays(start, i);
+      final eaten = target + gauss(140);
+      mass +=
+          (eaten - (trueTdee + 22 * (mass - startKg))) /
+          CoachConstants.kcalPerKg;
+      if (rng.nextDouble() < 0.88) {
+        final bodyComp = i % 7 == 0;
+        weights.add(
+          WeightEntry(
+            date: dateKey(d),
+            kg: double.parse((mass + gauss(0.45)).toStringAsFixed(1)),
+            bodyFatPct: bodyComp
+                ? double.parse((bf - i * 0.06).toStringAsFixed(1))
+                : null,
+            skeletalMuscleKg: bodyComp
+                ? double.parse((35.2 - i * 0.004).toStringAsFixed(1))
+                : null,
+          ),
+        );
+      }
+      if (rng.nextDouble() < 0.93) {
+        final split = [0.25, 0.4, 0.35];
+        for (var j = 0; j < 3; j++) {
+          final k = (eaten * split[j]).roundToDouble();
+          final list = names[j];
+          meals.add(
+            Meal(
+              id: 'demo-$i-$j',
+              date: dateKey(d),
+              time: DateTime(
+                d.year,
+                d.month,
+                d.day,
+                [8, 13, 19][j],
+                rng.nextInt(50),
+              ),
+              name: list[rng.nextInt(list.length)],
+              kcal: k,
+              proteinG: (k * 0.3 / 4).roundToDouble(),
+              carbsG: (k * 0.42 / 4).roundToDouble(),
+              fatG: (k * 0.28 / 9).roundToDouble(),
+              source: MealSource.manual,
+            ),
+          );
+        }
+      }
+      // Weekly check-ins accepted for weeks 1..4; week 5 is left due today.
+      if ((i + 1) % 7 == 0 && i + 1 < weeks * 7) {
+        final logs = <DayLog>[];
+        final wByDay = {for (final w in weights) w.date: w.kg};
+        final iByDay = <String, double>{};
+        for (final m in meals) {
+          iByDay[m.date] = (iByDay[m.date] ?? 0) + m.kcal;
+        }
+        for (var j = 0; j <= i; j++) {
+          final dd = _addDays(start, j);
+          logs.add(
+            DayLog(
+              date: dd,
+              weightKg: wByDay[dateKey(dd)],
+              intakeKcal: iByDay[dateKey(dd)],
+            ),
+          );
+        }
+        final r = weeklyCheckin(
+          profile: profile.coachProfile,
+          goal: profile.coachGoal,
+          days: logs,
+          today: d,
+          previousTdee: prevTdee,
+          bodyFatPct: bf,
+        );
+        final next = _addDays(d, 1);
+        plans.add(
+          Plan(
+            weekStart: dateKey(next),
+            targetKcal: r.proposal.kcal,
+            proteinG: r.proposal.proteinG,
+            carbsG: r.proposal.carbsG,
+            fatG: r.proposal.fatG,
+            tdeeEst: r.tdeeEstimate,
+            confidence: r.confidence,
+            reason: r.reason,
+            status: r.adjusted ? PlanStatus.accepted : PlanStatus.kept,
+          ),
+        );
+        if (r.adjusted) {
+          prevTdee = r.tdeeEstimate;
+          target = r.proposal.kcal;
+        }
+      }
+    }
+    // Today: a weigh-in and the first two meals, plus a few saved meals.
+    weights.add(
+      WeightEntry(
+        date: dateKey(today),
+        kg: double.parse((mass + gauss(0.45)).toStringAsFixed(1)),
+      ),
+    );
+    final saved = korean
+        ? [
+            ('그릭요거트 + 바나나', 290.0, 17.0, 40.0, 6.0),
+            ('닭가슴살 샐러드', 380.0, 38.0, 22.0, 14.0),
+            ('현미밥 + 제육볶음', 750.0, 32.0, 78.0, 34.0),
+          ]
+        : [
+            ('Greek yogurt + banana', 290.0, 17.0, 40.0, 6.0),
+            ('Chicken salad', 380.0, 38.0, 22.0, 14.0),
+            ('Brown rice + spicy pork', 750.0, 32.0, 78.0, 34.0),
+          ];
+    for (var j = 0; j < 2; j++) {
+      final m = saved[j];
+      meals.add(
+        Meal(
+          id: 'demo-today-$j',
+          date: dateKey(today),
+          time: DateTime(today.year, today.month, today.day, [8, 12][j], 20),
+          name: m.$1,
+          kcal: m.$2,
+          proteinG: m.$3,
+          carbsG: m.$4,
+          fatG: m.$5,
+          source: MealSource.saved,
+        ),
+      );
+    }
+    _data.savedMeals = [
+      for (var j = 0; j < saved.length; j++)
+        SavedMeal(
+          id: 'demo-saved-$j',
+          name: saved[j].$1,
+          kcal: saved[j].$2,
+          proteinG: saved[j].$3,
+          carbsG: saved[j].$4,
+          fatG: saved[j].$5,
+        ),
+    ];
+    await repo.saveSavedMeals(_data.savedMeals);
+    _data
+      ..profile = profile
+      ..weights = weights
+      ..meals = meals
+      ..plans = plans
+      ..settings = settings.copyWith(
+        checkinWeekday: today.weekday,
+        consentedAt: settings.consentedAt ?? clock(),
+      );
+    _sort();
+    await repo.saveProfile(profile);
+    await repo.saveWeights(weights);
+    await repo.saveMeals(meals);
+    await repo.savePlans(plans);
+    await repo.saveSettings(_data.settings);
+    notifyListeners();
+  }
+}
+
+/// Makes [AppState] available to the widget tree.
+class AppScope extends InheritedNotifier<AppState> {
+  const AppScope({super.key, required AppState state, required super.child})
+    : super(notifier: state);
+
+  static AppState of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<AppScope>()!.notifier!;
+
+  static AppState read(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<AppScope>()!.notifier!;
+}

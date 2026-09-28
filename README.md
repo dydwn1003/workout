@@ -1,17 +1,98 @@
-# adapt_coach
+# Adapt (가칭) — 적응형 칼로리·체중 코치
 
-A new Flutter project.
+체중 정체기에도 목표 칼로리를 알아서 다시 맞춰주는 코치 앱입니다.
+체중과 식사를 기록하면, 추세 체중 변화와 섭취량으로 **실제 소비량(TDEE)을 역산**해서 매주 목표를 조정합니다.
 
-## Getting Started
+- Flutter (iOS / Android / Web), 한국어·영어
+- 오프라인 MVP: 기기에 로컬 저장, 서버 없음
+- 디자인: 크림 배경 + 파스텔 포인트 컬러, 둥근 카드, 코드로 그린 복숭아 마스코트, Jua/고운돋움 폰트
 
-This project is a starting point for a Flutter application.
+## 바로 실행하기
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+scripts/run_web.sh          # Flutter 설치(없으면) → 웹 빌드 → http://localhost:8080
+scripts/run_web.sh --dev    # 핫 리로드 개발 서버
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- 첫 화면에서 동의 체크 → **"샘플 데이터로 먼저 둘러보기"** 를 누르면 5주치 기록이 채워지고, 주간 체크인을 바로 체험할 수 있어요.
+- 모바일: `flutter run` (에뮬레이터/실기기 연결 시).
+- Claude Code: `.claude/settings.json`의 SessionStart 훅이 Flutter SDK를 준비하고, `launch-app` 스킬이 실행·스크린샷 방법을 알려줍니다. "앱 실행해줘"라고 하면 됩니다.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 개발 명령어
+
+```bash
+flutter test                       # 엔진 + 상태 + 음식 추정 테스트
+dart run tool/simulate.dart        # 시나리오 A~F 시뮬레이션 (특정 시나리오: ... A E)
+python3 tool/l10n_source.py        # UI 문자열 원본 → lib/l10n/app_{ko,en}.arb 생성
+flutter gen-l10n                   # ARB → Dart (빌드 시 자동)
+```
+
+## 구조
+
+```
+lib/
+  core/coach_engine/   순수 Dart 엔진 (Flutter 의존 없음)
+    constants.dart     모든 알고리즘 상수 (한 곳에서 수정)
+    engine.dart        트렌드 EMA, Mifflin/Katch-McArdle, 실측 TDEE 역산, 블렌딩·스무딩,
+                       목표 칼로리(안전 하한), 매크로, 신뢰도, 도달 예상, 체지방→목표체중, 근손실 경고
+  data/                엔티티, repository 인터페이스 + 로컬 구현(shared_preferences), 텍스트 음식 추정
+  state/app_state.dart ChangeNotifier 앱 상태 (체크인 호출, 샘플 데이터)
+  ui/                  테마, 공용 위젯(링, 마스코트…), 화면
+  l10n/                ARB (ko 템플릿, en)
+tool/simulate.dart     시뮬레이터
+test/                  단위 테스트
+```
+
+화면: 온보딩(동의 + 6단계) → 오늘 / 트렌드 / 주간 체크인 / 설정, 식사 기록 시트(텍스트·내 식사·직접 입력·사진[준비 중]), 체중 기록 시트.
+
+## 시뮬레이션 결과 (seed 고정, 12주, 사용자는 매주 제안을 수락)
+
+가상 사용자에게 "실제 소비량"(공식 대비 오차 포함), 일일 섭취 노이즈(σ 150 kcal), 수분 노이즈를 주고 엔진에 넣었습니다.
+
+| 시나리오 | 설정 | ±150 kcal 수렴 | 안전 하한 | 비고 |
+|---|---|---|---|---|
+| A 감량 | 80kg, 체지방 20→15%, 보통, 공식이 200 kcal 과소추정 | **6주차** | 지킴 | 초반 2~4주는 EMA 지연으로 −200~−320 kcal 과소추정 |
+| B 정체기 | 섭취 고정, 3주차부터 소비량 300 kcal 감소 | 8주차 | 지킴 | 9주차 `plateau` 판정 → 목표 하향 제안, 12주차엔 1,200 kcal 하한에 걸려 안내 |
+| C 증량 | 65kg, 보통, 공식이 150 kcal 과대추정 | **3주차** | 지킴 | |
+| D 기록 누락 | 식사 50%, 체중 35% | 5주차 | 지킴 | 12주 중 8주가 "신뢰도 낮음" → 목표 유지 (의도대로) |
+| E 수분 변동 큼 | 체중 노이즈 σ 1.0kg | 12주차 | 지킴 | 오차가 ±200 kcal 안에서 흔들림. 수용 기준 **미달** |
+| F 체성분 개선 | 60kg, 체지방 28→23% | **3주차** | 지킴 | |
+
+- 수용 기준(4~6주 내 ±150 kcal): A·C·F 충족(테스트로 고정), B는 소비량이 도중에 변하는 시나리오라 8주, D는 데이터 부족 시 조정을 멈추는 게 정상 동작.
+- **E 개선 후보:** 윈도우를 21일로 늘리기, 주간 변경 폭 ±100 kcal, 또는 추세 기울기를 회귀로 추정. 실제 사용자 데이터로 판단 필요.
+- 감량 속도 상한(1.0%/주)은 *계획 속도*에 적용됩니다. E에서 추정 오차로 실제 한 주 감량이 1.04%가 된 주가 있었습니다.
+
+## 가정과 결정
+
+기획서의 기본값을 따랐고, 바꾸거나 새로 정한 것은 아래와 같습니다.
+
+| 항목 | 결정 | 이유 |
+|---|---|---|
+| 상태관리 | Riverpod 대신 `ChangeNotifier` + `InheritedNotifier` | MVP 규모에서 의존성 최소화. 화면이 늘면 Riverpod로 옮기기 쉬운 구조 |
+| 라우팅 | go_router 대신 기본 `Navigator` + 하단 탭 | 화면 수가 적음 |
+| 로컬 저장 | Drift 대신 `shared_preferences`(컬렉션별 JSON) | 웹에서도 설정 없이 동작. repository 인터페이스 뒤에 있어 Drift/Firebase로 교체 가능 |
+| 체성분 개선 속도 | 감량 0.1 / 0.2 / 0.3 %/주 | 기획서에 값이 없어 느린 감량으로 가정 |
+| 증량 속도 상한 | 0.5 %/주 | 기획서에 없음. 안전장치로 추가 |
+| 활동계수 | 근력 + 유산소 횟수 합으로 매핑 | 기획서 표 기준 |
+| 유효 기록일 | 하루 섭취 800 kcal 이상 기록된 날 | "기록 완성도 낮은 날 제외" 규칙의 구체화 |
+| 윈도우 | 14일 기본, 기록이 적으면(70% 미만) 21일로 확장, 이력 10일 미만이면 실측 생략 | |
+| β(실측 비중) | 전체 유효 기록일 ÷ 28 (최대 0.85) | 윈도우 내 일수로 하면 0.75를 넘지 못해서 |
+| 신뢰도 | 낮음: 최근 7일 식사 <5일 또는 체중 <3회 / 높음: 식사 ≥6일 + 체중 ≥5회 / 나머지 보통 | "높음" 기준은 새로 정함 |
+| 정체기 판정 | 감량 목표 + 14일 추세 변화 < 0.15kg + 신뢰도 높음 + 추정 소비량 하락 | 기획서대로 별도 로직 없이 같은 파이프라인 결과에 라벨만 붙임 |
+| 오늘 식사 | 체크인 계산에서 제외 (체중은 사용) | 하루가 끝나지 않아 섭취가 과소 집계됨 |
+| 체크인 시점 | 현재 목표 시작 후 4일 이상 지난 첫 지정 요일 | 온보딩 직후 바로 체크인이 뜨지 않게 |
+| 도달 예상 | 21일 이상 이력이면 최근 28일 추세 기울기, 아니면 계획 속도. ±20% 범위로 표시 | |
+| 근손실 경고 | 최신 골격근량이 ~4주 전 측정 대비 1% 초과 감소 | |
+| BMI 안전장치 | BMI < 18.5면 감량 목표 차단, 목표 체중 BMI < 18.5 차단 | |
+| 텍스트 식사 추정 | AI 서버 전까지 **내장 음식 사전(약 35개) 기반 간이 추정**, 항상 수정 가능 | 서버 없이 오프라인 동작 |
+| 사진 분석·건강앱 연동·알림 | UI 자리만 두고 "준비 중" 표시 | 서버 함수/실기기 권한 필요 (3단계) |
+| 다크 모드 | 미지원 | MVP 범위 밖 |
+| 폰트 | Jua(제목), Gowun Dodum(본문), 앱에 번들 (OFL) | 웹에서도 한글이 바로 보이도록 |
+
+## 다음 단계 제안
+
+1. 실제로 2~4주 써보면서 α, 윈도우, ±150 kcal 값 조정 (특히 시나리오 E).
+2. 3단계: Cloud Functions 사진 분석 프록시(하루 3장 쿼터), `health` 플러그인 연동, 로컬 알림.
+3. 4단계: Firebase repository 구현, 계정·동기화, 스토어 문구 점검.
+
+> 이 앱은 의학적 조언을 제공하지 않습니다. 모든 수치는 기본값이며 검증이 필요합니다.
