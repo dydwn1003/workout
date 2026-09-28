@@ -8,8 +8,11 @@ Column names differ between releases, so headers are matched by keyword.
 Rows need at least a name and energy; values are per the row's basis amount
 (usually 100 g) and normalized to per 100 g.
 
+Works with the 공공데이터포털 standard data files
+(전국통합식품영양성분정보(음식)표준데이터, (원재료성)표준데이터, ...).
+
 Usage:
-  python3 tool/import_mfds.py <file.xlsx|file.csv> [--include-processed]
+  python3 tool/import_mfds.py <file.csv|file.xlsx> [more files...] [--include-processed]
   python3 tool/gen_foods.py
 
 By default only dishes (음식) and raw ingredients (원재료성) are imported;
@@ -37,7 +40,7 @@ COLS = {
     "rep": ["대표식품명"],
     "type": ["데이터구분명", "데이터구분"],
     "serving": ["1회제공량", "1회 제공량", "1회섭취참고량", "1회 섭취참고량", "식품중량"],
-    "maker": ["제조사명", "업소명"],
+    "maker": ["제조사명", "업체명", "업소명"],
 }
 
 
@@ -152,9 +155,16 @@ def convert(path, include_processed=False):
 
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    if len(args) != 1:
+    if not args:
         sys.exit(__doc__)
-    foods, skipped = convert(args[0], "--include-processed" in sys.argv)
+    foods, skipped, names = [], 0, set()
+    for path in args:
+        fs, sk = convert(path, "--include-processed" in sys.argv)
+        new = [f for f in fs if f[0] not in names]
+        names.update(f[0] for f in new)
+        foods += new
+        skipped += sk
+        print(f"{os.path.basename(path)}: {len(new)} foods")
     with open(OUT, "w", encoding="utf-8") as f:
         f.write("# Imported from 식품의약품안전처 식품영양성분 데이터베이스 by tool/import_mfds.py\n")
         f.write("# 출처: 식품의약품안전처 식품영양성분 데이터베이스 (per 100 g)\n")
