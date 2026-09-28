@@ -14,9 +14,11 @@ class Food {
   /// weights, so no gram unit is offered for them.
   final bool custom;
 
-  /// Macros the source does not publish: any of 'p', 'c', 'f' (e.g. many
-  /// franchise menus list only kcal and protein). Their values are estimates
-  /// from similar foods (tool/gen_foods.py estimate()), shown as such.
+  /// Values the source does not publish: any of 'p', 'c', 'f' (e.g. many
+  /// franchise menus list only kcal and protein) and 'k' (menus missing from
+  /// the MFDS data altogether, where kcal is estimated too). They hold
+  /// estimates from similar foods (tool/gen_foods.py, tool/gen_franchise.py)
+  /// and are shown as such.
   final String unknown;
 
   const Food(
@@ -34,6 +36,7 @@ class Food {
   });
 
   bool get hasEstimatedMacros => unknown.isNotEmpty;
+  bool get kcalEstimated => unknown.contains('k');
 
   /// Units shown to the user: the food's own units plus grams.
   List<FoodUnit> get allUnits =>

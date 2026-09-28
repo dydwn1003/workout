@@ -778,7 +778,7 @@ class LEn extends L {
 
   @override
   String get foodMacrosEstimatedNote =>
-      '\'Est.\' values aren\'t published by the source; they\'re estimated from the calories and similar foods.';
+      '\'Est.\' (~) values aren\'t published by the source; they\'re estimated from similar foods.';
 
   @override
   String get estimated => 'Est.';

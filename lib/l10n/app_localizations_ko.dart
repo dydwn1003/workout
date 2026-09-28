@@ -763,7 +763,7 @@ class LKo extends L {
 
   @override
   String get foodMacrosEstimatedNote =>
-      '\'추정\'은 업체가 공개하지 않은 값을 칼로리와 비슷한 음식으로 계산한 거예요.';
+      '\'추정\'(~)은 업체가 공개하지 않은 값을 비슷한 음식의 영양정보로 계산한 거예요.';
 
   @override
   String get estimated => '추정';

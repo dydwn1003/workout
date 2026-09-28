@@ -3,6 +3,7 @@ data/foods_mfds.tsv (imported from the 식약처 DB by tool/import_mfds.py, if
 present):
 
   lib/data/food_db.g.dart   (const Dart list for the app)
+  (plus data/foods_franchise.tsv, estimated menus from tool/gen_franchise.py)
   preview/src/foods.json    (embedded into the single-file preview)
 
 Also sanity-checks each row (kcal vs 4/4/9 macro energy) and estimates the
@@ -20,6 +21,7 @@ import sys
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 SRC = os.path.join(ROOT, "data", "foods_ko.tsv")
 MFDS = os.path.join(ROOT, "data", "foods_mfds.tsv")
+FRANCHISE = os.path.join(ROOT, "data", "foods_franchise.tsv")  # all estimated, tool/gen_franchise.py
 
 
 def slug(name: str, prefix: str) -> str:
@@ -89,7 +91,7 @@ def estimate(foods, refs):
     kcal_per_g = (4, 4, 9)
     for fd in foods:
         miss = [i for i, k in enumerate("pcf") if k in fd["unknown"]]
-        if not miss:
+        if not miss or "k" in fd["unknown"]:  # kcal estimated too: already filled
             continue
         group = fd["aliases"][0] if fd["aliases"] else fd["name"]
         if len(by_group[group]) >= 3:
@@ -155,7 +157,10 @@ def main():
     imported = [f for f in load(MFDS, "m") if f["name"].lower() not in curated]
     check(imported, strict=False)
     estimate(imported, foods + imported)
-    foods += imported
+    names = curated | {f["name"].lower() for f in imported}
+    franchise = [f for f in load(FRANCHISE, "e") if f["name"].lower() not in names]
+    check(franchise, strict=False)
+    foods += imported + franchise
     with open(os.path.join(ROOT, "lib", "data", "food_db.g.dart"), "w", encoding="utf-8") as fh:
         fh.write(dart(foods))
     compact = [[fd["id"], fd["name"], fd["aliases"], fd["cat"], fd["kcal"], fd["p"], fd["c"], fd["f"],
@@ -163,7 +168,8 @@ def main():
                for fd in foods]
     with open(os.path.join(ROOT, "preview", "src", "foods.json"), "w", encoding="utf-8") as fh:
         json.dump(compact, fh, ensure_ascii=False, separators=(",", ":"))
-    print(f"{len(foods)} foods ({len(imported)} imported), {len({f['cat'] for f in foods})} categories")
+    print(f"{len(foods)} foods ({len(imported)} imported, {len(franchise)} estimated franchise menus), "
+          f"{len({f['cat'] for f in foods})} categories")
 
 
 if __name__ == "__main__":

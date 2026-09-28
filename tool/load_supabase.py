@@ -1,6 +1,7 @@
 """Loads the full food database into Supabase (table public.foods, see
 supabase/schema.sql): the curated foods plus every row of the MFDS API
-downloads, including all ~590k 가공식품.
+downloads, including all ~590k 가공식품, and the estimated franchise menus
+(data/foods_franchise.tsv).
 
 Needs the downloads from tool/fetch_mfds_api.py and these environment
 variables (never written to disk; do not commit keys):
@@ -12,6 +13,7 @@ Usage:
   python3 tool/load_supabase.py --csv out.csv   # write a CSV for COPY instead
   python3 tool/load_supabase.py --skip 260000   # resume after an interrupted upload
   python3 tool/load_supabase.py --only-estimated  # re-upload just the rows with estimated macros
+  python3 tool/load_supabase.py --source estimated  # just the estimated franchise menus
 """
 import argparse
 import csv
@@ -78,6 +80,10 @@ def all_records():
         print(f"{source}: {len(new)} foods")
     imported = [fd for _, new in groups for fd in new]
     gen_foods.estimate(imported, curated + imported)
+    franchise = [fd for fd in gen_foods.load(gen_foods.FRANCHISE, "e") if fd["name"].lower() not in names]
+    gen_foods.check(franchise, strict=False)
+    groups.append(("estimated", franchise))
+    print(f"estimated: {len(franchise)} foods")
     return [record(fd, "curated") for fd in curated] + [
         record(fd, source) for source, new in groups for fd in new]
 
@@ -140,12 +146,15 @@ def main():
     ap.add_argument("--csv", help="write a CSV for COPY instead of uploading")
     ap.add_argument("--batch", type=int, default=1000)
     ap.add_argument("--skip", type=int, default=0, help="rows already uploaded (resume)")
+    ap.add_argument("--source", help="only rows from this source (curated, mfds_food, mfds_process, estimated)")
     ap.add_argument("--only-estimated", action="store_true",
                     help="only rows whose macros are estimated (after changing estimate())")
     a = ap.parse_args()
     recs = all_records()
     if a.only_estimated:
         recs = [r for r in recs if r["unknown"]]
+    if a.source:
+        recs = [r for r in recs if r["source"] == a.source]
     print(f"{len(recs)} foods total")
     if a.csv:
         write_csv(recs, a.csv)

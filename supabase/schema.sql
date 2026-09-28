@@ -14,8 +14,8 @@ create table if not exists public.foods (
   carbs     real not null,
   fat       real not null,
   units     jsonb not null,             -- [{"label": "1회 제공량", "g": 194}, ...]
-  unknown   text not null default '',   -- macros the source does not publish: p/c/f
-  source    text not null,              -- 'curated' | 'mfds_food' | 'mfds_process'
+  unknown   text not null default '',   -- estimated, not published: k(cal)/p/c/f
+  source    text not null,              -- 'curated' | 'mfds_food' | 'mfds_process' | 'estimated'
   search    text not null               -- lower-cased name + aliases without spaces, joined with '|'
 );
 

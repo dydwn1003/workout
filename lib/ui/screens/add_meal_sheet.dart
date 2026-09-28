@@ -544,7 +544,9 @@ class _FoodRow extends StatelessWidget {
               ),
             ),
             Text(
-              '${fmt0(n.kcal)} kcal',
+              food.kcalEstimated
+                  ? '~${fmt0(n.kcal)} kcal'
+                  : '${fmt0(n.kcal)} kcal',
               style: const TextStyle(
                 fontFamily: headingFont,
                 fontWeight: FontWeight.w800,
@@ -697,12 +699,15 @@ class _FoodDetailState extends State<_FoodDetail> {
               CountUp(
                 value: n.kcal,
                 duration: Motion.medium,
-                format: (v) => '${fmt0(v)} kcal',
+                format: (v) =>
+                    f.kcalEstimated ? '~${fmt0(v)} kcal' : '${fmt0(v)} kcal',
                 style: Theme.of(context).textTheme.displaySmall,
               ),
               if (!f.custom)
                 Text(
-                  '${fmt0(_unit.grams * _qty)}g',
+                  f.kcalEstimated
+                      ? '${fmt0(_unit.grams * _qty)}g · ${t.estimated}'
+                      : '${fmt0(_unit.grams * _qty)}g',
                   style: const TextStyle(color: AppColors.inkSoft),
                 ),
               const SizedBox(height: 12),

@@ -281,6 +281,17 @@ void main() {
       );
     });
 
+    test('franchise menus missing from MFDS are searchable estimates', () {
+      final f = searchFoods(builtInFoods, 'bhc 뿌링클').first;
+      expect(f.name, '뿌링클 (bhc)');
+      expect(f.kcalEstimated, isTrue);
+      expect(f.kcal, greaterThan(0));
+      expect(
+        searchFoods(builtInFoods, '네네 스노윙').first.name,
+        startsWith('스노윙치킨'),
+      );
+    });
+
     test('no initial consonant search', () {
       expect(searchFoods(builtInFoods, 'ㄷㄱㅅㅅ'), isEmpty);
     });

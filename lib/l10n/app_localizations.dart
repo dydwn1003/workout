@@ -1439,7 +1439,7 @@ abstract class L {
   /// No description provided for @foodMacrosEstimatedNote.
   ///
   /// In ko, this message translates to:
-  /// **'\'추정\'은 업체가 공개하지 않은 값을 칼로리와 비슷한 음식으로 계산한 거예요.'**
+  /// **'\'추정\'(~)은 업체가 공개하지 않은 값을 비슷한 음식의 영양정보로 계산한 거예요.'**
   String get foodMacrosEstimatedNote;
 
   /// No description provided for @estimated.

@@ -522,7 +522,7 @@
   },
   "createFood": "내 음식 만들기",
   "createFoodDesc": "찾는 음식이 없으면 직접 만들어 저장해요",
-  "foodMacrosEstimatedNote": "'추정'은 업체가 공개하지 않은 값을 칼로리와 비슷한 음식으로 계산한 거예요.",
+  "foodMacrosEstimatedNote": "'추정'(~)은 업체가 공개하지 않은 값을 비슷한 음식의 영양정보로 계산한 거예요.",
   "estimated": "추정",
   "foodRefNote": "영양정보는 일반적인 참고값이에요. 제품·조리법에 따라 다를 수 있어요.",
   "unitLabel": "단위",

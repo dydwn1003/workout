@@ -222,7 +222,7 @@
   "noResults": "No results for '{query}'",
   "createFood": "Create a food",
   "createFoodDesc": "Can't find it? Save your own",
-  "foodMacrosEstimatedNote": "'Est.' values aren't published by the source; they're estimated from the calories and similar foods.",
+  "foodMacrosEstimatedNote": "'Est.' (~) values aren't published by the source; they're estimated from similar foods.",
   "estimated": "Est.",
   "foodRefNote": "Nutrition values are typical estimates and vary by product and recipe.",
   "unitLabel": "Unit",

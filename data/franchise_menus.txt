@@ -1,0 +1,427 @@
+# Well-known franchise menus the MFDS database does not cover. Nutrition for
+# these is estimated by tool/gen_franchise.py (see TYPES there); nothing
+# here is published nutrition.
+#
+#   @Brand|search alias|...      starts a brand (aliases are also searchable)
+#   menu<TAB>type[:pattern]      reference type, optionally narrowed by a
+#                                name pattern of similar MFDS foods
+#
+# Menu names are from the brands' commonly known line-ups and may not match
+# the current menu exactly. Brands already in the MFDS data (교촌, BBQ, 굽네,
+# 롯데리아, 스타벅스, ...) are only extended with what they are missing.
+
+# ---- 치킨 ----
+@bhc|BHC|비에이치씨
+뿌링클	cheese
+뿌링클 순살	cheese
+맛초킹	ganjang
+맛초킹 순살	ganjang
+골드킹	ganjang
+골드킹 순살	ganjang
+후라이드	fried
+후라이드 순살	fried
+양념치킨	yangnyeom
+양념치킨 순살	yangnyeom
+반반 (후라이드+양념)	half
+커리퀸	curry
+마법클	spicy
+콰삭킹	fried
+핫후라이드	spicy
+레드킹	spicy
+뿌링치즈볼	cheeseball
+달콤바삭치즈볼	cheeseball
+뿌링감자	seasoned_fries
+콘샐러드	corn_salad
+
+@네네치킨|네네
+후라이드치킨	fried
+후라이드치킨 순살	fried
+양념치킨	yangnyeom
+양념치킨 순살	yangnyeom
+반반치킨	half
+스노윙치킨	cheese
+스노윙치킨 순살	cheese
+오리엔탈파닭	green_onion
+오리엔탈파닭 순살	green_onion
+청양마요치킨	mayo
+쇼킹핫치킨	spicy
+간장치킨	ganjang
+크리스피치킨	fried
+스노윙치즈볼	cheeseball
+
+@처갓집양념치킨|처갓집
+슈프림양념치킨	yangnyeom
+슈프림양념치킨 순살	yangnyeom
+슈프림골드양념치킨	yangnyeom
+후라이드치킨	fried
+후라이드치킨 순살	fried
+양념치킨	yangnyeom
+간장치킨	ganjang
+핫양념치킨	spicy
+트리플치즈치킨	cheese
+반반치킨	half
+치즈볼	cheeseball
+
+@푸라닭|푸라닭치킨
+블랙알리오	garlic
+블랙알리오 순살	garlic
+고추마요	mayo
+고추마요 순살	mayo
+파불로	green_onion
+콘소메이징	cheese
+후라이드	fried
+투움바	cream
+블랙투움바	cream
+악마치킨	spicy
+
+@60계치킨|60계
+후라이드치킨	fried
+후라이드치킨 순살	fried
+간지치킨	ganjang
+간지치킨 순살	ganjang
+고추치킨	spicy
+호랑이치킨	spicy
+양념치킨	yangnyeom
+크크크치킨	fried
+
+@노랑통닭
+후라이드치킨	fried
+후라이드치킨 순살	fried
+양념치킨	yangnyeom
+알싸한마늘치킨	garlic
+노랑반반	half
+깐풍치킨	spicy
+
+@페리카나
+후라이드치킨	fried
+후라이드치킨 순살	fried
+양념치킨	yangnyeom
+양념치킨 순살	yangnyeom
+간장치킨	ganjang
+반반치킨	half
+
+@지코바|지코바치킨
+숯불양념구이	charcoal
+숯불양념구이 순살	charcoal
+매운 숯불양념구이	charcoal:매운
+소금구이	roasted
+소금구이 순살	roasted
+
+@바른치킨
+대새바 (새우+치킨)	fried
+후라이드	fried
+후라이드 순살	fried
+양념	yangnyeom
+간장	ganjang
+
+@또래오래
+후라이드	fried
+후라이드 순살	fried
+양념	yangnyeom
+갈릭반반	garlic
+간장	ganjang
+
+@가마치통닭|가마치
+옛날통닭	fried
+양념통닭	yangnyeom
+순살통닭	fried
+닭강정	dakgangjeong
+
+@부어치킨|부어
+후라이드	fried
+후라이드 순살	fried
+양념	yangnyeom
+간장	ganjang
+파닭	green_onion
+
+@땅땅치킨
+허브순살치킨	fried
+후라이드	fried
+양념	yangnyeom
+간장	ganjang
+
+@KFC|케이에프씨
+오리지널치킨	fried
+핫크리스피치킨	spicy
+블랙라벨치킨	fried
+치킨텐더	nugget
+핫윙	wings
+에그타르트	egg_tart
+비스켓	biscuit
+코울슬로	coleslaw
+케이준프라이	seasoned_fries
+
+@파파이스|Popeyes
+케이준 치킨	spicy
+마일드 치킨	fried
+치킨 텐더	nugget
+케이준 프라이	seasoned_fries
+비스킷	biscuit
+루이지애나 치킨 버거	burger:치킨
+
+@맘스터치
+싸이순살	fried
+간장마늘싸이순살	garlic
+양념싸이순살	yangnyeom
+팝콘치킨	nugget
+케이준양념감자	seasoned_fries
+치즈볼	cheeseball
+콘샐러드	corn_salad
+
+# ---- 버거·샌드위치·토스트 ----
+@맥도날드|맥날|McDonald's
+후렌치 후라이	fries
+맥너겟	nugget
+맥윙	wings
+치즈스틱	cheesestick
+해쉬 브라운	hashbrown
+애플파이	apple_pie
+에그 맥머핀	burger:에그|머핀
+소시지 에그 맥머핀	burger:에그|머핀
+맥플러리 오레오	soft_serve
+아이스크림콘	soft_serve
+코울슬로	coleslaw
+
+@버거킹
+프렌치프라이	fries
+너겟킹	nugget
+어니언링	onion_ring
+치즈스틱	cheesestick
+코울슬로	coleslaw
+선데	soft_serve
+
+@노브랜드버거|노브랜드
+감자튀김	fries
+치즈스틱	cheesestick
+치킨너겟	nugget
+
+@쉐이크쉑|쉑쉑|Shake Shack
+쉑버거	burger:비프|쇠고기|소고기|패티
+더블 쉑버거	burger:더블
+스모크쉑	burger:베이컨
+슈룸버거	burger:버섯|머쉬룸
+쉑스택	burger:더블
+치킨쉑	burger:치킨
+크링클 컷 프라이	fries
+치즈 프라이	seasoned_fries
+바닐라 쉐이크	shake
+초콜릿 쉐이크	shake:초코|초콜릿
+
+@서브웨이|써브웨이|Subway
+에그마요	sandwich:에그|계란
+이탈리안 비엠티	sandwich:햄|살라미|페퍼로니
+스파이시 이탈리안	sandwich:살라미|페퍼로니|햄
+로티세리 바비큐 치킨	sandwich:치킨|닭
+치킨 데리야끼	sandwich:치킨|닭
+써브웨이 클럽	sandwich:햄|터키|칠면조
+햄	sandwich:햄
+참치	sandwich:참치
+비엘티	sandwich:베이컨|BLT
+스테이크 & 치즈	sandwich:스테이크|비프|불고기
+풀드포크 바비큐	sandwich:포크|돼지|바비큐
+K-바비큐	sandwich:불고기|바비큐
+치킨 베이컨 아보카도	sandwich:아보카도|치킨
+쉬림프	sandwich:새우|쉬림프
+베지	sandwich:야채|베지|채소
+로티세리 치킨 샐러드	salad:치킨|닭
+에그마요 샐러드	salad:에그|계란
+초코칩 쿠키	cookie:초코
+더블 초코칩 쿠키	cookie:초코
+
+@이삭토스트|이삭
+햄스페셜	toast:햄
+햄치즈	toast:햄|치즈
+베이컨베스트	toast:베이컨
+딥치즈베이컨	toast:베이컨
+불고기MVP	toast:불고기
+치킨마요	toast:치킨|닭
+더블치즈	toast:치즈
+새우토스트	toast:새우
+
+@에그드랍
+아메리칸 브렉퍼스트	sandwich:에그|계란
+햄 치즈	sandwich:햄
+베이컨 치즈	sandwich:베이컨
+갈릭 베이컨 치즈	sandwich:베이컨
+에그마요	sandwich:에그|계란
+
+# ---- 분식 ----
+@동대문엽기떡볶이|엽기떡볶이|엽떡
+엽기떡볶이	tteokbokki
+엽기오뎅	tteokbokki:어묵|오뎅
+로제떡볶이	tteokbokki:로제|크림
+마라떡볶이	tteokbokki:마라
+짜장떡볶이	tteokbokki:짜장
+주먹김밥	rice_ball
+모둠튀김	twigim
+계란찜	egg_roll:찜
+순대	sundae
+
+@신전떡볶이|신전
+신전떡볶이	tteokbokki
+치즈떡볶이	tteokbokki:치즈
+로제떡볶이	tteokbokki:로제|크림
+신전김밥	gimbap
+김말이	twigim:김말이
+순대	sundae
+오뎅	eomuk
+
+@죠스떡볶이|죠스
+죠스떡볶이	tteokbokki
+로제떡볶이	tteokbokki:로제|크림
+부산어묵	eomuk
+김말이튀김	twigim:김말이
+죠스김밥	gimbap
+순대	sundae
+
+@청년다방
+차돌떡볶이	tteokbokki:차돌|소고기
+로제떡볶이	tteokbokki:로제|크림
+통큰오짱	twigim:오징어
+버터갈릭감자튀김	seasoned_fries
+
+@배떡
+로제떡볶이	tteokbokki:로제|크림
+배떡 오리지널 떡볶이	tteokbokki
+
+@두끼떡볶이|두끼
+두끼 떡볶이	tteokbokki
+두끼 볶음밥	fried_rice
+
+@김가네김밥|김가네
+김가네김밥	gimbap
+참치김밥	gimbap:참치
+치즈김밥	gimbap:치즈
+돈까스	donkatsu
+라면	ramyeon
+떡볶이	tteokbokki
+쫄면	jjolmyeon
+제육덮밥	dosirak:제육|돼지
+오므라이스	omurice
+
+@고봉민김밥|고봉민
+고봉민김밥	gimbap
+참치김밥	gimbap:참치
+치즈김밥	gimbap:치즈
+돈까스김밥	gimbap:돈가스|돈까스
+라면	ramyeon
+떡볶이	tteokbokki
+
+@바르다김선생
+바른김밥	gimbap
+참치김밥	gimbap:참치
+치즈김밥	gimbap:치즈
+매운어묵김밥	gimbap:어묵
+
+@명랑핫도그|명랑
+명랑핫도그	hotdog
+모짜렐라 핫도그	hotdog:모짜|치즈
+감자핫도그	hotdog:감자
+반반핫도그	hotdog
+
+@봉구스밥버거|봉구스
+햄치즈밥버거	rice_ball:햄|치즈
+불고기밥버거	rice_ball:불고기
+제육밥버거	rice_ball:제육|돼지
+치킨마요밥버거	rice_ball:치킨|닭|마요
+
+@신포우리만두|신포
+고기만두	dumpling:고기
+김치만두	dumpling:김치
+쫄면	jjolmyeon
+떡볶이	tteokbokki
+우동	udon
+
+@국수나무
+잔치국수	noodle:잔치|국수
+비빔국수	bibim_noodle
+돈까스	donkatsu
+우동	udon
+김치볶음밥	fried_rice:김치
+
+# ---- 한식·중식·도시락 ----
+@한솥도시락|한솥
+치킨마요	dosirak:치킨|닭
+빅치킨마요	dosirak:치킨|닭
+참치마요	dosirak:참치
+돈치 고기고기	dosirak:돼지|제육
+제육볶음 도시락	dosirak:제육|돼지
+돈까스도련님	dosirak:돈가스|돈까스
+소불고기 도시락	dosirak:불고기|소고기
+김치볶음밥	fried_rice:김치
+
+@본도시락
+불고기 도시락	dosirak:불고기|소고기
+제육 도시락	dosirak:제육|돼지
+돈까스 도시락	dosirak:돈가스|돈까스
+
+@본죽|본죽&비빔밥
+전복죽	porridge:전복
+소고기야채죽	porridge:소고기|쇠고기|채소|야채
+단호박죽	porridge:호박
+참치야채죽	porridge:참치
+낙지김치죽	porridge:김치|낙지
+불고기비빔밥	bibimbap:불고기
+
+@역전우동0410|역전우동
+옛날우동	udon
+김치우동	udon:김치
+어묵우동	udon:어묵
+돈까스	donkatsu
+가츠동	dosirak:돈가스|돈까스|가츠
+
+@홍콩반점0410|홍콩반점
+짜장면	jjajang
+짬뽕	jjamppong
+탕수육	tangsuyuk
+볶음밥	fried_rice
+짬뽕밥	jjamppongbap
+군만두	dumpling
+
+@원할머니보쌈|원할머니
+보쌈	bossam
+족발	jokbal
+막국수	bibim_noodle
+
+@새마을식당|새마을
+열탄불고기	pork_bulgogi
+7분김치찌개	kimchi_jjigae
+소금구이	pork_grill
+
+@백채김치찌개|백채
+김치찌개	kimchi_jjigae
+참치김치찌개	kimchi_jjigae:참치
+계란말이	egg_roll:말이
+
+@봉추찜닭|봉추
+찜닭	jjimdak
+
+@탕화쿵푸마라탕|탕화쿵푸
+마라탕	malatang
+마라샹궈	malaxiangguo
+꿔바로우	tangsuyuk
+
+# ---- 카페·디저트·샐러드 ----
+@설빙
+인절미설빙	bingsu:인절미
+애플망고치즈설빙	bingsu:망고
+생딸기설빙	bingsu:딸기
+초코브라우니설빙	bingsu:초코|초콜릿
+팥인절미설빙	bingsu:팥
+메론설빙	bingsu:메론|멜론
+녹차설빙	bingsu:녹차|말차
+치즈설빙	bingsu:치즈
+인절미토스트	toast:인절미
+
+@폴바셋|Paul Bassett
+아메리카노	coffee:아메리카노
+룽고	coffee:아메리카노
+카페라떼	latte:카페
+바닐라빈 라떼	latte:바닐라
+아이스크림	soft_serve
+
+@샐러디|Saladay
+콥 샐러드	salad:콥
+닭가슴살 샐러드	salad:닭|치킨
+연어 샐러드	salad:연어
+멕시칸 랩	wrap
