@@ -15,7 +15,8 @@ class Food {
   final bool custom;
 
   /// Macros the source does not publish: any of 'p', 'c', 'f' (e.g. many
-  /// franchise menus list only kcal and protein). Stored as 0.
+  /// franchise menus list only kcal and protein). Their values are estimates
+  /// from similar foods (tool/gen_foods.py estimate()), shown as such.
   final String unknown;
 
   const Food(
@@ -32,7 +33,7 @@ class Food {
     this.unknown = '',
   });
 
-  bool get hasUnknownMacros => unknown.isNotEmpty;
+  bool get hasEstimatedMacros => unknown.isNotEmpty;
 
   /// Units shown to the user: the food's own units plus grams.
   List<FoodUnit> get allUnits =>
@@ -103,47 +104,23 @@ class Nutrition {
 // Search
 // ---------------------------------------------------------------------------
 
-const _choseong = [
-  'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', //
-  'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ',
-];
-
-/// Initial consonants of Hangul syllables ("닭가슴살" -> "ㄷㄱㅅㅅ").
-String choseongOf(String s) {
-  final b = StringBuffer();
-  for (final r in s.runes) {
-    if (r >= 0xAC00 && r <= 0xD7A3) {
-      b.write(_choseong[(r - 0xAC00) ~/ 588]);
-    } else {
-      b.writeCharCode(r);
-    }
-  }
-  return b.toString();
-}
-
-bool _isChoseongQuery(String q) =>
-    q.isNotEmpty && q.runes.every((r) => r >= 0x3131 && r <= 0x314E);
-
 String normalizeQuery(String s) => s.toLowerCase().replaceAll(' ', '');
 
-/// Ranked search: exact > prefix > contains, over names and aliases, with
-/// initial-consonant matching for queries like "ㄷㄱㅅㅅ".
+/// Ranked search: exact > prefix > contains, over names and aliases.
 List<Food> searchFoods(List<Food> foods, String query, {int limit = 40}) {
   final q = normalizeQuery(query);
   if (q.isEmpty) return const [];
-  final cho = _isChoseongQuery(q);
   final scored = <(int, int, Food)>[];
   for (var i = 0; i < foods.length; i++) {
     final f = foods[i];
     var best = -1;
     for (final raw in [f.name, ...f.aliases]) {
       final n = normalizeQuery(raw);
-      final hay = cho ? choseongOf(n) : n;
-      final score = hay == q
+      final score = n == q
           ? 3
-          : hay.startsWith(q)
+          : n.startsWith(q)
           ? 2
-          : hay.contains(q)
+          : n.contains(q)
           ? 1
           : -1;
       if (score > best) best = score;

@@ -281,9 +281,25 @@ void main() {
       );
     });
 
-    test('initial consonant search', () {
-      expect(choseongOf('닭가슴살'), 'ㄷㄱㅅㅅ');
-      expect(searchFoods(builtInFoods, 'ㄷㄱㅅㅅ').first.name, '닭가슴살');
+    test('no initial consonant search', () {
+      expect(searchFoods(builtInFoods, 'ㄷㄱㅅㅅ'), isEmpty);
+    });
+
+    test('unpublished franchise macros are estimated from kcal', () {
+      final menus = builtInFoods.where((f) => f.unknown.isNotEmpty).toList();
+      expect(menus, isNotEmpty);
+      for (final f in menus) {
+        final e = {'p': f.proteinG * 4, 'c': f.carbsG * 4, 'f': f.fatG * 9};
+        final published = [
+          for (final k in e.keys)
+            if (!f.unknown.contains(k)) e[k]!,
+        ].fold(0.0, (a, b) => a + b);
+        final total = e.values.reduce((a, b) => a + b);
+        // Estimates fill the energy the published macros leave (none when
+        // the source's own numbers already exceed kcal).
+        final target = published > f.kcal ? published : f.kcal;
+        expect(total, closeTo(target, target * 0.02 + 1), reason: f.name);
+      }
     });
 
     test('portion math and custom foods', () {

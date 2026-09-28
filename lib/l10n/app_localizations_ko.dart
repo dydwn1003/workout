@@ -742,7 +742,7 @@ class LKo extends L {
   String get tabSearch => '검색';
 
   @override
-  String get searchHint => '음식 검색 (예: 닭가슴살, ㄷㄱㅅㅅ)';
+  String get searchHint => '음식 검색 (예: 닭가슴살, 신라면)';
 
   @override
   String get recentFoodsChip => '최근';
@@ -762,7 +762,11 @@ class LKo extends L {
   String get createFoodDesc => '찾는 음식이 없으면 직접 만들어 저장해요';
 
   @override
-  String get foodMacrosUnknownNote => '—는 업체가 공개하지 않은 값이라 기록에 0g으로 들어가요.';
+  String get foodMacrosEstimatedNote =>
+      '\'추정\'은 업체가 공개하지 않은 값을 칼로리와 비슷한 음식으로 계산한 거예요.';
+
+  @override
+  String get estimated => '추정';
 
   @override
   String get foodRefNote => '영양정보는 일반적인 참고값이에요. 제품·조리법에 따라 다를 수 있어요.';

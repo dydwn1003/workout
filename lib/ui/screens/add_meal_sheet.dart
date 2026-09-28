@@ -620,49 +620,48 @@ class _FoodDetailState extends State<_FoodDetail> {
     final t = L.of(context);
     final f = widget.food;
     final n = f.forPortion(_unit, _qty);
-    Widget macro(String label, double? g, Color c, Color soft) => Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: soft,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Column(
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: headingFont,
-                fontWeight: FontWeight.w800,
-                fontSize: 12,
-                color: c,
-              ),
+    Widget macro(String label, double g, bool estimated, Color c, Color soft) =>
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: soft,
+              borderRadius: BorderRadius.circular(14),
             ),
-            if (g == null) // not published by the source
-              const Text(
-                '—',
-                style: TextStyle(
-                  fontFamily: headingFont,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 17,
-                  color: AppColors.inkSoft,
+            child: Column(
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: headingFont,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12,
+                    color: c,
+                  ),
                 ),
-              )
-            else
-              CountUp(
-                value: g,
-                duration: Motion.medium,
-                format: (v) => '${fmt1(v)}g',
-                style: const TextStyle(
-                  fontFamily: headingFont,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 17,
+                CountUp(
+                  value: g,
+                  duration: Motion.medium,
+                  format: (v) => estimated ? '~${fmt1(v)}g' : '${fmt1(v)}g',
+                  style: TextStyle(
+                    fontFamily: headingFont,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 17,
+                    color: estimated ? AppColors.inkSoft : null,
+                  ),
                 ),
-              ),
-          ],
-        ),
-      ),
-    );
+                if (estimated) // not published by the source
+                  Text(
+                    t.estimated,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.inkSoft,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
     return ListView(
       padding: EdgeInsets.fromLTRB(
         20,
@@ -711,21 +710,24 @@ class _FoodDetailState extends State<_FoodDetail> {
                 children: [
                   macro(
                     t.protein,
-                    f.unknown.contains('p') ? null : n.proteinG,
+                    n.proteinG,
+                    f.unknown.contains('p'),
                     AppColors.mint,
                     AppColors.mintSoft,
                   ),
                   const SizedBox(width: 6),
                   macro(
                     t.carbs,
-                    f.unknown.contains('c') ? null : n.carbsG,
+                    n.carbsG,
+                    f.unknown.contains('c'),
                     const Color(0xFFD49B1F),
                     AppColors.butterSoft,
                   ),
                   const SizedBox(width: 6),
                   macro(
                     t.fat,
-                    f.unknown.contains('f') ? null : n.fatG,
+                    n.fatG,
+                    f.unknown.contains('f'),
                     AppColors.lilac,
                     AppColors.lilacSoft,
                   ),
@@ -800,8 +802,8 @@ class _FoodDetailState extends State<_FoodDetail> {
         ),
         const SizedBox(height: 12),
         Text(
-          f.hasUnknownMacros
-              ? '${t.foodMacrosUnknownNote} ${t.foodRefNote}'
+          f.hasEstimatedMacros
+              ? '${t.foodMacrosEstimatedNote} ${t.foodRefNote}'
               : t.foodRefNote,
           style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),
         ),

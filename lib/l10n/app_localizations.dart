@@ -1403,7 +1403,7 @@ abstract class L {
   /// No description provided for @searchHint.
   ///
   /// In ko, this message translates to:
-  /// **'음식 검색 (예: 닭가슴살, ㄷㄱㅅㅅ)'**
+  /// **'음식 검색 (예: 닭가슴살, 신라면)'**
   String get searchHint;
 
   /// No description provided for @recentFoodsChip.
@@ -1436,11 +1436,17 @@ abstract class L {
   /// **'찾는 음식이 없으면 직접 만들어 저장해요'**
   String get createFoodDesc;
 
-  /// No description provided for @foodMacrosUnknownNote.
+  /// No description provided for @foodMacrosEstimatedNote.
   ///
   /// In ko, this message translates to:
-  /// **'—는 업체가 공개하지 않은 값이라 기록에 0g으로 들어가요.'**
-  String get foodMacrosUnknownNote;
+  /// **'\'추정\'은 업체가 공개하지 않은 값을 칼로리와 비슷한 음식으로 계산한 거예요.'**
+  String get foodMacrosEstimatedNote;
+
+  /// No description provided for @estimated.
+  ///
+  /// In ko, this message translates to:
+  /// **'추정'**
+  String get estimated;
 
   /// No description provided for @foodRefNote.
   ///

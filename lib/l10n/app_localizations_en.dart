@@ -777,8 +777,11 @@ class LEn extends L {
   String get createFoodDesc => 'Can\'t find it? Save your own';
 
   @override
-  String get foodMacrosUnknownNote =>
-      '— means the source doesn\'t publish it; it\'s logged as 0 g.';
+  String get foodMacrosEstimatedNote =>
+      '\'Est.\' values aren\'t published by the source; they\'re estimated from the calories and similar foods.';
+
+  @override
+  String get estimated => 'Est.';
 
   @override
   String get foodRefNote =>

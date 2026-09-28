@@ -5,11 +5,14 @@ present):
   lib/data/food_db.g.dart   (const Dart list for the app)
   preview/src/foods.json    (embedded into the single-file preview)
 
-Also sanity-checks each row (kcal vs 4/4/9 macro energy).
+Also sanity-checks each row (kcal vs 4/4/9 macro energy) and estimates the
+macros a source does not publish (see estimate()).
 Run: python3 tool/gen_foods.py
 """
 import hashlib
 import json
+import statistics
+from collections import defaultdict
 import os
 import re
 import sys
@@ -53,6 +56,55 @@ def load(path=SRC, prefix="f"):
             "unknown": unknown,
         })
     return foods
+
+
+def _shares(fd):
+    """Energy shares (protein, carbs, fat) of a fully published food."""
+    e = (fd["p"] * 4, fd["c"] * 4, fd["f"] * 9)
+    total = sum(e)
+    return tuple(x / total for x in e) if total > 0 else None
+
+
+def estimate(foods, refs):
+    """Fills macros the source does not publish ("unknown", e.g. franchise
+    menus list only kcal and protein) with estimates, in place. The energy
+    left after the published macros is split between the missing ones by
+    the median energy shares of fully published foods in the same group
+    (대표식품명, the first alias), else the same category, else evenly.
+    `unknown` keeps the letters so the app can label the values as estimates.
+    """
+    by_group, by_cat = defaultdict(list), defaultdict(list)
+    for r in refs:
+        sh = None if r["unknown"] else _shares(r)
+        if sh:
+            by_group[r["aliases"][0] if r["aliases"] else r["name"]].append(sh)
+            by_cat[r["cat"]].append(sh)
+    medians = {}
+
+    def ratio(key, pool):
+        if key not in medians:
+            medians[key] = tuple(statistics.median(x[i] for x in pool) for i in range(3))
+        return medians[key]
+
+    kcal_per_g = (4, 4, 9)
+    for fd in foods:
+        miss = [i for i, k in enumerate("pcf") if k in fd["unknown"]]
+        if not miss:
+            continue
+        group = fd["aliases"][0] if fd["aliases"] else fd["name"]
+        if len(by_group[group]) >= 3:
+            sh = ratio(("g", group), by_group[group])
+        elif len(by_cat[fd["cat"]]) >= 3:
+            sh = ratio(("c", fd["cat"]), by_cat[fd["cat"]])
+        else:
+            sh = (1 / 3, 1 / 3, 1 / 3)
+        vals = [fd["p"], fd["c"], fd["f"]]
+        left = max(0.0, fd["kcal"] - sum(vals[i] * kcal_per_g[i] for i in range(3) if i not in miss))
+        weight = sum(sh[i] for i in miss) or len(miss)
+        for i in miss:
+            share = sh[i] / weight if sum(sh[i] for i in miss) else 1 / len(miss)
+            vals[i] = round(left * share / kcal_per_g[i], 1)
+        fd["p"], fd["c"], fd["f"] = vals
 
 
 def check(foods, strict=True):
@@ -102,6 +154,7 @@ def main():
     curated = {f["name"].lower() for f in foods}
     imported = [f for f in load(MFDS, "m") if f["name"].lower() not in curated]
     check(imported, strict=False)
+    estimate(imported, foods + imported)
     foods += imported
     with open(os.path.join(ROOT, "lib", "data", "food_db.g.dart"), "w", encoding="utf-8") as fh:
         fh.write(dart(foods))

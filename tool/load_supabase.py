@@ -11,6 +11,7 @@ Usage:
   python3 tool/load_supabase.py                 # upsert into Supabase
   python3 tool/load_supabase.py --csv out.csv   # write a CSV for COPY instead
   python3 tool/load_supabase.py --skip 260000   # resume after an interrupted upload
+  python3 tool/load_supabase.py --only-estimated  # re-upload just the rows with estimated macros
 """
 import argparse
 import csv
@@ -64,19 +65,21 @@ def foods_of(path, prefix):
 
 
 def all_records():
-    out, names = [], set()
-    for fd in gen_foods.load():
-        names.add(fd["name"].lower())
-        out.append(record(fd, "curated"))
+    curated = gen_foods.load()
+    names = {fd["name"].lower() for fd in curated}
+    groups = []
     for source, path, prefix in SOURCES:
         if not os.path.exists(path):
             sys.exit(f"missing {path}: run tool/fetch_mfds_api.py first")
         new = [fd for fd in foods_of(path, prefix) if fd["name"].lower() not in names]
         names.update(fd["name"].lower() for fd in new)
         gen_foods.check(new, strict=False)  # also fails on id collisions
-        out += [record(fd, source) for fd in new]
+        groups.append((source, new))
         print(f"{source}: {len(new)} foods")
-    return out
+    imported = [fd for _, new in groups for fd in new]
+    gen_foods.estimate(imported, curated + imported)
+    return [record(fd, "curated") for fd in curated] + [
+        record(fd, source) for source, new in groups for fd in new]
 
 
 def pg_array(xs):
@@ -137,8 +140,12 @@ def main():
     ap.add_argument("--csv", help="write a CSV for COPY instead of uploading")
     ap.add_argument("--batch", type=int, default=1000)
     ap.add_argument("--skip", type=int, default=0, help="rows already uploaded (resume)")
+    ap.add_argument("--only-estimated", action="store_true",
+                    help="only rows whose macros are estimated (after changing estimate())")
     a = ap.parse_args()
     recs = all_records()
+    if a.only_estimated:
+        recs = [r for r in recs if r["unknown"]]
     print(f"{len(recs)} foods total")
     if a.csv:
         write_csv(recs, a.csv)
