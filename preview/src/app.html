@@ -361,10 +361,11 @@ const today = () => dayOnly(new Date());
 // Store (per-browser; falls back to memory if storage is blocked)
 // ============================================================================
 const KEY = "adapt.preview.v1";
-const empty = () => ({ profile: null, settings: { checkinWeekday: 1, notifications: true, consentedAt: null }, weights: [], meals: [], saved: [], plans: [] });
+const empty = () => ({ profile: null, settings: { checkinWeekday: 1, notifications: true, consentedAt: null }, weights: [], meals: [], saved: [], plans: [], workouts: [] });
 let S = (() => { try { const r = localStorage.getItem(KEY); return r ? JSON.parse(r) : empty(); } catch (e) { return empty(); } })();
 function save() { sortAll(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
-function sortAll() { S.weights.sort((a, b) => a.date.localeCompare(b.date)); S.meals.sort((a, b) => a.time - b.time); S.plans.sort((a, b) => a.weekStart.localeCompare(b.weekStart)); }
+function sortAll() { (S.workouts = S.workouts || []).sort((a, b) => a.date.localeCompare(b.date)); S.weights.sort((a, b) => a.date.localeCompare(b.date)); S.meals.sort((a, b) => a.time - b.time); S.plans.sort((a, b) => a.weekStart.localeCompare(b.weekStart)); }
+S.workouts = S.workouts || [];
 sortAll();
 
 const goalOf = p => ({ type: p.goalType, pace: p.pace, sessions: p.strength + p.cardio, targetKg: p.targetKg });
@@ -432,6 +433,18 @@ function recentMeals() {
   }
   return out;
 }
+const workoutsOn = d => S.workouts.filter(w => w.date === dk(d));
+const weekWorkouts = () => { const since = dk(addDays(today(), -6)); return S.workouts.filter(w => w.date >= since).length; };
+// Suggests matching logged training frequency when it changes the activity factor
+// (only after 2+ weeks of workout logging). Returns [strength, cardio] per week.
+function workoutSuggestion() {
+  const p = S.profile; if (!p || !S.workouts.length) return null;
+  const since = addDays(today(), -13);
+  if (pd(S.workouts[0].date) > since) return null;
+  const recent = S.workouts.filter(w => w.date >= dk(since));
+  const st = Math.round(recent.filter(w => w.type === "strength").length / 2), ca = Math.round(recent.filter(w => w.type === "cardio").length / 2);
+  return activity(st + ca) === activity(p.strength + p.cardio) ? null : [st, ca];
+}
 function muscleWarn() {
   const p = S.profile; if (!p || p.goalType === "maintain" || p.goalType === "gain") return false;
   return muscleLossWarning(S.weights.filter(w => w.smm != null).map(w => [pd(w.date), w.smm]));
@@ -487,7 +500,13 @@ function loadDemo() {
   weights.push({ date: dk(t), kg: +(mass + gauss(.45)).toFixed(1), bf: null, smm: null });
   const saved = [["그릭요거트 + 바나나", 290, 17, 40, 6], ["닭가슴살 샐러드", 380, 38, 22, 14], ["현미밥 + 제육볶음", 750, 32, 78, 34]];
   saved.slice(0, 2).forEach((s, j) => meals.push({ id: `demo-today-${j}`, date: dk(t), time: +new Date(t.getFullYear(), t.getMonth(), t.getDate(), [8, 12][j], 20), name: s[0], kcal: s[1], p: s[2], c: s[3], f: s[4], source: "saved", edited: false }));
-  S = { profile, settings: { ...S.settings, checkinWeekday: t.getDay() || 7, consentedAt: S.settings.consentedAt || Date.now() }, weights, meals,
+  const workouts = [];
+  for (let i = 0; i <= weeks * 7; i++) {
+    const d = addDays(start, i), wd = d.getDay();
+    const type = [1, 2, 4, 5].includes(wd) ? "strength" : [3, 6].includes(wd) ? "cardio" : null;
+    if (type) workouts.push({ id: "dw" + i, date: dk(d), type, minutes: type === "strength" ? 60 : 30 + 15 * Math.floor(rnd() * 3) });
+  }
+  S = { workouts, profile, settings: { ...S.settings, checkinWeekday: t.getDay() || 7, consentedAt: S.settings.consentedAt || Date.now() }, weights, meals,
     saved: saved.map((s, j) => ({ id: "ds" + j, name: s[0], kcal: s[1], p: s[2], c: s[3], f: s[4] })), plans };
   save();
 }
@@ -736,13 +755,21 @@ function viewToday() {
     <div ${st()}><div class="card row tap" data-act="weight" style="padding:16px;gap:14px"><span class="ico" style="background:var(--sky-soft)">${ic("weight", 24, "var(--sky)")}</span>
       <span style="flex:1"><span class="muted" style="font-size:13px">${isToday ? "오늘 체중" : "이날 체중"}</span><br><b class="h num" style="font-size:20px">${w ? f1(w.kg) + " kg" : "체중 기록하기"}</b></span>
       ${isToday && tr != null ? pill("추세 " + f1(tr) + "kg", "var(--sky)", "var(--sky-soft)") : ""}${ic(w ? "edit" : "plus", 22, "var(--sky)")}</div></div>`;
+  const wos = workoutsOn(date);
+  html += `<div ${st()}><div class="card" style="padding:16px 14px 16px 18px"><div class="row" style="gap:6px"><b class="h" style="flex:1;font-size:16px">${isToday ? "운동" : "이날 운동"}</b>
+      <button class="pill tap" data-act="workout" data-v="strength" style="border:0;color:var(--mint);background:var(--mint-soft);padding:8px 12px;cursor:pointer">${ic("dumbbell", 16)}근력운동 +</button>
+      <button class="pill tap" data-act="workout" data-v="cardio" style="border:0;color:var(--sky);background:var(--sky-soft);padding:8px 12px;cursor:pointer">${ic("chart", 16)}유산소 +</button></div>
+    <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px">${wos.length ? wos.map(w => { const sg = w.type === "strength", c = sg ? "var(--mint)" : "var(--sky)";
+      return `<span class="pill" style="color:${c};background:${sg ? "var(--mint-soft)" : "var(--sky-soft)"};padding:6px 6px 6px 12px;animation:fadeUp .4s var(--ease)">${ic(sg ? "dumbbell" : "chart", 15)}${sg ? "근력운동" : "유산소"} · ${w.minutes}분
+        <button class="iconbtn" data-act="delWorkout" data-id="${w.id}" aria-label="삭제" style="width:22px;height:22px;color:${c}">${ic("x", 12)}</button></span>`; }).join("")
+      : `<span class="muted" style="font-size:13px">아직 운동 기록이 없어요</span>`}</div></div></div>`;
   if (isToday) {
     const log = weekLog(), sk = streak(), md = log.filter(d => d.meal).length, wd = log.filter(d => d.weight).length, ready = md >= 5 && wd >= 3;
     html += `<div ${st()}><div class="card" style="padding:16px 18px">
       <div class="row" style="gap:6px">${ic("fire", 22, "var(--peach)")}<b class="h" style="font-size:16px">${sk > 0 ? `연속 ${sk}일째 기록 중!` : "오늘 첫 기록으로 연속 기록을 시작해요"}</b></div>
       <div class="row" style="margin:14px 0 12px;gap:0">${log.map((d, i) => `<div class="daydot"><i class="${d.meal && d.weight ? "full" : d.meal || d.weight ? "part" : ""} ${i === 6 ? "today" : ""}" style="animation-delay:${200 + i * 50}ms">${d.meal && d.weight ? "✓" : d.meal ? "식" : d.weight ? "체" : ""}</i>
         <span class="small" style="${i === 6 ? "font-weight:800" : "color:var(--soft)"}">${WD[d.d.getDay()]}</span></div>`).join("")}</div>
-      <div class="row" style="gap:6px">${pill(`식사 ${md}/7일`, "var(--peach)", "var(--peach-soft)")}${pill(`체중 ${wd}회`, "var(--sky)", "var(--sky-soft)")}</div>
+      <div class="row" style="gap:6px;flex-wrap:wrap">${pill(`식사 ${md}/7일`, "var(--peach)", "var(--peach-soft)")}${pill(`체중 ${wd}회`, "var(--sky)", "var(--sky-soft)")}${pill(`운동 ${weekWorkouts()}회`, "var(--mint)", "var(--mint-soft)")}</div>
       <p class="note" style="margin:8px 0 0;${ready ? "color:var(--mint)" : ""}">${ready ? "이번 주 기록이 충분해요. 체크인 때 정확하게 조정할 수 있어요!" : "식사 5일 · 체중 3회 이상 기록하면 체크인에서 목표를 조정할 수 있어요"}</p></div></div>`;
   }
   html += `<h2 class="h sect" style="margin-bottom:0">${isToday ? "오늘 먹은 것" : "이날 먹은 것"}</h2>`;
@@ -823,6 +850,11 @@ function viewCheckin() {
   let html = `<h1 class="h title" style="margin-bottom:12px">주간 체크인</h1>`;
   if (!due && next) html += `<div style="margin:0 0 12px 2px">${pill("다음 체크인: " + fmtDate(next), "var(--peach)", "var(--peach-soft)")}</div>`;
   html += `<div class="col" style="gap:14px">`;
+  const sug = workoutSuggestion();
+  if (sug) html += `<div ${st()}><div class="card" style="background:var(--mint-soft);box-shadow:none;padding:16px 18px 10px">
+    <div class="row" style="gap:8px">${ic("dumbbell", 22, "var(--mint)")}<b class="h" style="font-size:16px">운동 횟수를 맞춰볼까요?</b></div>
+    <p style="margin:8px 0 0;line-height:1.55;font-size:14px">지난 2주 동안 주 평균 근력 ${sug[0]}회 · 유산소 ${sug[1]}회 운동했어요. 설정은 주 ${S.profile.strength + S.profile.cardio}회예요. 실제 기록에 맞추면 공식 추정치가 더 정확해져요.</p>
+    <div style="text-align:right"><button class="btn txt" data-act="applySug" style="color:var(--mint)">기록에 맞추기</button></div></div></div>`;
   if (doneToday && !ui.forcePreview) {
     html += `<div ${st()}><div class="card" style="text-align:center">${mascot(80, "cheer")}<h2 class="h" style="font-size:19px;margin:10px 0 6px">이번 주 체크인 완료!</h2>
       <p class="muted" style="margin:0 0 16px;line-height:1.55">다음 체크인까지 꾸준히 기록해 주세요. 기록이 많을수록 정확해져요.</p>${summary(plan)}
@@ -935,6 +967,17 @@ function renderSheet() {
         : `<button class="btn txt" data-act="showComp" style="margin-top:8px">+ 체성분도 입력하기</button>`}
       <div class="row" style="background:var(--sky-soft);border-radius:16px;padding:12px 14px;margin:14px 0 18px">${ic("scale", 20, "var(--sky)")}<b class="h" style="flex:1">건강앱 자동 연동</b><span class="muted" style="font-size:12px">모바일 앱에서 지원 예정</span></div>
       <button class="btn pri" data-act="weightSave">저장</button>`;
+  } else if (sheet.kind === "workout") {
+    const typeBtn = (k, l, icn, c, sf) => `<button class="choice tap ${sheet.type === k ? "on" : ""}" data-act="woType" data-v="${k}" style="padding:12px;${sheet.type === k ? `border-color:${c};background:${sf}` : ""}">
+      <span class="ico" style="background:${sf};width:40px;height:40px">${ic(icn, 22, c)}</span><b class="h">${l}</b><span class="check">${ic("check", 20, c)}</span></button>`;
+    b.innerHTML = `<h2 class="h" style="font-size:22px;margin:0 0 16px">${ui.date ? fmtDate(ui.date) + " 운동" : "운동 기록"}</h2>
+      <div class="row">${typeBtn("strength", "근력운동", "dumbbell", "var(--mint)", "var(--mint-soft)")}${typeBtn("cardio", "유산소", "chart", "var(--sky)", "var(--sky-soft)")}</div>
+      <div class="muted" style="font-size:13px;margin:20px 0 8px">운동 시간</div>
+      <div class="row" style="justify-content:center;gap:14px"><span class="stepper"><button data-act="woMin" data-v="-5" aria-label="5분 줄이기">−</button></span>
+        <span class="h num" id="woMin" style="font-size:34px;min-width:110px;text-align:center">${sheet.minutes}분</span><span class="stepper"><button data-act="woMin" data-v="5" aria-label="5분 늘리기">+</button></span></div>
+      <div class="chips" style="justify-content:center;flex-wrap:wrap;margin:14px 0">${[20, 30, 45, 60, 90].map(m => `<button class="chip tap ${sheet.minutes === m ? "on" : ""}" data-act="woPreset" data-v="${m}">${m}분</button>`).join("")}</div>
+      <p class="note" style="margin:0 0 16px">운동 칼로리는 목표에 더하지 않아요. 운동으로 쓴 에너지는 체중 변화에 이미 반영되어 매주 소비량 계산에 들어가요.</p>
+      <button class="btn pri" data-act="woSave">저장</button>`;
   } else if (sheet.kind === "manageSaved") {
     b.innerHTML = `<h2 class="h" style="font-size:22px;margin:0 0 12px">내 식사 관리</h2>` + (S.saved.length ? `<div class="card list" style="padding:4px 0">${S.saved.map(m => `<div class="row" style="padding:8px 8px 8px 18px">
       <span style="flex:1">${esc(m.name)}<div class="muted small">${f0(m.kcal)} kcal</div></span><button class="iconbtn" data-act="delSaved" data-id="${m.id}" aria-label="삭제">${ic("trash", 18, "var(--soft)")}</button></div>`).join("")}</div>`
@@ -1012,6 +1055,14 @@ const actions = {
     const i = S.meals.findIndex(x => x.id === sheet.meal.id); S.meals[i] = { ...S.meals[i], ...m, edited: true }; save(); closeSheet(); render(); toast("수정했어요"); },
   mealDelete: () => { S.meals = S.meals.filter(x => x.id !== sheet.meal.id); save(); closeSheet(); render(); toast("삭제했어요"); },
   weight: () => openSheet("weight", {}),
+  workout: el => openSheet("workout", { type: el.dataset.v, minutes: el.dataset.v === "strength" ? 60 : 30 }),
+  woType: el => { sheet.type = el.dataset.v; renderSheet(); },
+  woMin: el => { sheet.minutes = clamp(sheet.minutes + +el.dataset.v, 5, 300); renderSheet(); $("#woMin").animate([{ transform: "scale(1.1)" }, { transform: "scale(1)" }], { duration: 300, easing: "cubic-bezier(.34,1.56,.64,1)" }); },
+  woPreset: el => { sheet.minutes = +el.dataset.v; renderSheet(); },
+  woSave: () => { const w = { id: uid(), date: dk(ui.date || today()), type: sheet.type, minutes: sheet.minutes }; S.workouts.push(w); save();
+    closeSheet(); render(); toast(`${w.type === "strength" ? "근력운동" : "유산소"} ${w.minutes}분 기록!`); },
+  delWorkout: (el, ev) => { ev.stopPropagation(); S.workouts = S.workouts.filter(w => w.id !== el.dataset.id); save(); render(); toast("운동 기록을 지웠어요"); },
+  applySug: () => { const sg = workoutSuggestion(); if (!sg) return; S.profile.strength = sg[0]; S.profile.cardio = sg[1]; save(); render(); toast("운동 횟수를 업데이트했어요"); },
   bump: el => { sheet.kg = clamp(Math.round((sheet.kg + +el.dataset.v) * 10) / 10, 25, 300); const k = $("#kgv"); k.textContent = f1(sheet.kg); k.animate([{ transform: "scale(1.08)" }, { transform: "scale(1)" }], { duration: 300, easing: "cubic-bezier(.34,1.56,.64,1)" }); },
   showComp: () => { sheet.comp = true; renderSheet(); },
   weightSave: () => {

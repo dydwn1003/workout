@@ -1184,6 +1184,90 @@ abstract class L {
   /// **'지난 기록 채우기'**
   String get pastDayGreeting;
 
+  /// No description provided for @workoutsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'운동'**
+  String get workoutsTitle;
+
+  /// No description provided for @workoutsOnDay.
+  ///
+  /// In ko, this message translates to:
+  /// **'이날 운동'**
+  String get workoutsOnDay;
+
+  /// No description provided for @logWorkout.
+  ///
+  /// In ko, this message translates to:
+  /// **'운동 기록'**
+  String get logWorkout;
+
+  /// No description provided for @noWorkouts.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 운동 기록이 없어요'**
+  String get noWorkouts;
+
+  /// No description provided for @minutesN.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}분'**
+  String minutesN(String n);
+
+  /// No description provided for @workoutMinutes.
+  ///
+  /// In ko, this message translates to:
+  /// **'운동 시간'**
+  String get workoutMinutes;
+
+  /// No description provided for @workoutAdded.
+  ///
+  /// In ko, this message translates to:
+  /// **'{type} {minutes}분 기록!'**
+  String workoutAdded(String type, String minutes);
+
+  /// No description provided for @workoutDeleted.
+  ///
+  /// In ko, this message translates to:
+  /// **'운동 기록을 지웠어요'**
+  String get workoutDeleted;
+
+  /// No description provided for @workoutNoCalories.
+  ///
+  /// In ko, this message translates to:
+  /// **'운동 칼로리는 목표에 더하지 않아요. 운동으로 쓴 에너지는 체중 변화에 이미 반영되어 매주 소비량 계산에 들어가요.'**
+  String get workoutNoCalories;
+
+  /// No description provided for @weekWorkouts.
+  ///
+  /// In ko, this message translates to:
+  /// **'운동 {n}회'**
+  String weekWorkouts(String n);
+
+  /// No description provided for @workoutSuggestTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'운동 횟수를 맞춰볼까요?'**
+  String get workoutSuggestTitle;
+
+  /// No description provided for @workoutSuggestBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'지난 2주 동안 주 평균 근력 {strength}회 · 유산소 {cardio}회 운동했어요. 설정은 주 {planned}회예요. 실제 기록에 맞추면 공식 추정치가 더 정확해져요.'**
+  String workoutSuggestBody(String strength, String cardio, String planned);
+
+  /// No description provided for @workoutSuggestApply.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록에 맞추기'**
+  String get workoutSuggestApply;
+
+  /// No description provided for @workoutSuggestApplied.
+  ///
+  /// In ko, this message translates to:
+  /// **'운동 횟수를 업데이트했어요'**
+  String get workoutSuggestApplied;
+
   /// No description provided for @settingsTitle.
   ///
   /// In ko, this message translates to:

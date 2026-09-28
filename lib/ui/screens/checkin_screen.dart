@@ -140,6 +140,10 @@ class _CheckinScreenState extends State<CheckinScreen> {
                     ],
                   ),
                 ),
+              if (s.workoutSuggestion case final sug?) ...[
+                FadeSlideIn(child: _WorkoutSuggestion(sug: sug)),
+                const SizedBox(height: 14),
+              ],
               if (doneToday && !_forcePreview) ...[
                 SoftCard(
                   child: Column(
@@ -513,6 +517,66 @@ class _CheckinScreenState extends State<CheckinScreen> {
             Text(body, style: const TextStyle(height: 1.6, fontSize: 14)),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _WorkoutSuggestion extends StatelessWidget {
+  final (int, int) sug;
+  const _WorkoutSuggestion({required this.sug});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L.of(context);
+    final s = AppScope.of(context);
+    final p = s.profile!;
+    return SoftCard(
+      color: AppColors.mintSoft,
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.fitness_center_rounded, color: AppColors.mint),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  t.workoutSuggestTitle,
+                  style: const TextStyle(
+                    fontFamily: headingFont,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            t.workoutSuggestBody(
+              '${sug.$1}',
+              '${sug.$2}',
+              '${p.strengthPerWeek + p.cardioPerWeek}',
+            ),
+            style: const TextStyle(fontSize: 14, height: 1.55),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              style: TextButton.styleFrom(foregroundColor: AppColors.mint),
+              onPressed: () async {
+                await s.applyWorkoutSuggestion();
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(t.workoutSuggestApplied)),
+                );
+              },
+              child: Text(t.workoutSuggestApply),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -10,6 +10,7 @@ import '../widgets.dart';
 import 'add_meal_sheet.dart';
 import 'home_shell.dart';
 import 'weight_sheet.dart';
+import 'workout_sheet.dart';
 
 class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
@@ -363,6 +364,8 @@ class _DayBody extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(height: 14),
+        enter(_WorkoutCard(date: date, isToday: isToday)),
         if (isToday) ...[
           const SizedBox(height: 14),
           enter(const _StreakCard()),
@@ -404,6 +407,167 @@ class _DayBody extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+class _WorkoutCard extends StatelessWidget {
+  final DateTime date;
+  final bool isToday;
+  const _WorkoutCard({required this.date, required this.isToday});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L.of(context);
+    final s = AppScope.of(context);
+    final list = s.workoutsOn(date);
+    Widget add(WorkoutType type, IconData icon, Color c, Color soft) => Squish(
+      child: Material(
+        color: soft,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () => showWorkoutSheet(context, date: date, type: type),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 18, color: c),
+                const SizedBox(width: 4),
+                Text(
+                  workoutLabel(t, type),
+                  style: TextStyle(
+                    fontFamily: headingFont,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13.5,
+                    color: c,
+                  ),
+                ),
+                Icon(Icons.add_rounded, size: 16, color: c),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    return SoftCard(
+      padding: const EdgeInsets.fromLTRB(18, 16, 14, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  isToday ? t.workoutsTitle : t.workoutsOnDay,
+                  style: const TextStyle(
+                    fontFamily: headingFont,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              add(
+                WorkoutType.strength,
+                Icons.fitness_center_rounded,
+                AppColors.mint,
+                AppColors.mintSoft,
+              ),
+              const SizedBox(width: 6),
+              add(
+                WorkoutType.cardio,
+                Icons.directions_run_rounded,
+                AppColors.sky,
+                AppColors.skySoft,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          AnimatedSize(
+            duration: Motion.medium,
+            curve: Motion.ease,
+            alignment: Alignment.topLeft,
+            child: list.isEmpty
+                ? Text(
+                    t.noWorkouts,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.inkSoft,
+                    ),
+                  )
+                : Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final w in list)
+                        _WorkoutChip(
+                          workout: w,
+                          onDelete: () {
+                            s.deleteWorkout(w.id);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(t.workoutDeleted)),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WorkoutChip extends StatelessWidget {
+  final Workout workout;
+  final VoidCallback onDelete;
+  const _WorkoutChip({required this.workout, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L.of(context);
+    final strength = workout.type == WorkoutType.strength;
+    final c = strength ? AppColors.mint : AppColors.sky;
+    return FadeSlideIn(
+      dy: 6,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(12, 6, 4, 6),
+        decoration: BoxDecoration(
+          color: strength ? AppColors.mintSoft : AppColors.skySoft,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              strength
+                  ? Icons.fitness_center_rounded
+                  : Icons.directions_run_rounded,
+              size: 16,
+              color: c,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              '${workoutLabel(t, workout.type)} · ${t.minutesN('${workout.minutes}')}',
+              style: TextStyle(
+                fontFamily: headingFont,
+                fontWeight: FontWeight.w800,
+                fontSize: 13,
+                color: c,
+              ),
+            ),
+            InkResponse(
+              onTap: onDelete,
+              radius: 16,
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: Icon(Icons.close_rounded, size: 14, color: c),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -465,18 +629,24 @@ class _StreakCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Row(
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
             children: [
               Pill(
                 text: t.weekMeals('$mealDays'),
                 color: AppColors.peach,
                 soft: AppColors.peachSoft,
               ),
-              const SizedBox(width: 6),
               Pill(
                 text: t.weekWeighs('$weighs'),
                 color: AppColors.sky,
                 soft: AppColors.skySoft,
+              ),
+              Pill(
+                text: t.weekWorkouts('${s.weekWorkouts}'),
+                color: AppColors.mint,
+                soft: AppColors.mintSoft,
               ),
             ],
           ),

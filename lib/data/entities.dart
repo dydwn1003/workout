@@ -255,6 +255,39 @@ class Plan {
   );
 }
 
+enum WorkoutType { strength, cardio }
+
+/// A training session. Deliberately has no calories: expenditure is measured
+/// from intake and weight trend, so adding exercise calories would double
+/// count them.
+class Workout {
+  final String id;
+  final String date;
+  final WorkoutType type;
+  final int minutes;
+
+  const Workout({
+    required this.id,
+    required this.date,
+    required this.type,
+    required this.minutes,
+  });
+
+  Map<String, Object?> toJson() => {
+    'id': id,
+    'date': date,
+    'type': type.name,
+    'minutes': minutes,
+  };
+
+  factory Workout.fromJson(Map<String, Object?> j) => Workout(
+    id: j['id'] as String,
+    date: j['date'] as String,
+    type: _enumByName(WorkoutType.values, j['type'], WorkoutType.strength),
+    minutes: j['minutes'] as int? ?? 0,
+  );
+}
+
 class AppSettings {
   /// null = follow system language.
   final String? language;

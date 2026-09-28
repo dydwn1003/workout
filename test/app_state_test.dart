@@ -117,6 +117,46 @@ void main() {
     });
   });
 
+  group('workouts', () {
+    test('logging, weekly count and delete', () async {
+      final s = AppState(MemoryCoachRepository(), clock: () => now);
+      await s.load();
+      await s.addWorkout(WorkoutType.strength, 60);
+      await s.addWorkout(WorkoutType.cardio, 30, date: DateTime(2026, 9, 20));
+      expect(s.workoutsOn(s.today).single.minutes, 60);
+      expect(s.weekWorkouts, 1); // Sep 20 is outside the last 7 days
+      await s.deleteWorkout(s.workoutsOn(s.today).single.id);
+      expect(s.workoutsOn(s.today), isEmpty);
+    });
+
+    test('suggests matching logged frequency after 2 weeks', () async {
+      final s = AppState(MemoryCoachRepository(), clock: () => now);
+      await s.load();
+      await s.loadDemoData(korean: true); // profile says 3 + 1 per week
+      final sug = s.workoutSuggestion;
+      expect(sug, isNotNull);
+      expect(sug!.$1 + sug.$2, greaterThanOrEqualTo(5));
+      await s.applyWorkoutSuggestion();
+      expect(s.profile!.strengthPerWeek, sug.$1);
+      expect(s.profile!.cardioPerWeek, sug.$2);
+      expect(s.workoutSuggestion, isNull);
+    });
+
+    test('no suggestion without 2 weeks of workout logs', () async {
+      final s = AppState(MemoryCoachRepository(), clock: () => now);
+      await s.load();
+      await s.loadDemoData(korean: true);
+      for (final w in s.workouts.toList()) {
+        await s.deleteWorkout(w.id);
+      }
+      expect(s.workoutSuggestion, isNull);
+      for (var i = 0; i < 6; i++) {
+        await s.addWorkout(WorkoutType.strength, 45);
+      }
+      expect(s.workoutSuggestion, isNull); // only logging since today
+    });
+  });
+
   group('food estimator', () {
     test('scales by grams and counts', () {
       final e = estimateFromText('닭가슴살 200g, 계란 2개, 현미밥 1공기');

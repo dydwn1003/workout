@@ -11,6 +11,7 @@ class AppData {
   List<WeightEntry> weights;
   List<Meal> meals;
   List<SavedMeal> savedMeals;
+  List<Workout> workouts;
   List<Plan> plans;
 
   AppData({
@@ -19,10 +20,12 @@ class AppData {
     List<WeightEntry>? weights,
     List<Meal>? meals,
     List<SavedMeal>? savedMeals,
+    List<Workout>? workouts,
     List<Plan>? plans,
   }) : weights = weights ?? [],
        meals = meals ?? [],
        savedMeals = savedMeals ?? [],
+       workouts = workouts ?? [],
        plans = plans ?? [];
 }
 
@@ -35,6 +38,7 @@ abstract class CoachRepository {
   Future<void> saveWeights(List<WeightEntry> weights);
   Future<void> saveMeals(List<Meal> meals);
   Future<void> saveSavedMeals(List<SavedMeal> savedMeals);
+  Future<void> saveWorkouts(List<Workout> workouts);
   Future<void> savePlans(List<Plan> plans);
   Future<void> deleteAll();
 }
@@ -86,6 +90,7 @@ class LocalCoachRepository implements CoachRepository {
       weights: _list(await _read('weights'), WeightEntry.fromJson),
       meals: _list(await _read('meals'), Meal.fromJson),
       savedMeals: _list(await _read('savedMeals'), SavedMeal.fromJson),
+      workouts: _list(await _read('workouts'), Workout.fromJson),
       plans: _list(await _read('plans'), Plan.fromJson),
     );
   }
@@ -109,6 +114,10 @@ class LocalCoachRepository implements CoachRepository {
   @override
   Future<void> saveSavedMeals(List<SavedMeal> savedMeals) =>
       _write('savedMeals', savedMeals.map((e) => e.toJson()).toList());
+
+  @override
+  Future<void> saveWorkouts(List<Workout> workouts) =>
+      _write('workouts', workouts.map((e) => e.toJson()).toList());
 
   @override
   Future<void> savePlans(List<Plan> plans) =>
@@ -145,6 +154,9 @@ class MemoryCoachRepository implements CoachRepository {
   @override
   Future<void> saveSavedMeals(List<SavedMeal> savedMeals) async =>
       data.savedMeals = [...savedMeals];
+  @override
+  Future<void> saveWorkouts(List<Workout> workouts) async =>
+      data.workouts = [...workouts];
   @override
   Future<void> savePlans(List<Plan> plans) async => data.plans = [...plans];
   @override

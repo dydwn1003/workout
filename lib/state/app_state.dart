@@ -25,6 +25,7 @@ class AppState extends ChangeNotifier {
   void _sort() {
     _data.weights.sort((a, b) => a.date.compareTo(b.date));
     _data.meals.sort((a, b) => a.time.compareTo(b.time));
+    _data.workouts.sort((a, b) => a.date.compareTo(b.date));
     _data.plans.sort((a, b) => a.weekStart.compareTo(b.weekStart));
   }
 
@@ -38,6 +39,7 @@ class AppState extends ChangeNotifier {
   List<WeightEntry> get weights => List.unmodifiable(_data.weights);
   List<Meal> get meals => List.unmodifiable(_data.meals);
   List<SavedMeal> get savedMeals => List.unmodifiable(_data.savedMeals);
+  List<Workout> get workouts => List.unmodifiable(_data.workouts);
   List<Plan> get plans => List.unmodifiable(_data.plans);
   bool get onboarded => _data.profile != null && _data.plans.isNotEmpty;
 
@@ -176,6 +178,62 @@ class AppState extends ChangeNotifier {
       if (out.length >= limit) break;
     }
     return out;
+  }
+
+  List<Workout> workoutsOn(DateTime d) {
+    final k = dateKey(d);
+    return _data.workouts.where((w) => w.date == k).toList();
+  }
+
+  /// Workouts in the last 7 days (including today).
+  int get weekWorkouts {
+    final since = dateKey(_addDays(today, -6));
+    return _data.workouts.where((w) => w.date.compareTo(since) >= 0).length;
+  }
+
+  /// When the last 2 weeks of logged training differ enough from the
+  /// profile's weekly sessions to change the activity factor, returns the
+  /// observed (strength, cardio) sessions per week. Only for users who have
+  /// been logging workouts for at least 2 weeks.
+  (int, int)? get workoutSuggestion {
+    final p = profile;
+    if (p == null || _data.workouts.isEmpty) return null;
+    final since = _addDays(today, -13);
+    if (parseDateKey(_data.workouts.first.date).isAfter(since)) return null;
+    final recent = _data.workouts
+        .where((w) => w.date.compareTo(dateKey(since)) >= 0)
+        .toList();
+    final strength =
+        (recent.where((w) => w.type == WorkoutType.strength).length / 2)
+            .round();
+    final cardio =
+        (recent.where((w) => w.type == WorkoutType.cardio).length / 2).round();
+    final planned = p.strengthPerWeek + p.cardioPerWeek;
+    if (CoachConstants.activityFactor(strength + cardio) ==
+        CoachConstants.activityFactor(planned)) {
+      return null;
+    }
+    return (strength, cardio);
+  }
+
+  Future<void> applyWorkoutSuggestion() async {
+    final sug = workoutSuggestion;
+    final p = profile;
+    if (sug == null || p == null) return;
+    await updateProfile(
+      UserProfile(
+        sex: p.sex,
+        birthYear: p.birthYear,
+        heightCm: p.heightCm,
+        goalType: p.goalType,
+        pace: p.pace,
+        strengthPerWeek: sug.$1,
+        cardioPerWeek: sug.$2,
+        targetWeightKg: p.targetWeightKg,
+        targetBodyFatPct: p.targetBodyFatPct,
+        createdAt: p.createdAt,
+      ),
+    );
   }
 
   /// Last 7 days ending today: (date, meals logged, weighed in).
@@ -394,6 +452,30 @@ class AppState extends ChangeNotifier {
       ),
     );
     await repo.saveSavedMeals(_data.savedMeals);
+    notifyListeners();
+  }
+
+  Future<void> addWorkout(
+    WorkoutType type,
+    int minutes, {
+    DateTime? date,
+  }) async {
+    _data.workouts.add(
+      Workout(
+        id: '${clock().microsecondsSinceEpoch}',
+        date: dateKey(date ?? today),
+        type: type,
+        minutes: minutes,
+      ),
+    );
+    _sort();
+    await repo.saveWorkouts(_data.workouts);
+    notifyListeners();
+  }
+
+  Future<void> deleteWorkout(String id) async {
+    _data.workouts.removeWhere((w) => w.id == id);
+    await repo.saveWorkouts(_data.workouts);
     notifyListeners();
   }
 
@@ -674,6 +756,32 @@ class AppState extends ChangeNotifier {
         ),
     ];
     await repo.saveSavedMeals(_data.savedMeals);
+    // Sample training: 4x strength + 2x cardio per week, more than the
+    // profile's 3 + 1, so the activity suggestion shows up.
+    final workouts = <Workout>[];
+    for (var i = 0; i <= weeks * 7; i++) {
+      final d = _addDays(start, i);
+      final wd = d.weekday;
+      final type = switch (wd) {
+        DateTime.monday ||
+        DateTime.tuesday ||
+        DateTime.thursday ||
+        DateTime.friday => WorkoutType.strength,
+        DateTime.wednesday || DateTime.saturday => WorkoutType.cardio,
+        _ => null,
+      };
+      if (type == null) continue;
+      workouts.add(
+        Workout(
+          id: 'demo-w-$i',
+          date: dateKey(d),
+          type: type,
+          minutes: type == WorkoutType.strength ? 60 : 30 + 15 * rng.nextInt(3),
+        ),
+      );
+    }
+    _data.workouts = workouts;
+    await repo.saveWorkouts(workouts);
     _data
       ..profile = profile
       ..weights = weights

@@ -605,6 +605,57 @@ class LKo extends L {
   String get pastDayGreeting => '지난 기록 채우기';
 
   @override
+  String get workoutsTitle => '운동';
+
+  @override
+  String get workoutsOnDay => '이날 운동';
+
+  @override
+  String get logWorkout => '운동 기록';
+
+  @override
+  String get noWorkouts => '아직 운동 기록이 없어요';
+
+  @override
+  String minutesN(String n) {
+    return '$n분';
+  }
+
+  @override
+  String get workoutMinutes => '운동 시간';
+
+  @override
+  String workoutAdded(String type, String minutes) {
+    return '$type $minutes분 기록!';
+  }
+
+  @override
+  String get workoutDeleted => '운동 기록을 지웠어요';
+
+  @override
+  String get workoutNoCalories =>
+      '운동 칼로리는 목표에 더하지 않아요. 운동으로 쓴 에너지는 체중 변화에 이미 반영되어 매주 소비량 계산에 들어가요.';
+
+  @override
+  String weekWorkouts(String n) {
+    return '운동 $n회';
+  }
+
+  @override
+  String get workoutSuggestTitle => '운동 횟수를 맞춰볼까요?';
+
+  @override
+  String workoutSuggestBody(String strength, String cardio, String planned) {
+    return '지난 2주 동안 주 평균 근력 $strength회 · 유산소 $cardio회 운동했어요. 설정은 주 $planned회예요. 실제 기록에 맞추면 공식 추정치가 더 정확해져요.';
+  }
+
+  @override
+  String get workoutSuggestApply => '기록에 맞추기';
+
+  @override
+  String get workoutSuggestApplied => '운동 횟수를 업데이트했어요';
+
+  @override
   String get settingsTitle => '설정';
 
   @override

@@ -620,6 +620,57 @@ class LEn extends L {
   String get pastDayGreeting => 'Filling in a past day';
 
   @override
+  String get workoutsTitle => 'Workouts';
+
+  @override
+  String get workoutsOnDay => 'Workouts that day';
+
+  @override
+  String get logWorkout => 'Log workout';
+
+  @override
+  String get noWorkouts => 'No workouts logged yet';
+
+  @override
+  String minutesN(String n) {
+    return '$n min';
+  }
+
+  @override
+  String get workoutMinutes => 'Duration';
+
+  @override
+  String workoutAdded(String type, String minutes) {
+    return 'Logged $minutes min of $type!';
+  }
+
+  @override
+  String get workoutDeleted => 'Workout removed';
+
+  @override
+  String get workoutNoCalories =>
+      'Exercise calories aren\'t added to your target. The energy you burn already shows up in your weight trend and your weekly expenditure estimate.';
+
+  @override
+  String weekWorkouts(String n) {
+    return '$n workouts';
+  }
+
+  @override
+  String get workoutSuggestTitle => 'Update your training frequency?';
+
+  @override
+  String workoutSuggestBody(String strength, String cardio, String planned) {
+    return 'Over the last 2 weeks you averaged $strength strength and $cardio cardio sessions a week, but your settings say $planned. Matching your real training makes the formula estimate more accurate.';
+  }
+
+  @override
+  String get workoutSuggestApply => 'Match my logs';
+
+  @override
+  String get workoutSuggestApplied => 'Training frequency updated';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override
