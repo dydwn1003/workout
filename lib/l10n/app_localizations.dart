@@ -1268,6 +1268,48 @@ abstract class L {
   /// **'운동 횟수를 업데이트했어요'**
   String get workoutSuggestApplied;
 
+  /// No description provided for @workoutTrendTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'운동 추이'**
+  String get workoutTrendTitle;
+
+  /// No description provided for @workoutThisWeek.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 7일'**
+  String get workoutThisWeek;
+
+  /// No description provided for @workoutThisWeekValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}회 · {minutes}분'**
+  String workoutThisWeekValue(String n, String minutes);
+
+  /// No description provided for @workoutAvg4w.
+  ///
+  /// In ko, this message translates to:
+  /// **'4주 평균'**
+  String get workoutAvg4w;
+
+  /// No description provided for @workoutAvgValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'주 {n}회'**
+  String workoutAvgValue(String n);
+
+  /// No description provided for @legendPlanned.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정 횟수'**
+  String get legendPlanned;
+
+  /// No description provided for @noWorkoutData.
+  ///
+  /// In ko, this message translates to:
+  /// **'운동을 기록하면 주별 추이를 볼 수 있어요'**
+  String get noWorkoutData;
+
   /// No description provided for @settingsTitle.
   ///
   /// In ko, this message translates to:

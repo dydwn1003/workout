@@ -6,6 +6,20 @@ import '../core/coach_engine/coach_engine.dart';
 import '../data/entities.dart';
 import '../data/repository.dart';
 
+class WorkoutWeek {
+  final DateTime start;
+  final int strength;
+  final int cardio;
+  final int minutes;
+  const WorkoutWeek({
+    required this.start,
+    required this.strength,
+    required this.cardio,
+    required this.minutes,
+  });
+  int get sessions => strength + cardio;
+}
+
 class AppState extends ChangeNotifier {
   final CoachRepository repo;
   final DateTime Function() clock;
@@ -234,6 +248,29 @@ class AppState extends ChangeNotifier {
         createdAt: p.createdAt,
       ),
     );
+  }
+
+  /// Rolling 7-day buckets ending today, oldest first.
+  List<WorkoutWeek> workoutWeeks({int weeks = 8}) {
+    return [
+      for (var i = weeks - 1; i >= 0; i--)
+        (() {
+          final end = _addDays(today, -7 * i);
+          final start = _addDays(end, -6);
+          final from = dateKey(start), to = dateKey(end);
+          final ws = _data.workouts
+              .where(
+                (w) => w.date.compareTo(from) >= 0 && w.date.compareTo(to) <= 0,
+              )
+              .toList();
+          return WorkoutWeek(
+            start: start,
+            strength: ws.where((w) => w.type == WorkoutType.strength).length,
+            cardio: ws.where((w) => w.type == WorkoutType.cardio).length,
+            minutes: ws.fold(0, (a, w) => a + w.minutes),
+          );
+        })(),
+    ];
   }
 
   /// Last 7 days ending today: (date, meals logged, weighed in).

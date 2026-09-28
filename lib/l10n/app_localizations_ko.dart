@@ -656,6 +656,31 @@ class LKo extends L {
   String get workoutSuggestApplied => '운동 횟수를 업데이트했어요';
 
   @override
+  String get workoutTrendTitle => '운동 추이';
+
+  @override
+  String get workoutThisWeek => '최근 7일';
+
+  @override
+  String workoutThisWeekValue(String n, String minutes) {
+    return '$n회 · $minutes분';
+  }
+
+  @override
+  String get workoutAvg4w => '4주 평균';
+
+  @override
+  String workoutAvgValue(String n) {
+    return '주 $n회';
+  }
+
+  @override
+  String get legendPlanned => '설정 횟수';
+
+  @override
+  String get noWorkoutData => '운동을 기록하면 주별 추이를 볼 수 있어요';
+
+  @override
   String get settingsTitle => '설정';
 
   @override

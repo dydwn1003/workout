@@ -129,6 +129,19 @@ void main() {
       expect(s.workoutsOn(s.today), isEmpty);
     });
 
+    test('weekly buckets end today and count by type', () async {
+      final s = AppState(MemoryCoachRepository(), clock: () => now);
+      await s.load();
+      await s.addWorkout(WorkoutType.strength, 60);
+      await s.addWorkout(WorkoutType.cardio, 30, date: DateTime(2026, 9, 22));
+      await s.addWorkout(WorkoutType.cardio, 40, date: DateTime(2026, 9, 21));
+      final w = s.workoutWeeks();
+      expect(w.length, 8);
+      expect(w.last.start, DateTime(2026, 9, 22));
+      expect((w.last.strength, w.last.cardio, w.last.minutes), (1, 1, 90));
+      expect(w[6].cardio, 1); // Sep 21 falls in the previous bucket
+    });
+
     test('suggests matching logged frequency after 2 weeks', () async {
       final s = AppState(MemoryCoachRepository(), clock: () => now);
       await s.load();

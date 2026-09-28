@@ -405,6 +405,30 @@
   },
   "workoutSuggestApply": "기록에 맞추기",
   "workoutSuggestApplied": "운동 횟수를 업데이트했어요",
+  "workoutTrendTitle": "운동 추이",
+  "workoutThisWeek": "최근 7일",
+  "workoutThisWeekValue": "{n}회 · {minutes}분",
+  "@workoutThisWeekValue": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "workoutAvg4w": "4주 평균",
+  "workoutAvgValue": "주 {n}회",
+  "@workoutAvgValue": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "legendPlanned": "설정 횟수",
+  "noWorkoutData": "운동을 기록하면 주별 추이를 볼 수 있어요",
   "settingsTitle": "설정",
   "sectionProfile": "내 정보",
   "profileSummary": "{sex} · {age}세 · {height}cm",

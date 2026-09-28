@@ -671,6 +671,31 @@ class LEn extends L {
   String get workoutSuggestApplied => 'Training frequency updated';
 
   @override
+  String get workoutTrendTitle => 'Training';
+
+  @override
+  String get workoutThisWeek => 'Last 7 days';
+
+  @override
+  String workoutThisWeekValue(String n, String minutes) {
+    return '$n · $minutes min';
+  }
+
+  @override
+  String get workoutAvg4w => '4-week avg';
+
+  @override
+  String workoutAvgValue(String n) {
+    return '$n/week';
+  }
+
+  @override
+  String get legendPlanned => 'Planned';
+
+  @override
+  String get noWorkoutData => 'Log workouts to see your weekly trend';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

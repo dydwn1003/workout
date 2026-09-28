@@ -10,6 +10,7 @@ import '../theme.dart';
 import '../widgets.dart';
 import 'labels.dart';
 import 'weight_sheet.dart';
+import 'workout_trend.dart';
 
 class TrendScreen extends StatefulWidget {
   const TrendScreen({super.key});
@@ -194,6 +195,9 @@ class _TrendScreenState extends State<TrendScreen> {
                   ),
                 ),
               ],
+              const SizedBox(height: 8),
+              SectionTitle(t.workoutTrendTitle),
+              const WorkoutTrendCard(),
               const SizedBox(height: 8),
               SectionTitle(t.bodyCompTitle),
               if (s.muscleWarning) ...[
