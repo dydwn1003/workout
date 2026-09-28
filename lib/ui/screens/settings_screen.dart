@@ -92,6 +92,7 @@ class SettingsScreen extends StatelessWidget {
                     goalLabel(t, p.goalType),
                     style: const TextStyle(
                       fontFamily: headingFont,
+                      fontWeight: FontWeight.w800,
                       fontSize: 17,
                     ),
                   ),
@@ -137,7 +138,10 @@ class SettingsScreen extends StatelessWidget {
                   title: Text(t.savedMealsManage),
                   trailing: Text(
                     '${s.savedMeals.length}',
-                    style: const TextStyle(fontFamily: headingFont),
+                    style: const TextStyle(
+                      fontFamily: headingFont,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   onTap: () => _savedMeals(context),
                 ),
@@ -219,7 +223,10 @@ class SettingsScreen extends StatelessWidget {
                   title: Text(t.units),
                   trailing: const Text(
                     'kg · kcal',
-                    style: TextStyle(fontFamily: headingFont),
+                    style: TextStyle(
+                      fontFamily: headingFont,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ]),

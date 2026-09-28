@@ -5,6 +5,7 @@ import '../../core/coach_engine/coach_engine.dart';
 import '../../data/entities.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
+import '../motion.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'labels.dart';
@@ -38,6 +39,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _strength = 3;
   int _cardio = 1;
   var _busy = false;
+  var _forward = true;
 
   @override
   void initState() {
@@ -201,7 +203,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (mounted && widget.editing) Navigator.of(context).pop();
       return;
     }
-    setState(() => _index++);
+    setState(() {
+      _forward = true;
+      _index++;
+    });
   }
 
   Future<void> _demo() async {
@@ -235,7 +240,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             if (_index == 0) {
                               Navigator.of(context).maybePop();
                             } else {
-                              setState(() => _index--);
+                              setState(() {
+                                _forward = false;
+                                _index--;
+                              });
                             }
                           },
                         ),
@@ -246,7 +254,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               for (var i = 0; i < progressTotal; i++)
                                 Expanded(
                                   child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 250),
+                                    duration: Motion.medium,
+                                    curve: Motion.ease,
                                     height: 8,
                                     margin: const EdgeInsets.symmetric(
                                       horizontal: 3,
@@ -267,7 +276,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                 Expanded(
                   child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
+                    duration: const Duration(milliseconds: 460),
+                    reverseDuration: const Duration(milliseconds: 200),
+                    switchInCurve: Motion.ease,
+                    switchOutCurve: Curves.easeInCubic,
                     layoutBuilder: (current, previous) => Stack(
                       alignment: Alignment.topCenter,
                       children: [...previous, ?current],
@@ -276,7 +288,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       opacity: a,
                       child: SlideTransition(
                         position: Tween(
-                          begin: const Offset(0.05, 0),
+                          begin: Offset(_forward ? 0.06 : -0.06, 0),
                           end: Offset.zero,
                         ).animate(a),
                         child: child,
@@ -507,7 +519,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             selectedBackgroundColor: AppColors.peachSoft,
             side: const BorderSide(color: AppColors.line, width: 1.5),
             minimumSize: const Size(0, 50),
-            textStyle: const TextStyle(fontFamily: headingFont, fontSize: 16),
+            textStyle: const TextStyle(
+              fontFamily: headingFont,
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+            ),
           ),
           segments: [
             ButtonSegment(value: Sex.male, label: Text(t.male)),
@@ -572,7 +588,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             selectedBackgroundColor: AppColors.peachSoft,
             side: const BorderSide(color: AppColors.line, width: 1.5),
             minimumSize: const Size(0, 50),
-            textStyle: const TextStyle(fontFamily: headingFont, fontSize: 16),
+            textStyle: const TextStyle(
+              fontFamily: headingFont,
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+            ),
           ),
           segments: [
             ButtonSegment(value: false, label: Text(t.targetByWeight)),
@@ -595,7 +615,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               padding: const EdgeInsets.all(16),
               child: Text(
                 t.targetBfResult(tw.toStringAsFixed(1)),
-                style: const TextStyle(fontFamily: headingFont, fontSize: 16),
+                style: const TextStyle(
+                  fontFamily: headingFont,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                ),
               ),
             ),
           ],
@@ -679,7 +703,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(fontFamily: headingFont, fontSize: 17),
+                  style: const TextStyle(
+                    fontFamily: headingFont,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 17,
+                  ),
                 ),
                 Text(
                   t.timesPerWeek,
@@ -771,8 +799,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   t.dailyTarget,
                   style: const TextStyle(color: AppColors.inkSoft),
                 ),
-                Text(
-                  '${fmt0(m.kcal)} kcal',
+                CountUp(
+                  value: m.kcal,
+                  format: (v) => '${fmt0(v)} kcal',
                   style: Theme.of(context).textTheme.displayMedium,
                 ),
                 const SizedBox(height: 16),
@@ -856,12 +885,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           Text(
             label,
-            style: TextStyle(fontSize: 12.5, color: c, fontFamily: headingFont),
+            style: TextStyle(
+              fontSize: 12.5,
+              color: c,
+              fontFamily: headingFont,
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
             '${fmt0(g)}g',
-            style: const TextStyle(fontFamily: headingFont, fontSize: 20),
+            style: const TextStyle(
+              fontFamily: headingFont,
+              fontWeight: FontWeight.w800,
+              fontSize: 20,
+            ),
           ),
         ],
       ),
@@ -891,7 +929,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         const SizedBox(height: 6),
         Text(
           value,
-          style: const TextStyle(fontFamily: headingFont, fontSize: 18),
+          style: const TextStyle(
+            fontFamily: headingFont,
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+          ),
         ),
       ],
     ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'motion.dart';
+
 /// Soft, rounded "cute but clean" palette.
 class AppColors {
   AppColors._();
@@ -21,8 +23,8 @@ class AppColors {
   static const skySoft = Color(0xFFE0F0FF);
 }
 
-const headingFont = 'Jua';
-const bodyFont = 'GowunDodum';
+const headingFont = 'NanumSquareRound';
+const bodyFont = 'NanumSquareRound';
 
 ThemeData buildTheme() {
   final scheme = ColorScheme.fromSeed(
@@ -39,21 +41,34 @@ ThemeData buildTheme() {
   );
   TextStyle h(double size) => TextStyle(
     fontFamily: headingFont,
+    fontWeight: FontWeight.w800,
     fontSize: size,
     color: AppColors.ink,
-    height: 1.2,
+    height: 1.25,
+    letterSpacing: -0.4,
   );
   return base.copyWith(
     scaffoldBackgroundColor: AppColors.bg,
+    splashFactory: InkRipple.splashFactory,
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: SoftPageTransitionsBuilder(),
+        TargetPlatform.iOS: SoftPageTransitionsBuilder(),
+        TargetPlatform.macOS: SoftPageTransitionsBuilder(),
+        TargetPlatform.windows: SoftPageTransitionsBuilder(),
+        TargetPlatform.linux: SoftPageTransitionsBuilder(),
+        TargetPlatform.fuchsia: SoftPageTransitionsBuilder(),
+      },
+    ),
     textTheme: base.textTheme
         .apply(bodyColor: AppColors.ink, displayColor: AppColors.ink)
         .copyWith(
-          displayLarge: h(56),
-          displayMedium: h(44),
-          displaySmall: h(34),
-          headlineMedium: h(28),
-          headlineSmall: h(24),
-          titleLarge: h(21),
+          displayLarge: h(50),
+          displayMedium: h(40),
+          displaySmall: h(30),
+          headlineMedium: h(25),
+          headlineSmall: h(22),
+          titleLarge: h(19),
           titleMedium: h(17),
         ),
     appBarTheme: AppBarTheme(
@@ -76,7 +91,11 @@ ThemeData buildTheme() {
         foregroundColor: Colors.white,
         minimumSize: const Size(0, 54),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        textStyle: const TextStyle(fontFamily: headingFont, fontSize: 18),
+        textStyle: const TextStyle(
+          fontFamily: headingFont,
+          fontWeight: FontWeight.w800,
+          fontSize: 18,
+        ),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
@@ -85,13 +104,21 @@ ThemeData buildTheme() {
         minimumSize: const Size(0, 54),
         side: const BorderSide(color: AppColors.line, width: 1.5),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        textStyle: const TextStyle(fontFamily: headingFont, fontSize: 17),
+        textStyle: const TextStyle(
+          fontFamily: headingFont,
+          fontWeight: FontWeight.w800,
+          fontSize: 17,
+        ),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: AppColors.peach,
-        textStyle: const TextStyle(fontFamily: headingFont, fontSize: 16),
+        textStyle: const TextStyle(
+          fontFamily: headingFont,
+          fontWeight: FontWeight.w800,
+          fontSize: 16,
+        ),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
@@ -120,6 +147,7 @@ ThemeData buildTheme() {
       labelTextStyle: WidgetStateProperty.resolveWith(
         (s) => TextStyle(
           fontFamily: headingFont,
+          fontWeight: FontWeight.w800,
           fontSize: 12.5,
           color: s.contains(WidgetState.selected)
               ? AppColors.ink
@@ -141,6 +169,7 @@ ThemeData buildTheme() {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       labelStyle: const TextStyle(
         fontFamily: headingFont,
+        fontWeight: FontWeight.w800,
         color: AppColors.ink,
       ),
     ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
+import '../motion.dart';
 import '../theme.dart';
 import 'checkin_screen.dart';
 import 'settings_screen.dart';
@@ -28,7 +29,7 @@ class _HomeShellState extends State<HomeShell> {
     final t = L.of(context);
     final due = AppScope.of(context).checkinDue;
     return Scaffold(
-      body: IndexedStack(
+      body: FadeIndexedStack(
         index: _tab,
         children: const [
           TodayScreen(),

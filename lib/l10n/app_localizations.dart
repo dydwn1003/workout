@@ -1094,6 +1094,96 @@ abstract class L {
   /// **'그래도 지금 다시 계산해 보기'**
   String get checkinAnyway;
 
+  /// No description provided for @backToToday.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘로'**
+  String get backToToday;
+
+  /// No description provided for @streakTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'연속 {days}일째 기록 중!'**
+  String streakTitle(String days);
+
+  /// No description provided for @streakZero.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘 첫 기록으로 연속 기록을 시작해요'**
+  String get streakZero;
+
+  /// No description provided for @weekMeals.
+  ///
+  /// In ko, this message translates to:
+  /// **'식사 {n}/7일'**
+  String weekMeals(String n);
+
+  /// No description provided for @weekWeighs.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중 {n}회'**
+  String weekWeighs(String n);
+
+  /// No description provided for @weekLogHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'식사 5일 · 체중 3회 이상 기록하면 체크인에서 목표를 조정할 수 있어요'**
+  String get weekLogHint;
+
+  /// No description provided for @weekLogReady.
+  ///
+  /// In ko, this message translates to:
+  /// **'이번 주 기록이 충분해요. 체크인 때 정확하게 조정할 수 있어요!'**
+  String get weekLogReady;
+
+  /// No description provided for @editMeal.
+  ///
+  /// In ko, this message translates to:
+  /// **'식사 수정'**
+  String get editMeal;
+
+  /// No description provided for @mealUpdated.
+  ///
+  /// In ko, this message translates to:
+  /// **'수정했어요'**
+  String get mealUpdated;
+
+  /// No description provided for @recentMeals.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 먹은 것'**
+  String get recentMeals;
+
+  /// No description provided for @savedMealsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 식사'**
+  String get savedMealsTitle;
+
+  /// No description provided for @mealsOnDay.
+  ///
+  /// In ko, this message translates to:
+  /// **'이날 먹은 것'**
+  String get mealsOnDay;
+
+  /// No description provided for @weightOnDay.
+  ///
+  /// In ko, this message translates to:
+  /// **'이날 체중'**
+  String get weightOnDay;
+
+  /// No description provided for @noMealsPast.
+  ///
+  /// In ko, this message translates to:
+  /// **'이날은 기록이 없어요.\n아래 버튼으로 빠진 식사를 채울 수 있어요.'**
+  String get noMealsPast;
+
+  /// No description provided for @pastDayGreeting.
+  ///
+  /// In ko, this message translates to:
+  /// **'지난 기록 채우기'**
+  String get pastDayGreeting;
+
   /// No description provided for @settingsTitle.
   ///
   /// In ko, this message translates to:

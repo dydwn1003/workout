@@ -318,6 +318,42 @@
   "checkinDone": "이번 주 체크인 완료!",
   "checkinDoneDesc": "다음 체크인까지 꾸준히 기록해 주세요. 기록이 많을수록 정확해져요.",
   "checkinAnyway": "그래도 지금 다시 계산해 보기",
+  "backToToday": "오늘로",
+  "streakTitle": "연속 {days}일째 기록 중!",
+  "@streakTitle": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "streakZero": "오늘 첫 기록으로 연속 기록을 시작해요",
+  "weekMeals": "식사 {n}/7일",
+  "@weekMeals": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "weekWeighs": "체중 {n}회",
+  "@weekWeighs": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "weekLogHint": "식사 5일 · 체중 3회 이상 기록하면 체크인에서 목표를 조정할 수 있어요",
+  "weekLogReady": "이번 주 기록이 충분해요. 체크인 때 정확하게 조정할 수 있어요!",
+  "editMeal": "식사 수정",
+  "mealUpdated": "수정했어요",
+  "recentMeals": "최근 먹은 것",
+  "savedMealsTitle": "내 식사",
+  "mealsOnDay": "이날 먹은 것",
+  "weightOnDay": "이날 체중",
+  "noMealsPast": "이날은 기록이 없어요.\n아래 버튼으로 빠진 식사를 채울 수 있어요.",
+  "pastDayGreeting": "지난 기록 채우기",
   "settingsTitle": "설정",
   "sectionProfile": "내 정보",
   "profileSummary": "{sex} · {age}세 · {height}cm",

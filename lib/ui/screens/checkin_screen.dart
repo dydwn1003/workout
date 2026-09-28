@@ -6,6 +6,7 @@ import '../../core/coach_engine/coach_engine.dart';
 import '../../data/entities.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
+import '../motion.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'labels.dart';
@@ -264,6 +265,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
                               '${fmt0(p.targetKcal)} kcal',
                               style: const TextStyle(
                                 fontFamily: headingFont,
+                                fontWeight: FontWeight.w800,
                                 fontSize: 16,
                               ),
                             ),
@@ -294,9 +296,21 @@ class _CheckinScreenState extends State<CheckinScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: c, fontFamily: headingFont),
+          style: TextStyle(
+            fontSize: 12,
+            color: c,
+            fontFamily: headingFont,
+            fontWeight: FontWeight.w800,
+          ),
         ),
-        Text(v, style: const TextStyle(fontFamily: headingFont, fontSize: 18)),
+        Text(
+          v,
+          style: const TextStyle(
+            fontFamily: headingFont,
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+          ),
+        ),
       ],
     ),
   );
@@ -308,39 +322,42 @@ class _CheckinScreenState extends State<CheckinScreen> {
       Confidence.medium => (const Color(0xFFD49B1F), AppColors.butterSoft),
       Confidence.low => (AppColors.inkSoft, AppColors.line),
     };
-    Widget tile(
-      String label,
-      String value, {
-      String? sub,
-      Widget? trailing,
-    }) => Expanded(
-      child: SoftCard(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(fontSize: 12.5, color: AppColors.inkSoft),
-            ),
-            const SizedBox(height: 4),
-            trailing ??
+    Widget tile(String label, String value, {String? sub, Widget? trailing}) =>
+        Expanded(
+          child: SoftCard(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
-                  value,
-                  style: const TextStyle(fontFamily: headingFont, fontSize: 20),
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.inkSoft,
+                  ),
                 ),
-            if (sub != null)
-              Text(
-                sub,
-                style: const TextStyle(
-                  fontSize: 11.5,
-                  color: AppColors.inkSoft,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
+                const SizedBox(height: 4),
+                trailing ??
+                    Text(
+                      value,
+                      style: const TextStyle(
+                        fontFamily: headingFont,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 20,
+                      ),
+                    ),
+                if (sub != null)
+                  Text(
+                    sub,
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      color: AppColors.inkSoft,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
     return Column(
       children: [
         Row(
@@ -405,6 +422,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
                       fmt0(current.targetKcal),
                       style: const TextStyle(
                         fontFamily: headingFont,
+                        fontWeight: FontWeight.w800,
                         fontSize: 26,
                         color: AppColors.inkSoft,
                       ),
@@ -423,10 +441,12 @@ class _CheckinScreenState extends State<CheckinScreen> {
                         fontSize: 13,
                       ),
                     ),
-                    Text(
-                      fmt0(m.kcal),
+                    CountUp(
+                      value: m.kcal,
+                      format: fmt0,
                       style: const TextStyle(
                         fontFamily: headingFont,
+                        fontWeight: FontWeight.w800,
                         fontSize: 34,
                       ),
                     ),
@@ -482,7 +502,11 @@ class _CheckinScreenState extends State<CheckinScreen> {
           leading: const Icon(Icons.calculate_rounded, color: AppColors.lilac),
           title: Text(
             t.howCalculated,
-            style: const TextStyle(fontFamily: headingFont, fontSize: 16),
+            style: const TextStyle(
+              fontFamily: headingFont,
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+            ),
           ),
           childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
           children: [

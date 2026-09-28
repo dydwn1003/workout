@@ -47,6 +47,8 @@ void main() {
       expect(s.plans.length, before + 1);
       expect(s.currentPlan!.targetKcal, r.proposal.kcal);
       expect(s.checkinDue, isFalse);
+      expect(s.planOn(s.today)!.targetKcal, r.proposal.kcal);
+      expect(s.planOn(DateTime(2026, 8, 1))!.status, PlanStatus.initial);
 
       // Persisted and reloadable.
       final reloaded = AppState(repo, clock: () => now);
@@ -63,6 +65,58 @@ void main() {
     });
   });
 
+  group('logging helpers', () {
+    test('streak, week log, recent meals and meal edit', () async {
+      final s = AppState(MemoryCoachRepository(), clock: () => now);
+      await s.load();
+      await s.loadDemoData(korean: true);
+      final log = s.weekLog();
+      expect(log.length, 7);
+      expect(log.last.$1, s.today);
+      expect(log.last.$2, isTrue); // demo logs meals today
+      expect(s.loggingStreak, greaterThan(0));
+      final recent = s.recentMeals();
+      final savedNames = s.savedMeals.map((m) => m.name).toSet();
+      expect(recent.any((m) => savedNames.contains(m.name)), isFalse);
+      expect(recent.map((m) => m.name).toSet().length, recent.length);
+
+      final m = s.mealsOn(s.today).first;
+      await s.updateMeal(
+        Meal(
+          id: m.id,
+          date: m.date,
+          time: m.time,
+          name: 'edited',
+          kcal: 123,
+          proteinG: 1,
+          carbsG: 2,
+          fatG: 3,
+          source: m.source,
+          edited: true,
+        ),
+      );
+      expect(s.mealsOn(s.today).firstWhere((x) => x.id == m.id).kcal, 123);
+    });
+
+    test('meals can be logged on a past day', () async {
+      final s = AppState(MemoryCoachRepository(), clock: () => now);
+      await s.load();
+      final yesterday = DateTime(2026, 9, 27);
+      await s.addMeal(
+        name: 'late log',
+        kcal: 500,
+        proteinG: 20,
+        carbsG: 60,
+        fatG: 15,
+        source: MealSource.manual,
+        date: yesterday,
+      );
+      expect(s.mealsOn(yesterday).single.name, 'late log');
+      expect(s.mealsOn(s.today), isEmpty);
+      expect(s.loggingStreak, 1); // yesterday counts when today is empty
+    });
+  });
+
   group('food estimator', () {
     test('scales by grams and counts', () {
       final e = estimateFromText('닭가슴살 200g, 계란 2개, 현미밥 1공기');
@@ -75,6 +129,13 @@ void main() {
       final e = estimateFromText('2 eggs and mystery stew');
       expect(e.items.first.kcal, closeTo(144, 1e-6));
       expect(e.hasUnmatched, isTrue);
+    });
+
+    test('prefers the longest matching food name', () {
+      final e = estimateFromText('볶음밥, 초밥 10개, 크림치즈');
+      expect(e.items[0].kcal, 600); // not plain rice
+      expect(e.items[1].kcal, closeTo(500, 1e-6));
+      expect(e.items[2].kcal, 70); // not cheese
     });
   });
 }

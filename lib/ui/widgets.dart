@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'motion.dart';
 import 'theme.dart';
 
 String fmt0(num v) {
@@ -35,7 +36,9 @@ class SoftCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final card = AnimatedContainer(
+      duration: Motion.medium,
+      curve: Motion.ease,
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(24),
@@ -56,6 +59,7 @@ class SoftCard extends StatelessWidget {
         ),
       ),
     );
+    return onTap == null ? card : Squish(child: card);
   }
 }
 
@@ -82,8 +86,8 @@ class Ring extends StatelessWidget {
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: progress.clamp(0, 1.0)),
-      duration: const Duration(milliseconds: 700),
-      curve: Curves.easeOutCubic,
+      duration: Motion.slow,
+      curve: Motion.emphasized,
       builder: (context, v, _) => SizedBox(
         width: size,
         height: size,
@@ -162,7 +166,11 @@ class MacroBar extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               label,
-              style: const TextStyle(fontFamily: headingFont, fontSize: 14),
+              style: const TextStyle(
+                fontFamily: headingFont,
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+              ),
             ),
             const Spacer(),
             Text(
@@ -176,8 +184,8 @@ class MacroBar extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           child: TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: p),
-            duration: const Duration(milliseconds: 700),
-            curve: Curves.easeOutCubic,
+            duration: Motion.slow,
+            curve: Motion.emphasized,
             builder: (context, v, _) => LinearProgressIndicator(
               value: v,
               minHeight: 10,
@@ -199,19 +207,38 @@ class Mascot extends StatelessWidget {
   final MascotMood mood;
   final Color color;
 
+  /// Gentle idle float.
+  final bool animate;
+
   const Mascot({
     super.key,
     this.size = 88,
     this.mood = MascotMood.happy,
     this.color = AppColors.peach,
+    this.animate = true,
   });
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    width: size,
-    height: size,
-    child: CustomPaint(painter: _MascotPainter(mood, color)),
-  );
+  Widget build(BuildContext context) {
+    final face = SizedBox(
+      width: size,
+      height: size,
+      child: AnimatedSwitcher(
+        duration: Motion.medium,
+        switchInCurve: Motion.ease,
+        transitionBuilder: (c, a) => ScaleTransition(
+          scale: Tween(begin: 0.85, end: 1.0).animate(a),
+          child: FadeTransition(opacity: a, child: c),
+        ),
+        child: CustomPaint(
+          key: ValueKey(mood),
+          size: Size.square(size),
+          painter: _MascotPainter(mood, color),
+        ),
+      ),
+    );
+    return animate ? Floaty(amplitude: size / 30, child: face) : face;
+  }
 }
 
 class _MascotPainter extends CustomPainter {
@@ -399,65 +426,68 @@ class ChoiceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      decoration: BoxDecoration(
-        color: selected ? soft : Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: selected ? color : AppColors.line,
-          width: selected ? 2 : 1.5,
-        ),
-      ),
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
+    return Squish(
+      child: AnimatedContainer(
+        duration: Motion.fast,
+        decoration: BoxDecoration(
+          color: selected ? soft : Colors.white,
           borderRadius: BorderRadius.circular(22),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: soft,
-                    borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected ? color : AppColors.line,
+            width: selected ? 2 : 1.5,
+          ),
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(22),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: soft,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(icon, color: color, size: 26),
                   ),
-                  child: Icon(icon, color: color, size: 26),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontFamily: headingFont,
-                          fontSize: 18,
-                        ),
-                      ),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: 2),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          subtitle!,
+                          title,
                           style: const TextStyle(
-                            fontSize: 13.5,
-                            color: AppColors.inkSoft,
+                            fontFamily: headingFont,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 18,
                           ),
                         ),
+                        if (subtitle != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            subtitle!,
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              color: AppColors.inkSoft,
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-                AnimatedOpacity(
-                  opacity: selected ? 1 : 0,
-                  duration: const Duration(milliseconds: 180),
-                  child: Icon(Icons.check_circle_rounded, color: color),
-                ),
-              ],
+                  AnimatedOpacity(
+                    opacity: selected ? 1 : 0,
+                    duration: Motion.fast,
+                    child: Icon(Icons.check_circle_rounded, color: color),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -500,6 +530,7 @@ class Pill extends StatelessWidget {
             text,
             style: TextStyle(
               fontFamily: headingFont,
+              fontWeight: FontWeight.w800,
               fontSize: 13,
               color: color,
             ),
@@ -547,7 +578,11 @@ class CountStepper extends StatelessWidget {
           child: Text(
             '$value',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontFamily: headingFont, fontSize: 24),
+            style: const TextStyle(
+              fontFamily: headingFont,
+              fontWeight: FontWeight.w800,
+              fontSize: 24,
+            ),
           ),
         ),
         btn(Icons.add_rounded, value < max ? () => onChanged(value + 1) : null),

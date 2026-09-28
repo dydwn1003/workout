@@ -4,17 +4,21 @@ import 'package:flutter/services.dart';
 import '../../data/entities.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
+import '../motion.dart';
 import '../theme.dart';
 import '../widgets.dart';
 
-Future<void> showWeightSheet(BuildContext context) => showModalBottomSheet(
-  context: context,
-  isScrollControlled: true,
-  builder: (_) => const WeightSheet(),
-);
+Future<void> showWeightSheet(BuildContext context, {DateTime? date}) =>
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      sheetAnimationStyle: Motion.sheet,
+      builder: (_) => WeightSheet(date: date),
+    );
 
 class WeightSheet extends StatefulWidget {
-  const WeightSheet({super.key});
+  final DateTime? date;
+  const WeightSheet({super.key, this.date});
 
   @override
   State<WeightSheet> createState() => _WeightSheetState();
@@ -30,7 +34,7 @@ class _WeightSheetState extends State<WeightSheet> {
   void initState() {
     super.initState();
     final s = AppScope.read(context);
-    final today = s.weightOn(s.today);
+    final today = s.weightOn(widget.date ?? s.today);
     _kg = today?.kg ?? s.latestWeight?.kg ?? 70;
     if (today?.bodyFatPct != null) {
       _bf.text = today!.bodyFatPct!.toString();
@@ -92,7 +96,7 @@ class _WeightSheetState extends State<WeightSheet> {
     final smm = double.tryParse(_smm.text.replaceAll(',', '.'));
     await s.upsertWeight(
       WeightEntry(
-        date: dateKey(s.today),
+        date: dateKey(widget.date ?? s.today),
         kg: _kg,
         bodyFatPct: bf != null && bf > 2 && bf < 70 ? bf : null,
         skeletalMuscleKg: smm != null && smm > 5 && smm < 100 ? smm : null,
@@ -148,6 +152,7 @@ class _WeightSheetState extends State<WeightSheet> {
                         text: ' kg',
                         style: TextStyle(
                           fontFamily: headingFont,
+                          fontWeight: FontWeight.w800,
                           fontSize: 22,
                           color: AppColors.inkSoft,
                         ),
@@ -228,7 +233,10 @@ class _WeightSheetState extends State<WeightSheet> {
                   Expanded(
                     child: Text(
                       t.healthSync,
-                      style: const TextStyle(fontFamily: headingFont),
+                      style: const TextStyle(
+                        fontFamily: headingFont,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                   Text(

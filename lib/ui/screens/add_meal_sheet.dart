@@ -5,18 +5,47 @@ import '../../data/entities.dart';
 import '../../data/food_estimator.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
+import '../motion.dart';
 import '../theme.dart';
 import '../widgets.dart';
 
-Future<void> showAddMealSheet(BuildContext context) => showModalBottomSheet(
-  context: context,
-  isScrollControlled: true,
-  builder: (_) =>
-      const FractionallySizedBox(heightFactor: 0.9, child: AddMealSheet()),
-);
+Future<void> showAddMealSheet(BuildContext context, {DateTime? date}) =>
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      sheetAnimationStyle: Motion.sheet,
+      builder: (_) => FractionallySizedBox(
+        heightFactor: 0.9,
+        child: AddMealSheet(date: date),
+      ),
+    );
+
+Future<void> showEditMealSheet(BuildContext context, Meal meal) =>
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      sheetAnimationStyle: Motion.sheet,
+      builder: (ctx) => FractionallySizedBox(
+        heightFactor: 0.75,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                L.of(ctx).editMeal,
+                style: Theme.of(ctx).textTheme.headlineSmall,
+              ),
+            ),
+            Expanded(child: _MealForm(withText: false, editing: meal)),
+          ],
+        ),
+      ),
+    );
 
 class AddMealSheet extends StatefulWidget {
-  const AddMealSheet({super.key});
+  final DateTime? date;
+  const AddMealSheet({super.key, this.date});
 
   @override
   State<AddMealSheet> createState() => _AddMealSheetState();
@@ -59,7 +88,11 @@ class _AddMealSheetState extends State<AddMealSheet>
         const SizedBox(height: 8),
         TabBar(
           controller: _tabs,
-          labelStyle: const TextStyle(fontFamily: headingFont, fontSize: 15),
+          labelStyle: const TextStyle(
+            fontFamily: headingFont,
+            fontWeight: FontWeight.w800,
+            fontSize: 15,
+          ),
           labelColor: AppColors.ink,
           unselectedLabelColor: AppColors.inkSoft,
           indicatorColor: AppColors.peach,
@@ -75,10 +108,10 @@ class _AddMealSheetState extends State<AddMealSheet>
         Expanded(
           child: TabBarView(
             controller: _tabs,
-            children: const [
-              _MealForm(withText: true),
-              _SavedList(),
-              _MealForm(withText: false),
+            children: [
+              _MealForm(withText: true, date: widget.date),
+              _SavedList(date: widget.date),
+              _MealForm(withText: false, date: widget.date),
               _PhotoSoon(),
             ],
           ),
@@ -90,7 +123,11 @@ class _AddMealSheetState extends State<AddMealSheet>
 
 class _MealForm extends StatefulWidget {
   final bool withText;
-  const _MealForm({required this.withText});
+  final DateTime? date;
+
+  /// When set, the form edits this meal instead of adding a new one.
+  final Meal? editing;
+  const _MealForm({required this.withText, this.date, this.editing});
 
   @override
   State<_MealForm> createState() => _MealFormState();
@@ -114,6 +151,14 @@ class _MealFormState extends State<_MealForm>
   @override
   void initState() {
     super.initState();
+    final m = widget.editing;
+    if (m != null) {
+      _name.text = m.name;
+      _kcal.text = m.kcal.round().toString();
+      _p.text = m.proteinG.round().toString();
+      _c.text = m.carbsG.round().toString();
+      _f.text = m.fatG.round().toString();
+    }
     for (final c in [_text, _name, _kcal, _p, _c, _f]) {
       c.addListener(() => setState(() {}));
     }
@@ -150,7 +195,30 @@ class _MealFormState extends State<_MealForm>
     final s = AppScope.read(context);
     final t = L.of(context);
     final name = _name.text.trim();
+    final editing = widget.editing;
+    if (editing != null) {
+      await s.updateMeal(
+        Meal(
+          id: editing.id,
+          date: editing.date,
+          time: editing.time,
+          name: name,
+          kcal: _v(_kcal),
+          proteinG: _v(_p),
+          carbsG: _v(_c),
+          fatG: _v(_f),
+          source: editing.source,
+          edited: true,
+        ),
+      );
+      if (!mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(t.mealUpdated)));
+      return;
+    }
     await s.addMeal(
+      date: widget.date,
       name: name,
       kcal: _v(_kcal),
       proteinG: _v(_p),
@@ -239,7 +307,10 @@ class _MealFormState extends State<_MealForm>
                         Expanded(child: Text(i.name)),
                         Text(
                           '${fmt0(i.kcal)} kcal',
-                          style: const TextStyle(fontFamily: headingFont),
+                          style: const TextStyle(
+                            fontFamily: headingFont,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ],
                     ),
@@ -288,18 +359,22 @@ class _MealFormState extends State<_MealForm>
             ],
           ),
           const SizedBox(height: 6),
-          CheckboxListTile(
-            value: _saveTemplate,
-            onChanged: (v) => setState(() => _saveTemplate = v ?? false),
-            title: Text(t.saveAsMyMeal, style: const TextStyle(fontSize: 14.5)),
-            controlAffinity: ListTileControlAffinity.leading,
-            contentPadding: EdgeInsets.zero,
-            activeColor: AppColors.peach,
-          ),
+          if (widget.editing == null)
+            CheckboxListTile(
+              value: _saveTemplate,
+              onChanged: (v) => setState(() => _saveTemplate = v ?? false),
+              title: Text(
+                t.saveAsMyMeal,
+                style: const TextStyle(fontSize: 14.5),
+              ),
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: EdgeInsets.zero,
+              activeColor: AppColors.peach,
+            ),
           const SizedBox(height: 8),
           FilledButton(
             onPressed: _valid ? _add : null,
-            child: Text(t.addToToday),
+            child: Text(widget.editing != null ? t.save : t.addToToday),
           ),
         ],
       ],
@@ -308,14 +383,41 @@ class _MealFormState extends State<_MealForm>
 }
 
 class _SavedList extends StatelessWidget {
-  const _SavedList();
+  final DateTime? date;
+  const _SavedList({this.date});
+
+  Future<void> _quickAdd(
+    BuildContext context,
+    String name,
+    double kcal,
+    double p,
+    double c,
+    double f,
+  ) async {
+    final s = AppScope.read(context);
+    final t = L.of(context);
+    await s.addMeal(
+      date: date,
+      name: name,
+      kcal: kcal,
+      proteinG: p,
+      carbsG: c,
+      fatG: f,
+      source: MealSource.saved,
+    );
+    if (!context.mounted) return;
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(t.added(name))));
+  }
 
   @override
   Widget build(BuildContext context) {
     final t = L.of(context);
     final s = AppScope.of(context);
     final saved = s.savedMeals;
-    if (saved.isEmpty) {
+    final recent = s.recentMeals();
+    if (saved.isEmpty && recent.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -334,45 +436,43 @@ class _SavedList extends StatelessWidget {
         ),
       );
     }
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-      itemCount: saved.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (context, i) {
-        final m = saved[i];
-        return SoftCard(
-          padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
-          onTap: () async {
-            await s.addMeal(
-              name: m.name,
-              kcal: m.kcal,
-              proteinG: m.proteinG,
-              carbsG: m.carbsG,
-              fatG: m.fatG,
-              source: MealSource.saved,
-            );
-            if (!context.mounted) return;
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text(t.added(m.name))));
-          },
+    var i = 0;
+    Widget row({
+      required IconData icon,
+      required Color color,
+      required String name,
+      required double kcal,
+      required double p,
+      required double c,
+      required double f,
+      VoidCallback? onRemove,
+    }) => FadeSlideIn(
+      delay: stagger(i++),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: SoftCard(
+          padding: EdgeInsets.fromLTRB(16, 10, onRemove == null ? 16 : 8, 10),
+          onTap: () => _quickAdd(context, name, kcal, p, c, f),
           child: Row(
             children: [
-              const Icon(Icons.bookmark_rounded, color: AppColors.peach),
+              Icon(icon, color: color),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      m.name,
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontFamily: headingFont,
+                        fontWeight: FontWeight.w800,
                         fontSize: 16,
                       ),
                     ),
                     Text(
-                      'P ${fmt0(m.proteinG)} · C ${fmt0(m.carbsG)} · F ${fmt0(m.fatG)}',
+                      'P ${fmt0(p)} · C ${fmt0(c)} · F ${fmt0(f)}',
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.inkSoft,
@@ -382,21 +482,57 @@ class _SavedList extends StatelessWidget {
                 ),
               ),
               Text(
-                '${fmt0(m.kcal)} kcal',
-                style: const TextStyle(fontFamily: headingFont),
-              ),
-              IconButton(
-                icon: const Icon(
-                  Icons.close_rounded,
-                  size: 18,
-                  color: AppColors.inkSoft,
+                '${fmt0(kcal)} kcal',
+                style: const TextStyle(
+                  fontFamily: headingFont,
+                  fontWeight: FontWeight.w800,
                 ),
-                onPressed: () => s.deleteSavedMeal(m.id),
               ),
+              if (onRemove != null)
+                IconButton(
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    size: 18,
+                    color: AppColors.inkSoft,
+                  ),
+                  onPressed: onRemove,
+                ),
             ],
           ),
-        );
-      },
+        ),
+      ),
+    );
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+      children: [
+        if (saved.isNotEmpty) ...[
+          SectionTitle(t.savedMealsTitle),
+          for (final m in saved)
+            row(
+              icon: Icons.bookmark_rounded,
+              color: AppColors.peach,
+              name: m.name,
+              kcal: m.kcal,
+              p: m.proteinG,
+              c: m.carbsG,
+              f: m.fatG,
+              onRemove: () => s.deleteSavedMeal(m.id),
+            ),
+        ],
+        if (recent.isNotEmpty) ...[
+          SectionTitle(t.recentMeals),
+          for (final m in recent)
+            row(
+              icon: Icons.history_rounded,
+              color: AppColors.sky,
+              name: m.name,
+              kcal: m.kcal,
+              p: m.proteinG,
+              c: m.carbsG,
+              f: m.fatG,
+            ),
+        ],
+      ],
     );
   }
 }

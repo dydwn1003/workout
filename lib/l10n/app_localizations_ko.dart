@@ -554,6 +554,57 @@ class LKo extends L {
   String get checkinAnyway => '그래도 지금 다시 계산해 보기';
 
   @override
+  String get backToToday => '오늘로';
+
+  @override
+  String streakTitle(String days) {
+    return '연속 $days일째 기록 중!';
+  }
+
+  @override
+  String get streakZero => '오늘 첫 기록으로 연속 기록을 시작해요';
+
+  @override
+  String weekMeals(String n) {
+    return '식사 $n/7일';
+  }
+
+  @override
+  String weekWeighs(String n) {
+    return '체중 $n회';
+  }
+
+  @override
+  String get weekLogHint => '식사 5일 · 체중 3회 이상 기록하면 체크인에서 목표를 조정할 수 있어요';
+
+  @override
+  String get weekLogReady => '이번 주 기록이 충분해요. 체크인 때 정확하게 조정할 수 있어요!';
+
+  @override
+  String get editMeal => '식사 수정';
+
+  @override
+  String get mealUpdated => '수정했어요';
+
+  @override
+  String get recentMeals => '최근 먹은 것';
+
+  @override
+  String get savedMealsTitle => '내 식사';
+
+  @override
+  String get mealsOnDay => '이날 먹은 것';
+
+  @override
+  String get weightOnDay => '이날 체중';
+
+  @override
+  String get noMealsPast => '이날은 기록이 없어요.\n아래 버튼으로 빠진 식사를 채울 수 있어요.';
+
+  @override
+  String get pastDayGreeting => '지난 기록 채우기';
+
+  @override
   String get settingsTitle => '설정';
 
   @override

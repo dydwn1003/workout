@@ -43,6 +43,17 @@ class AppState extends ChangeNotifier {
 
   Plan? get currentPlan => _data.plans.isEmpty ? null : _data.plans.last;
 
+  /// The plan that was in effect on [d] (falls back to the first plan).
+  Plan? planOn(DateTime d) {
+    if (_data.plans.isEmpty) return null;
+    final k = dateKey(d);
+    Plan? found;
+    for (final p in _data.plans) {
+      if (p.weekStart.compareTo(k) <= 0) found = p;
+    }
+    return found ?? _data.plans.first;
+  }
+
   WeightEntry? weightOn(DateTime d) {
     final k = dateKey(d);
     for (final w in _data.weights) {
@@ -150,6 +161,52 @@ class AppState extends ChangeNotifier {
         trendWeight ?? latestWeight?.kg ?? 70,
       ),
     );
+  }
+
+  /// Distinct recently eaten meals (newest first), excluding saved ones.
+  List<Meal> recentMeals({int limit = 6, int days = 14}) {
+    final since = dateKey(_addDays(today, -days));
+    final saved = {for (final s in _data.savedMeals) s.name};
+    final seen = <String>{};
+    final out = <Meal>[];
+    for (final m in _data.meals.reversed) {
+      if (m.date.compareTo(since) < 0) break;
+      if (saved.contains(m.name) || !seen.add(m.name)) continue;
+      out.add(m);
+      if (out.length >= limit) break;
+    }
+    return out;
+  }
+
+  /// Last 7 days ending today: (date, meals logged, weighed in).
+  List<(DateTime, bool, bool)> weekLog() {
+    final mealDays = {for (final m in _data.meals) m.date};
+    final weighDays = {for (final w in _data.weights) w.date};
+    return [
+      for (var i = 6; i >= 0; i--)
+        (() {
+          final d = _addDays(today, -i);
+          final k = dateKey(d);
+          return (d, mealDays.contains(k), weighDays.contains(k));
+        })(),
+    ];
+  }
+
+  /// Consecutive days with any log (meal or weight), counting back from
+  /// today (or yesterday, if today has nothing yet).
+  int get loggingStreak {
+    final days = {
+      for (final m in _data.meals) m.date,
+      for (final w in _data.weights) w.date,
+    };
+    var d = today;
+    if (!days.contains(dateKey(d))) d = _addDays(d, -1);
+    var n = 0;
+    while (days.contains(dateKey(d))) {
+      n++;
+      d = _addDays(d, -1);
+    }
+    return n;
   }
 
   bool get muscleWarning {
@@ -300,6 +357,14 @@ class AppState extends ChangeNotifier {
       ),
     );
     _sort();
+    await repo.saveMeals(_data.meals);
+    notifyListeners();
+  }
+
+  Future<void> updateMeal(Meal meal) async {
+    final i = _data.meals.indexWhere((m) => m.id == meal.id);
+    if (i < 0) return;
+    _data.meals[i] = meal;
     await repo.saveMeals(_data.meals);
     notifyListeners();
   }

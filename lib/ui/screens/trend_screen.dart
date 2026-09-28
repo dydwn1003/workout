@@ -180,6 +180,7 @@ class _TrendScreenState extends State<TrendScreen> {
                         '${t.goalWeight} ${fmt1(goal)}kg',
                         style: const TextStyle(
                           fontFamily: headingFont,
+                          fontWeight: FontWeight.w800,
                           fontSize: 16,
                         ),
                       ),
@@ -256,6 +257,7 @@ class _TrendScreenState extends State<TrendScreen> {
                                       textAlign: TextAlign.end,
                                       style: const TextStyle(
                                         fontFamily: headingFont,
+                                        fontWeight: FontWeight.w800,
                                       ),
                                     ),
                                   ),
@@ -267,6 +269,7 @@ class _TrendScreenState extends State<TrendScreen> {
                                       textAlign: TextAlign.end,
                                       style: const TextStyle(
                                         fontFamily: headingFont,
+                                        fontWeight: FontWeight.w800,
                                       ),
                                     ),
                                   ),
@@ -299,6 +302,7 @@ class _TrendScreenState extends State<TrendScreen> {
                               '${fmt1(w.kg)} kg',
                               style: const TextStyle(
                                 fontFamily: headingFont,
+                                fontWeight: FontWeight.w800,
                                 fontSize: 16,
                               ),
                             ),
@@ -337,7 +341,12 @@ class _TrendScreenState extends State<TrendScreen> {
         const SizedBox(height: 4),
         Text(
           value,
-          style: TextStyle(fontFamily: headingFont, fontSize: 24, color: c),
+          style: TextStyle(
+            fontFamily: headingFont,
+            fontWeight: FontWeight.w800,
+            fontSize: 24,
+            color: c,
+          ),
         ),
       ],
     ),

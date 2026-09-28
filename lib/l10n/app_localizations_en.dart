@@ -567,6 +567,59 @@ class LEn extends L {
   String get checkinAnyway => 'Recalculate now anyway';
 
   @override
+  String get backToToday => 'Today';
+
+  @override
+  String streakTitle(String days) {
+    return '$days-day logging streak!';
+  }
+
+  @override
+  String get streakZero => 'Log something today to start a streak';
+
+  @override
+  String weekMeals(String n) {
+    return 'Meals $n/7 days';
+  }
+
+  @override
+  String weekWeighs(String n) {
+    return '$n weigh-ins';
+  }
+
+  @override
+  String get weekLogHint =>
+      'Log meals on 5+ days and weight 3+ times so check-in can adjust your target';
+
+  @override
+  String get weekLogReady => 'Enough data this week for an accurate check-in!';
+
+  @override
+  String get editMeal => 'Edit meal';
+
+  @override
+  String get mealUpdated => 'Updated';
+
+  @override
+  String get recentMeals => 'Recent';
+
+  @override
+  String get savedMealsTitle => 'My meals';
+
+  @override
+  String get mealsOnDay => 'Meals that day';
+
+  @override
+  String get weightOnDay => 'Weight that day';
+
+  @override
+  String get noMealsPast =>
+      'Nothing logged that day.\nYou can fill in missed meals below.';
+
+  @override
+  String get pastDayGreeting => 'Filling in a past day';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override
