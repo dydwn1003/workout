@@ -49,3 +49,6 @@ app.*.map.json
 
 # Raw downloads from the data.go.kr API (regenerate with tool/fetch_mfds_api.py)
 data/mfds_api*.csv
+
+# Per-page download cache of tool/fetch_mfds_api.py (resumable downloads)
+data/.mfds_cache/

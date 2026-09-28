@@ -296,6 +296,12 @@ S = {
                       "All weights, meals and plans will be erased and you'll return to the start. This can't be undone."),
  "sectionAbout": ("정보", "About"),
  "version": ("버전", "Version"),
+ "browseMore": ("이 분류에는 {count}개가 있어요. 이름으로 검색해 보세요.",
+                "{count} foods in this category. Search by name to find the rest."),
+ "foodDataSource": ("출처: 식품의약품안전처 식품영양성분 데이터베이스",
+                    "Source: Korea Ministry of Food and Drug Safety (MFDS) Food Nutrient Database"),
+ "foodDataSourceDesc": ("음식 검색의 영양정보는 공공데이터포털에서 받은 데이터를 100g 기준으로 바꾼 값이에요.",
+                        "Food search nutrition comes from data.go.kr, converted to per 100 g."),
  "savedMealsManage": ("내 식사 관리", "Manage my meals"),
 }
 

@@ -21,7 +21,7 @@ await p.goto('http://localhost:8080', { waitUntil: 'networkidle' });
 await p.waitForTimeout(4000);
 ```
 
-Useful coordinates on the welcome screen: consent checkbox (44, 619), "sample data" link (195, 807).
+Useful coordinates on the welcome screen: consent checkbox (44, 545), "sample data" link (195, 807).
 Bottom nav tabs at y=812: Today x=49, Trend x=146, Check-in x=244, Settings x=341.
 
 The "sample data" button fills 5 weeks of history, so the weekly check-in is immediately due.

@@ -303,6 +303,21 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ),
                 ListTile(
+                  leading: icon(
+                    Icons.menu_book_rounded,
+                    AppColors.mint,
+                    AppColors.mintSoft,
+                  ),
+                  title: Text(
+                    t.foodDataSource,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  subtitle: Text(
+                    t.foodDataSourceDesc,
+                    style: const TextStyle(fontSize: 12.5),
+                  ),
+                ),
+                ListTile(
                   title: Text(t.version),
                   trailing: const Text(
                     '0.1.0 (MVP)',

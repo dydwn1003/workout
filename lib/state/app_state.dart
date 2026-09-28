@@ -64,11 +64,13 @@ class AppState extends ChangeNotifier {
     ...builtInFoods,
   ];
 
+  static final _builtInById = {for (final f in builtInFoods) f.id: f};
+
   Food? foodById(String id) {
-    for (final f in allFoods) {
-      if (f.id == id) return f;
+    for (final c in _data.customFoods) {
+      if (c.id == id) return c.toFood();
     }
-    return null;
+    return _builtInById[id];
   }
 
   /// Distinct foods logged from search recently (newest first).

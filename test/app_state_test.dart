@@ -229,7 +229,7 @@ void main() {
       await reloaded.load();
       expect(reloaded.customFoods.single.name, '엄마표 김밥');
       await s.deleteCustomFood(s.customFoods.single.id);
-      expect(s.searchAllFoods('엄마'), isEmpty);
+      expect(s.searchAllFoods('엄마').where((f) => f.custom), isEmpty);
     });
 
     test('old meals without slot load with a time-based slot', () {

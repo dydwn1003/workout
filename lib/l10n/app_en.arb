@@ -258,5 +258,8 @@
   "deleteAllConfirm": "All weights, meals and plans will be erased and you'll return to the start. This can't be undone.",
   "sectionAbout": "About",
   "version": "Version",
+  "browseMore": "{count} foods in this category. Search by name to find the rest.",
+  "foodDataSource": "Source: Korea Ministry of Food and Drug Safety (MFDS) Food Nutrient Database",
+  "foodDataSourceDesc": "Food search nutrition comes from data.go.kr, converted to per 100 g.",
   "savedMealsManage": "Manage my meals"
 }

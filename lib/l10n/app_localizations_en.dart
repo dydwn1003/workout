@@ -901,5 +901,18 @@ class LEn extends L {
   String get version => 'Version';
 
   @override
+  String browseMore(String count) {
+    return '$count foods in this category. Search by name to find the rest.';
+  }
+
+  @override
+  String get foodDataSource =>
+      'Source: Korea Ministry of Food and Drug Safety (MFDS) Food Nutrient Database';
+
+  @override
+  String get foodDataSourceDesc =>
+      'Food search nutrition comes from data.go.kr, converted to per 100 g.';
+
+  @override
   String get savedMealsManage => 'Manage my meals';
 }

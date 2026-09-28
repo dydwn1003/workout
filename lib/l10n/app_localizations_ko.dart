@@ -883,5 +883,17 @@ class LKo extends L {
   String get version => '버전';
 
   @override
+  String browseMore(String count) {
+    return '이 분류에는 $count개가 있어요. 이름으로 검색해 보세요.';
+  }
+
+  @override
+  String get foodDataSource => '출처: 식품의약품안전처 식품영양성분 데이터베이스';
+
+  @override
+  String get foodDataSourceDesc =>
+      '음식 검색의 영양정보는 공공데이터포털에서 받은 데이터를 100g 기준으로 바꾼 값이에요.';
+
+  @override
   String get savedMealsManage => '내 식사 관리';
 }

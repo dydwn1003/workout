@@ -517,7 +517,8 @@ const slotName = k => SLOTS.find(x => x[0] === k)[1];
 const customToFood = c => { const g = c.grams || 100, k = 100 / g;
   return { id: c.id, name: c.name, aliases: [], cat: "내 음식", kcal: c.kcal * k, p: c.p * k, c: c.c * k, f: c.f * k, units: [{ label: c.unitLabel, g }], custom: true }; };
 const allFoods = () => [...S.customFoods.map(customToFood), ...BUILTIN];
-const foodById = id => allFoods().find(f => f.id === id) || null;
+const BUILTIN_BY_ID = new Map(BUILTIN.map(f => [f.id, f]));
+const foodById = id => { const c = S.customFoods.find(c => c.id === id); return c ? customToFood(c) : BUILTIN_BY_ID.get(id) || null; };
 function recentFoods(limit = 8) {
   const seen = new Set(), out = [];
   for (let i = S.meals.length - 1; i >= 0 && out.length < limit; i--) {
@@ -607,6 +608,7 @@ const I = {
   weight: '<rect x="4" y="4" width="16" height="16" rx="4" stroke="currentColor" stroke-width="2" fill="none"/><path d="M9 9.5a4 4 0 0 1 6 0l-2 2.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>',
   edit: '<path d="M4 20h4L19 9l-4-4L4 16v4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none"/>',
   bookmark: '<path d="M7 4h10v16l-5-3.5L7 20V4Z" fill="currentColor"/>',
+  book: '<path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5v-13ZM20 5.5c0-.8-.7-1.5-1.5-1.5H13v16h5.5c.8 0 1.5-.7 1.5-1.5v-13Z" fill="currentColor"/>',
   history: '<path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4M12 8v4l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
   check: '<circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M7.5 12.5l3 3 6-6.5" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
   x: '<path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
@@ -996,7 +998,8 @@ function viewSettings() {
     group("데이터", [row("flask", "var(--lilac)", "var(--lilac-soft)", "샘플 데이터 채우기", "5주치 예시 기록으로 체크인과 그래프를 체험해요", "", "demoConfirm"),
       S.settings.consentedAt ? row("check", "var(--mint)", "var(--mint-soft)", `민감정보 저장 동의일: ${new Date(S.settings.consentedAt).toLocaleDateString("ko-KR")}`, "", "") : "",
       `<div class="setrow tap" data-act="deleteConfirm" role="button" tabindex="0"><span class="sico" style="background:#FFE4E4">${ic("trash", 20, "#E5484D")}</span><span style="color:#E5484D">모든 데이터 삭제</span></div>`]) +
-    group("정보", [`<p class="note" style="padding:14px 18px;margin:0">이 앱은 의학적 조언을 제공하지 않아요. 질환이 있거나 임신·수유 중이라면 먼저 전문가와 상담해 주세요.<br>미리보기 버전 · 기록은 이 브라우저에만 저장돼요.</p>`]);
+    group("정보", [row("book", "var(--mint)", "var(--mint-soft)", "출처: 식품의약품안전처 식품영양성분 데이터베이스", "음식 검색의 영양정보는 공공데이터포털에서 받은 데이터를 100g 기준으로 바꾼 값이에요.", ""),
+      `<p class="note" style="padding:14px 18px;margin:0">이 앱은 의학적 조언을 제공하지 않아요. 질환이 있거나 임신·수유 중이라면 먼저 전문가와 상담해 주세요.<br>미리보기 버전 · 기록은 이 브라우저에만 저장돼요.</p>`]);
 }
 
 // ============================================================================
@@ -1058,7 +1061,8 @@ function renderResults() {
   const q = sheet.q.trim(), foods = allFoods(), recent = recentFoods();
   const cats = [...new Set(foods.map(f => f.cat))];
   const cat = sheet.cat ?? (recent.length ? null : cats[0]);
-  const list = q ? searchFoods(foods, q) : cat == null ? recent : foods.filter(f => f.cat === cat);
+  const found = q ? searchFoods(foods, q) : cat == null ? recent : foods.filter(f => f.cat === cat);
+  const list = found.slice(0, 100); // imported categories are large; search finds the rest
   box.innerHTML = (q ? "" : `<div class="chips" style="overflow-x:auto;margin:12px -20px 4px;padding:0 20px 4px;scrollbar-width:none">${[...(recent.length ? [null] : []), ...cats].map(c =>
       `<button class="chip tap ${cat === c ? "on" : ""}" data-act="foodCat" data-v="${c ?? ""}" style="white-space:nowrap;flex:none">${c ?? "최근"}</button>`).join("")}</div>`)
     + `<div style="margin-top:10px">${list.length ? list.map((f, i) => { const u = f.units[0], n = forGrams(f, u.g);
@@ -1066,6 +1070,7 @@ function renderResults() {
           <span style="flex:1;min-width:0"><b class="h ellipsis" style="display:block">${esc(f.name)}</b><span class="muted" style="font-size:12px">${esc(f.cat)} · ${esc(u.label)}${f.custom ? "" : ` (${Math.round(u.g)}g)`}</span></span>
           <b class="h num">${f0(n.kcal)} kcal</b><button class="iconbtn" data-act="foodQuick" data-id="${f.id}" aria-label="${esc(f.name)} 바로 추가" style="color:var(--peach)">${ic("plus", 22)}</button></div>`; }).join("")
       : `<p class="muted" style="text-align:center;padding:16px 0">${q ? `'${esc(q)}' 검색 결과가 없어요` : "검색해서 기록한 음식이 여기에 모여요"}</p>`}
+      ${found.length > list.length ? `<p class="muted" style="text-align:center;padding:6px 0 12px;font-size:13px">이 분류에는 ${found.length.toLocaleString("ko-KR")}개가 있어요. 이름으로 검색해 보세요.</p>` : ""}
       <div class="card row tap" data-act="foodNew" style="background:var(--lilac-soft);box-shadow:none;padding:14px;margin-top:4px">${ic("plus", 22, "var(--lilac)")}
         <span style="flex:1"><b class="h">내 음식 만들기</b><br><span class="muted" style="font-size:12.5px">찾는 음식이 없으면 직접 만들어 저장해요</span></span>${ic("right", 18, "var(--lilac)")}</div></div>`;
   box.querySelector(".chip.on")?.scrollIntoView({ inline: "center", block: "nearest" });

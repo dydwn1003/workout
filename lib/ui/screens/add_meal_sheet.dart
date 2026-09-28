@@ -261,6 +261,8 @@ class _SearchTab extends StatefulWidget {
   State<_SearchTab> createState() => _SearchTabState();
 }
 
+const _browseLimit = 100;
+
 enum _View { list, detail, create }
 
 class _SearchTabState extends State<_SearchTab>
@@ -369,11 +371,14 @@ class _SearchTabState extends State<_SearchTab>
     // With no history yet, open on the first category instead of an empty list.
     final showRecent = recent.isNotEmpty;
     final category = _category ?? (showRecent ? null : cats.first);
-    final List<Food> foods = q.isNotEmpty
+    final List<Food> found = q.isNotEmpty
         ? s.searchAllFoods(q)
         : category == null
         ? recent
         : s.allFoods.where((f) => f.category == category).toList();
+    // Imported categories can hold thousands of foods; browse shows the
+    // first ones and search finds the rest.
+    final foods = found.take(_browseLimit).toList();
     return ListView(
       padding: EdgeInsets.fromLTRB(
         20,
@@ -441,6 +446,15 @@ class _SearchTabState extends State<_SearchTab>
               food: f,
               onTap: () => _go(_View.detail, food: f),
               onQuickAdd: () => _log(f, f.units.first, 1),
+            ),
+          ),
+        if (found.length > foods.length)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Text(
+              t.browseMore('${found.length}'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.inkSoft, fontSize: 13),
             ),
           ),
         const SizedBox(height: 6),
