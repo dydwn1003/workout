@@ -1,4 +1,6 @@
-"""Generates the built-in food table from data/foods_ko.tsv:
+"""Generates the built-in food table from data/foods_ko.tsv (curated) plus
+data/foods_mfds.tsv (imported from the 식약처 DB by tool/import_mfds.py, if
+present):
 
   lib/data/food_db.g.dart   (const Dart list for the app)
   preview/src/foods.json    (embedded into the single-file preview)
@@ -6,6 +8,7 @@
 Also sanity-checks each row (kcal vs 4/4/9 macro energy).
 Run: python3 tool/gen_foods.py
 """
+import hashlib
 import json
 import os
 import re
@@ -13,15 +16,19 @@ import sys
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 SRC = os.path.join(ROOT, "data", "foods_ko.tsv")
+MFDS = os.path.join(ROOT, "data", "foods_mfds.tsv")
 
 
-def slug(i: int) -> str:
-    return f"f{i:03d}"
+def slug(name: str, prefix: str) -> str:
+    # Stable across edits: meals store this id.
+    return prefix + hashlib.sha1(name.encode("utf-8")).hexdigest()[:8]
 
 
-def load():
+def load(path=SRC, prefix="f"):
     foods = []
-    for n, line in enumerate(open(SRC, encoding="utf-8"), 1):
+    if not os.path.exists(path):
+        return foods
+    for n, line in enumerate(open(path, encoding="utf-8"), 1):
         line = line.rstrip("\n")
         if not line or line.startswith("#"):
             continue
@@ -34,7 +41,7 @@ def load():
             label, grams = u.rsplit(":", 1)
             us.append((label.strip(), float(grams)))
         foods.append({
-            "id": slug(len(foods)),
+            "id": slug(name.strip(), prefix),
             "name": name.strip(),
             "aliases": [a.strip() for a in aliases.split(",") if a.strip()],
             "cat": cat.strip(),
@@ -44,14 +51,14 @@ def load():
     return foods
 
 
-def check(foods):
+def check(foods, strict=True):
     names = set()
     for fd in foods:
         if fd["name"] in names:
             sys.exit(f"duplicate name: {fd['name']}")
         names.add(fd["name"])
         macro = fd["p"] * 4 + fd["c"] * 4 + fd["f"] * 9
-        if fd["cat"] == "주류" or fd["kcal"] < 20:
+        if not strict or fd["cat"] == "주류" or fd["kcal"] < 20:
             continue  # alcohol energy / near-zero drinks
         if abs(macro - fd["kcal"]) / fd["kcal"] > 0.25:
             print(f"warn: {fd['name']} kcal {fd['kcal']} vs macros {macro:.0f}")
@@ -84,13 +91,17 @@ def dart(foods) -> str:
 def main():
     foods = load()
     check(foods)
+    curated = {f["name"].lower() for f in foods}
+    imported = [f for f in load(MFDS, "m") if f["name"].lower() not in curated]
+    check(imported, strict=False)
+    foods += imported
     with open(os.path.join(ROOT, "lib", "data", "food_db.g.dart"), "w", encoding="utf-8") as fh:
         fh.write(dart(foods))
     compact = [[fd["id"], fd["name"], fd["aliases"], fd["cat"], fd["kcal"], fd["p"], fd["c"], fd["f"],
                 [[l, g] for l, g in fd["units"]]] for fd in foods]
     with open(os.path.join(ROOT, "preview", "src", "foods.json"), "w", encoding="utf-8") as fh:
         json.dump(compact, fh, ensure_ascii=False, separators=(",", ":"))
-    print(f"{len(foods)} foods, {len({f['cat'] for f in foods})} categories")
+    print(f"{len(foods)} foods ({len(imported)} imported), {len({f['cat'] for f in foods})} categories")
 
 
 if __name__ == "__main__":
