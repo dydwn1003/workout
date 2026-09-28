@@ -30,7 +30,7 @@ SOURCES = [
     ("mfds_process", os.path.join(ROOT, "data", "mfds_api_process.csv"), "m"),
 ]
 COLUMNS = ["id", "name", "aliases", "category", "kcal", "protein", "carbs", "fat",
-           "units", "unknown", "source", "keys", "cho_keys", "search", "cho"]
+           "units", "unknown", "source", "search", "cho"]
 
 CHO = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ"
 
@@ -54,7 +54,7 @@ def record(fd, source):
         "kcal": fd["kcal"], "protein": fd["p"], "carbs": fd["c"], "fat": fd["f"],
         "units": [{"label": l, "g": g} for l, g in fd["units"]],
         "unknown": fd["unknown"], "source": source,
-        "keys": keys, "cho_keys": cho_keys, "search": "|".join(keys), "cho": "|".join(cho_keys),
+        "search": "|".join(keys), "cho": "|".join(cho_keys),
     }
 
 
@@ -96,7 +96,7 @@ def write_csv(recs, path):
         w = csv.writer(f)
         w.writerow(COLUMNS)
         for r in recs:
-            w.writerow([pg_array(r[c]) if c in ("aliases", "keys", "cho_keys")
+            w.writerow([pg_array(r[c]) if c == "aliases"
                         else json.dumps(r[c], ensure_ascii=False) if c == "units"
                         else r[c] for c in COLUMNS])
     print(f"wrote {len(recs)} rows to {path}")

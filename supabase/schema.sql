@@ -16,10 +16,8 @@ create table if not exists public.foods (
   units     jsonb not null,             -- [{"label": "1회 제공량", "g": 194}, ...]
   unknown   text not null default '',   -- macros the source does not publish: p/c/f
   source    text not null,              -- 'curated' | 'mfds_food' | 'mfds_process'
-  keys      text[] not null,            -- lower-cased name + aliases without spaces
-  cho_keys  text[] not null,            -- initial consonants of keys (닭가슴살 -> ㄷㄱㅅㅅ)
-  search    text not null,              -- keys joined with '|', for the trigram index
-  cho       text not null               -- cho_keys joined with '|'
+  search    text not null,              -- lower-cased name + aliases without spaces, joined with '|'
+  cho       text not null               -- initial consonants of the same keys (닭가슴살 -> ㄷㄱㅅㅅ)
 );
 
 create index if not exists foods_search_trgm on public.foods using gin (search gin_trgm_ops);
@@ -40,25 +38,27 @@ returns setof public.foods
 language sql stable
 as $$
   with p as (
-    select lower(replace(q, ' ', '')) as q,
+    select replace(lower(replace(q, ' ', '')), '|', '') as q,
            lower(replace(q, ' ', '')) ~ '^[ㄱ-ㅎ]+$' as cho
   ), e as (
     select q, cho, replace(replace(replace(q, '\', '\\'), '%', '\%'), '_', '\_') as lq from p
+  ), m as (
+    select f.*, '|' || case when e.cho then f.cho else f.search end || '|' as k, e.lq
+    from public.foods f, e
+    where e.q <> ''
+      and case when e.cho then f.cho like '%' || e.lq || '%'
+               else f.search like '%' || e.lq || '%' end
   )
-  select f.*
-  from public.foods f, e
-  where e.q <> ''
-    and case when e.cho then f.cho like '%' || e.lq || '%'
-             else f.search like '%' || e.lq || '%' end
+  select id, name, aliases, category, kcal, protein, carbs, fat, units, unknown, source, search, cho
+  from m
   order by
     case
-      when e.q = any(case when e.cho then f.cho_keys else f.keys end) then 3
-      when exists (select 1 from unnest(case when e.cho then f.cho_keys else f.keys end) k
-                   where k like e.lq || '%') then 2
+      when k like '%|' || lq || '|%' then 3
+      when k like '%|' || lq || '%' then 2
       else 1
     end desc,
-    length(f.name),
-    f.id
+    length(name),
+    id
   limit least(greatest(lim, 1), 100);
 $$;
 

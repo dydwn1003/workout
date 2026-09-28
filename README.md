@@ -126,7 +126,7 @@ test/                  단위 테스트
   - 프랜차이즈 메뉴 상당수는 업체가 열량·단백질만 공개해요. 비어 있는 탄수화물·지방은 `data/foods_mfds.tsv` 9번째 열(`cf` 등)과 `Food.unknown`에 표시하고, 상세 화면에서 0g 대신 "—"와 안내 문구를 보여줘요(기록에는 0g으로 들어가요). `--full-macros-only`로 이런 행을 뺄 수 있어요.
   - **가공식품**: 전체 약 59만 건은 앱·미리보기에 넣기엔 너무 커서 대표식품명별 10개씩만 넣어요(`--processed-per-group`). 포장 중량이 있는 제품, 최신 데이터를 우선해요. 전체 검색은 서버 단계에서 API로 붙일 예정이에요.
   - 식약처 분류는 앱 분류(밥·죽, 반찬, 음료…)로 합쳤고, 피자·버거·샌드위치·치킨은 패스트푸드, 케이크·도넛 등은 간식·디저트로 옮겨요. 분류 둘러보기는 100개까지 보여주고 나머지는 검색으로 찾아요.
-  - **Supabase(서버 검색, 적재 완료)**: `supabase/schema.sql`(foods 테이블, 한글 부분·초성 검색 인덱스, 읽기 전용 RLS, `search_foods(q, lim)` 함수)을 SQL Editor에서 한 번 실행하고, `SUPABASE_URL`·`SUPABASE_SERVICE_ROLE_KEY` 환경변수를 넣은 뒤 `python3 tool/load_supabase.py`로 전체(직접 만든 221 + 음식 1.7만 + 가공식품 28.9만, 원본 59만 건 중 식품코드가 같은 중복 제외)를 올려요. 로컬 PostgreSQL 16에서 검색 3~170ms 확인. 2026-09-28 전체 306,644건 적재 완료(중간에 끊기면 `--skip N`으로 이어서 올리기).
+  - **Supabase(서버 검색, 적재 완료)**: `supabase/schema.sql`(foods 테이블, 한글 부분·초성 검색 인덱스, 읽기 전용 RLS, `search_foods(q, lim)` 함수, 약 205MB)을 SQL Editor에서 한 번 실행하고, `SUPABASE_URL`·`SUPABASE_SERVICE_ROLE_KEY` 환경변수를 넣은 뒤 `python3 tool/load_supabase.py`로 전체(직접 만든 221 + 음식 1.7만 + 가공식품 28.9만, 원본 59만 건 중 식품코드가 같은 중복 제외)를 올려요. 로컬 PostgreSQL 16에서 검색 3~170ms 확인. 2026-09-28 전체 306,644건 적재 완료. keys/cho_keys 배열이 있던 예전 DB는 `supabase/migrate_drop_key_arrays.sql`로 줄이기(중간에 끊기면 `--skip N`으로 이어서 올리기).
   - 바코드 스캔은 모바일 앱 + Open Food Facts/식약처 바코드 API로 검토.
 
 ## 다음 단계 제안
