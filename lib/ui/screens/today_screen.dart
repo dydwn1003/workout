@@ -488,6 +488,7 @@ class _SlotCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = L.of(context);
     final kcal = meals.fold(0.0, (a, m) => a + m.kcal);
+    final (color, soft) = slotColors(slot);
     return SoftCard(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
@@ -496,7 +497,15 @@ class _SlotCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(18, 6, 6, 6),
             child: Row(
               children: [
-                Icon(slotIcon(slot), size: 20, color: AppColors.peach),
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: soft,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(slotIcon(slot), size: 18, color: color),
+                ),
                 const SizedBox(width: 8),
                 Text(
                   slotLabel(t, slot),
@@ -523,11 +532,7 @@ class _SlotCard extends StatelessWidget {
                   tooltip: t.addMeal,
                   onPressed: () =>
                       showAddMealSheet(context, date: date, slot: slot),
-                  icon: const Icon(
-                    Icons.add_circle_rounded,
-                    color: AppColors.peach,
-                    size: 28,
-                  ),
+                  icon: Icon(Icons.add_circle_rounded, color: color, size: 28),
                 ),
               ],
             ),
@@ -933,8 +938,8 @@ class _MealRow extends StatelessWidget {
         onTap: () => showEditMealSheet(context, meal),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
         leading: CircleAvatar(
-          backgroundColor: AppColors.peachSoft,
-          child: Icon(_icon, color: AppColors.peach, size: 20),
+          backgroundColor: slotColors(meal.slot).$2,
+          child: Icon(_icon, color: slotColors(meal.slot).$1, size: 20),
         ),
         title: Text(meal.name, maxLines: 1, overflow: TextOverflow.ellipsis),
         subtitle: Text(

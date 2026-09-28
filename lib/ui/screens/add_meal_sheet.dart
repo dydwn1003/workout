@@ -17,6 +17,14 @@ String slotLabel(L t, MealSlot s) => switch (s) {
   MealSlot.snack => t.slotSnack,
 };
 
+/// (color, soft background) of a meal slot.
+(Color, Color) slotColors(MealSlot s) => switch (s) {
+  MealSlot.breakfast => (AppColors.breakfast, AppColors.breakfastSoft),
+  MealSlot.lunch => (AppColors.lunch, AppColors.lunchSoft),
+  MealSlot.dinner => (AppColors.dinner, AppColors.dinnerSoft),
+  MealSlot.snack => (AppColors.snack, AppColors.snackSoft),
+};
+
 IconData slotIcon(MealSlot s) => switch (s) {
   MealSlot.breakfast => Icons.wb_twilight_rounded,
   MealSlot.lunch => Icons.wb_sunny_rounded,
@@ -85,9 +93,19 @@ class SlotChips extends StatelessWidget {
               child: ChoiceChip(
                 label: SizedBox(
                   width: double.infinity,
-                  child: Text(slotLabel(t, s), textAlign: TextAlign.center),
+                  child: Text(
+                    slotLabel(t, s),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: value == s ? slotColors(s).$1 : null,
+                    ),
+                  ),
                 ),
                 selected: value == s,
+                selectedColor: slotColors(s).$2,
+                side: value == s
+                    ? BorderSide(color: slotColors(s).$1, width: 1.5)
+                    : null,
                 showCheckmark: false,
                 onSelected: (_) => onChanged(s),
               ),
@@ -820,6 +838,9 @@ class _FoodDetailState extends State<_FoodDetail> {
                   await widget.onAdd(_unit, _qty);
                 }
               : null,
+          style: FilledButton.styleFrom(
+            backgroundColor: slotColors(widget.slot).$1,
+          ),
           icon: Icon(slotIcon(widget.slot)),
           label: Text(t.addToSlot(slotLabel(t, widget.slot))),
         ),
@@ -1265,6 +1286,11 @@ class _MealFormState extends State<_MealForm>
           const SizedBox(height: 8),
           FilledButton(
             onPressed: _valid ? _add : null,
+            style: widget.editing != null
+                ? null
+                : FilledButton.styleFrom(
+                    backgroundColor: slotColors(widget.slot).$1,
+                  ),
             child: Text(
               widget.editing != null
                   ? t.save

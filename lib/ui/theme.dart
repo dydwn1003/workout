@@ -21,6 +21,16 @@ class AppColors {
   static const lilacSoft = Color(0xFFECE6FF);
   static const sky = Color(0xFF6EB7FF); // weight
   static const skySoft = Color(0xFFE0F0FF);
+
+  // Meal slots: time-of-day colors, kept apart from the kcal/macro ones.
+  static const breakfast = Color(0xFFE8770E); // sunrise orange
+  static const breakfastSoft = Color(0xFFFFEAD4);
+  static const lunch = Color(0xFFB38600); // midday gold
+  static const lunchSoft = Color(0xFFFFF4C7);
+  static const dinner = Color(0xFF5B6BD6); // night indigo
+  static const dinnerSoft = Color(0xFFE3E7FF);
+  static const snack = Color(0xFFD9538F); // dessert pink
+  static const snackSoft = Color(0xFFFFE0EE);
 }
 
 const headingFont = 'NanumSquareRound';
