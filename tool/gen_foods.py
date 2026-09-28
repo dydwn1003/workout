@@ -20,8 +20,10 @@ MFDS = os.path.join(ROOT, "data", "foods_mfds.tsv")
 
 
 def slug(name: str, prefix: str) -> str:
-    # Stable across edits: meals store this id.
-    return prefix + hashlib.sha1(name.encode("utf-8")).hexdigest()[:8]
+    # Stable across edits: meals store this id. Imported foods ("m") number
+    # in the hundreds of thousands on the server, so they get more digits.
+    digits = 8 if prefix == "f" else 12
+    return prefix + hashlib.sha1(name.encode("utf-8")).hexdigest()[:digits]
 
 
 def load(path=SRC, prefix="f"):
@@ -54,11 +56,14 @@ def load(path=SRC, prefix="f"):
 
 
 def check(foods, strict=True):
-    names = set()
+    names, ids = set(), set()
     for fd in foods:
         if fd["name"] in names:
             sys.exit(f"duplicate name: {fd['name']}")
+        if fd["id"] in ids:
+            sys.exit(f"duplicate id {fd['id']}: {fd['name']}")
         names.add(fd["name"])
+        ids.add(fd["id"])
         macro = fd["p"] * 4 + fd["c"] * 4 + fd["f"] * 9
         if not strict or fd["unknown"] or fd["cat"] == "주류" or fd["kcal"] < 20:
             continue  # alcohol energy / near-zero drinks
