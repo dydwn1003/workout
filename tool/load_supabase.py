@@ -10,6 +10,7 @@ variables (never written to disk; do not commit keys):
 Usage:
   python3 tool/load_supabase.py                 # upsert into Supabase
   python3 tool/load_supabase.py --csv out.csv   # write a CSV for COPY instead
+  python3 tool/load_supabase.py --skip 260000   # resume after an interrupted upload
 """
 import argparse
 import csv
@@ -126,13 +127,13 @@ def post(url, key, batch):
     sys.exit(f"giving up: {err}")
 
 
-def upload(recs, batch_size):
+def upload(recs, batch_size, skip=0):
     base = os.environ.get("SUPABASE_URL", "").rstrip("/")
     key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
     if not base or not key:
         sys.exit("set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY")
     url = f"{base}/rest/v1/foods?on_conflict=id"
-    for i in range(0, len(recs), batch_size):
+    for i in range(skip, len(recs), batch_size):
         post(url, key, recs[i:i + batch_size])
         done = min(i + batch_size, len(recs))
         if done % (batch_size * 20) == 0 or done == len(recs):
@@ -143,13 +144,14 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--csv", help="write a CSV for COPY instead of uploading")
     ap.add_argument("--batch", type=int, default=1000)
+    ap.add_argument("--skip", type=int, default=0, help="rows already uploaded (resume)")
     a = ap.parse_args()
     recs = all_records()
     print(f"{len(recs)} foods total")
     if a.csv:
         write_csv(recs, a.csv)
     else:
-        upload(recs, a.batch)
+        upload(recs, a.batch, a.skip)
 
 
 if __name__ == "__main__":
