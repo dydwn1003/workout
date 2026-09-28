@@ -5,7 +5,7 @@ downloads, including all ~590k 가공식품.
 Needs the downloads from tool/fetch_mfds_api.py and these environment
 variables (never written to disk; do not commit keys):
   SUPABASE_URL               https://<project>.supabase.co
-  SUPABASE_SERVICE_ROLE_KEY  service_role / secret key (writes bypass RLS)
+  SUPABASE_SERVICE_ROLE_KEY  secret key (sb_secret_...) or legacy service_role key
 
 Usage:
   python3 tool/load_supabase.py                 # upsert into Supabase
@@ -103,11 +103,14 @@ def write_csv(recs, path):
 
 def post(url, key, batch):
     body = json.dumps(batch, ensure_ascii=False).encode("utf-8")
-    req = urllib.request.Request(url, data=body, method="POST", headers={
-        "apikey": key, "Authorization": f"Bearer {key}",
+    headers = {
+        "apikey": key,
         "Content-Type": "application/json",
         "Prefer": "resolution=merge-duplicates,return=minimal",
-    })
+    }
+    if not key.startswith("sb_"):  # legacy JWT keys also go in Authorization
+        headers["Authorization"] = f"Bearer {key}"
+    req = urllib.request.Request(url, data=body, method="POST", headers=headers)
     for attempt in range(6):
         try:
             with urllib.request.urlopen(req, timeout=120):
