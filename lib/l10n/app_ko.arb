@@ -429,6 +429,81 @@
   },
   "legendPlanned": "설정 횟수",
   "noWorkoutData": "운동을 기록하면 주별 추이를 볼 수 있어요",
+  "tipRest": "{days}일 연속 운동했어요! 회복도 운동의 일부예요. 하루쯤 쉬어도 괜찮아요.",
+  "@tipRest": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "tipStrengthForLoss": "감량 중엔 근력운동을 주 {target}일 이상 하면 근육을 지키는 데 도움이 돼요. (최근 7일 {days}일)",
+  "@tipStrengthForLoss": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      },
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "tipMoreThanUsual": "최근 3주 평균보다 {minutes}분 더 운동했어요!",
+  "@tipMoreThanUsual": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "tipLessThanUsual": "최근 3주 평균보다 {minutes}분 적어요. 바쁜 한 주였다면 짧게라도 괜찮아요.",
+  "@tipLessThanUsual": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "tipPlanDone": "이번 주 목표 {sessions}회를 채웠어요!",
+  "@tipPlanDone": {
+    "placeholders": {
+      "sessions": {
+        "type": "String"
+      }
+    }
+  },
+  "tipPlanRemaining": "주 {planned}회 목표까지 {left}회 남았어요.",
+  "@tipPlanRemaining": {
+    "placeholders": {
+      "planned": {
+        "type": "String"
+      },
+      "left": {
+        "type": "String"
+      }
+    }
+  },
+  "tipCardioDone": "유산소 {minutes}분으로 WHO 권장량(주 150분)을 채웠어요!",
+  "@tipCardioDone": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "tipCardioProgress": "유산소 {minutes}분 · WHO 권장량(주 150분)까지 {left}분 남았어요.",
+  "@tipCardioProgress": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "left": {
+        "type": "String"
+      }
+    }
+  },
+  "workoutFeedbackTitle": "이번 주 운동 피드백",
+  "minutesField": "분",
   "settingsTitle": "설정",
   "sectionProfile": "내 정보",
   "profileSummary": "{sex} · {age}세 · {height}cm",

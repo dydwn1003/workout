@@ -367,6 +367,86 @@ void main() {
     });
   });
 
+  group('workout feedback', () {
+    WorkoutSummary sum({
+      int strengthDays = 3,
+      int cardio = 60,
+      int total = 240,
+      int sessions = 4,
+      int planned = 4,
+      double? prev = 240,
+      int streak = 2,
+      GoalType goal = GoalType.lose,
+    }) => WorkoutSummary(
+      strengthDays: strengthDays,
+      cardioMinutes: cardio,
+      totalMinutes: total,
+      sessions: sessions,
+      plannedSessions: planned,
+      previousAvgMinutes: prev,
+      consecutiveDays: streak,
+      goalType: goal,
+    );
+    List<WorkoutTipKind> kinds(WorkoutSummary s) =>
+        workoutFeedback(s).map((t) => t.kind).toList();
+
+    test('no feedback without any training data', () {
+      expect(
+        workoutFeedback(sum(sessions: 0, total: 0, cardio: 0, prev: null)),
+        isEmpty,
+      );
+    });
+
+    test('plan done and cardio progress with remaining minutes', () {
+      final tips = workoutFeedback(sum());
+      expect(tips.map((t) => t.kind), [
+        WorkoutTipKind.planDone,
+        WorkoutTipKind.cardioProgress,
+      ]);
+      expect(tips.last.b, 90);
+    });
+
+    test('nudges strength while losing, not while gaining', () {
+      expect(kinds(sum(strengthDays: 1)).first, WorkoutTipKind.strengthForLoss);
+      expect(
+        kinds(sum(strengthDays: 1, goal: GoalType.gain)),
+        isNot(contains(WorkoutTipKind.strengthForLoss)),
+      );
+    });
+
+    test('compares against the 3-week average', () {
+      expect(
+        kinds(sum(total: 300, prev: 240)),
+        contains(WorkoutTipKind.moreThanUsual),
+      );
+      expect(
+        kinds(sum(total: 150, prev: 240)),
+        contains(WorkoutTipKind.lessThanUsual),
+      );
+      expect(
+        kinds(sum(total: 250, prev: 240)),
+        isNot(
+          anyOf(
+            contains(WorkoutTipKind.moreThanUsual),
+            contains(WorkoutTipKind.lessThanUsual),
+          ),
+        ),
+      );
+    });
+
+    test('rest tip first after 7 straight days; cardio guideline reached', () {
+      final k = kinds(sum(streak: 7, cardio: 160));
+      expect(k.first, WorkoutTipKind.rest);
+      expect(k, contains(WorkoutTipKind.cardioDone));
+    });
+
+    test('remaining planned sessions', () {
+      final tip = workoutFeedback(sum(sessions: 1))
+          .firstWhere((t) => t.kind == WorkoutTipKind.planRemaining);
+      expect((tip.a, tip.b), (3, 4));
+    });
+  });
+
   group('simulator acceptance', () {
     for (final s in sim.scenarios()) {
       test('scenario ${s.id} respects safety floor', () {

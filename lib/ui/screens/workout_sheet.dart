@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../data/entities.dart';
 import '../../l10n/app_localizations.dart';
@@ -33,13 +34,29 @@ class WorkoutSheet extends StatefulWidget {
 class _WorkoutSheetState extends State<WorkoutSheet> {
   late WorkoutType _type = widget.initialType;
   var _minutes = 60;
+  final _ctrl = TextEditingController();
 
   static const _presets = [20, 30, 45, 60, 90];
+  static const _max = 600;
 
   @override
   void initState() {
     super.initState();
     if (widget.initialType == WorkoutType.cardio) _minutes = 30;
+    _ctrl.text = '$_minutes';
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  /// Sets minutes from buttons/presets and mirrors them into the field.
+  void _set(int m) {
+    setState(() => _minutes = m.clamp(1, _max));
+    _ctrl.text = '$_minutes';
+    _ctrl.selection = TextSelection.collapsed(offset: _ctrl.text.length);
   }
 
   Future<void> _save() async {
@@ -109,24 +126,36 @@ class _WorkoutSheetState extends State<WorkoutSheet> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton.filledTonal(
-                  onPressed: _minutes > 5
-                      ? () => setState(() => _minutes -= 5)
-                      : null,
+                  onPressed: _minutes > 1 ? () => _set(_minutes - 1) : null,
                   icon: const Icon(Icons.remove_rounded),
                 ),
+                const SizedBox(width: 8),
                 SizedBox(
-                  width: 120,
-                  child: CountUp(
-                    value: _minutes.toDouble(),
-                    duration: Motion.medium,
-                    format: (v) => t.minutesN('${v.round()}'),
+                  width: 130,
+                  child: TextField(
+                    controller: _ctrl,
+                    textAlign: TextAlign.center,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(3),
+                    ],
                     style: Theme.of(context).textTheme.displaySmall,
+                    decoration: InputDecoration(
+                      suffixText: t.minutesField,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                    ),
+                    onChanged: (v) => setState(
+                      () => _minutes = (int.tryParse(v) ?? 0).clamp(0, _max),
+                    ),
                   ),
                 ),
+                const SizedBox(width: 8),
                 IconButton.filledTonal(
-                  onPressed: _minutes < 300
-                      ? () => setState(() => _minutes += 5)
-                      : null,
+                  onPressed: _minutes < _max ? () => _set(_minutes + 1) : null,
                   icon: const Icon(Icons.add_rounded),
                 ),
               ],
@@ -143,7 +172,7 @@ class _WorkoutSheetState extends State<WorkoutSheet> {
                   label: Text(t.minutesN('$m')),
                   selected: _minutes == m,
                   showCheckmark: false,
-                  onSelected: (_) => setState(() => _minutes = m),
+                  onSelected: (_) => _set(m),
                 ),
             ],
           ),
@@ -157,7 +186,10 @@ class _WorkoutSheetState extends State<WorkoutSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          FilledButton(onPressed: _save, child: Text(t.save)),
+          FilledButton(
+            onPressed: _minutes > 0 ? _save : null,
+            child: Text(t.save),
+          ),
         ],
       ),
     );

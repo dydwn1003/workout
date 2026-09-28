@@ -273,6 +273,46 @@ class AppState extends ChangeNotifier {
     ];
   }
 
+  /// Time-based training feedback for the last 7 days.
+  List<WorkoutTip> workoutTips() {
+    final p = profile;
+    if (p == null) return const [];
+    final weeks = workoutWeeks(weeks: 4);
+    final since = dateKey(_addDays(today, -6));
+    final recent = _data.workouts.where((w) => w.date.compareTo(since) >= 0);
+    final prior = weeks.sublist(0, 3);
+    final hasPrior =
+        _data.workouts.isNotEmpty &&
+        !parseDateKey(_data.workouts.first.date).isAfter(_addDays(today, -27));
+    final days = {for (final w in _data.workouts) w.date};
+    var d = today;
+    if (!days.contains(dateKey(d))) d = _addDays(d, -1);
+    var streak = 0;
+    while (days.contains(dateKey(d))) {
+      streak++;
+      d = _addDays(d, -1);
+    }
+    return workoutFeedback(
+      WorkoutSummary(
+        strengthDays: {
+          for (final w in recent)
+            if (w.type == WorkoutType.strength) w.date,
+        }.length,
+        cardioMinutes: recent
+            .where((w) => w.type == WorkoutType.cardio)
+            .fold(0, (a, w) => a + w.minutes),
+        totalMinutes: recent.fold(0, (a, w) => a + w.minutes),
+        sessions: recent.length,
+        plannedSessions: p.strengthPerWeek + p.cardioPerWeek,
+        previousAvgMinutes: hasPrior
+            ? prior.fold(0, (a, w) => a + w.minutes) / 3
+            : null,
+        consecutiveDays: streak,
+        goalType: p.goalType,
+      ),
+    );
+  }
+
   /// Last 7 days ending today: (date, meals logged, weighed in).
   List<(DateTime, bool, bool)> weekLog() {
     final mealDays = {for (final m in _data.meals) m.date};

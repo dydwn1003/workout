@@ -469,6 +469,31 @@ function workoutBars(weeks, planned) {
   if (planned > 0) s += `<line x1="${L}" x2="${W}" y1="${y(planned)}" y2="${y(planned)}" stroke="var(--peach)" stroke-width="2" stroke-dasharray="5 4"/>`;
   return s + "</svg>";
 }
+// Time-based training feedback (mirror of lib/core/coach_engine/workout_feedback.dart)
+function workoutTips() {
+  const p = S.profile; if (!p) return [];
+  const since = dk(addDays(today(), -6)), recent = S.workouts.filter(w => w.date >= since);
+  const wk = workoutWeeks(4), hasPrior = S.workouts.length && pd(S.workouts[0].date) <= addDays(today(), -27);
+  const prev = hasPrior ? wk.slice(0, 3).reduce((a, w) => a + w.minutes, 0) / 3 : null;
+  const days = new Set(S.workouts.map(w => w.date)); let d = today(); if (!days.has(dk(d))) d = addDays(d, -1);
+  let streakN = 0; while (days.has(dk(d))) { streakN++; d = addDays(d, -1); }
+  const strengthDays = new Set(recent.filter(w => w.type === "strength").map(w => w.date)).size;
+  const cardio = recent.filter(w => w.type === "cardio").reduce((a, w) => a + w.minutes, 0), total = recent.reduce((a, w) => a + w.minutes, 0);
+  const sessions = recent.length, planned = p.strength + p.cardio, tips = [];
+  if (sessions === 0 && !(prev > 0)) return tips;
+  if (streakN >= 7) tips.push(["nudge", `${streakN}일 연속 운동했어요! 회복도 운동의 일부예요. 하루쯤 쉬어도 괜찮아요.`]);
+  if ((p.goalType === "lose" || p.goalType === "recomp") && strengthDays < 2) tips.push(["nudge", `감량 중엔 근력운동을 주 2일 이상 하면 근육을 지키는 데 도움이 돼요. (최근 7일 ${strengthDays}일)`]);
+  if (prev > 0) { const diff = Math.round(total - prev);
+    if (diff >= 30) tips.push(["positive", `최근 3주 평균보다 ${diff}분 더 운동했어요!`]);
+    else if (-diff >= 60) tips.push(["neutral", `최근 3주 평균보다 ${-diff}분 적어요. 바쁜 한 주였다면 짧게라도 괜찮아요.`]); }
+  if (planned > 0) tips.push(sessions >= planned ? ["positive", `이번 주 목표 ${planned}회를 채웠어요!`] : ["neutral", `주 ${planned}회 목표까지 ${planned - sessions}회 남았어요.`]);
+  tips.push(cardio >= 150 ? ["positive", `유산소 ${cardio}분으로 WHO 권장량(주 150분)을 채웠어요!`] : ["neutral", `유산소 ${cardio}분 · WHO 권장량(주 150분)까지 ${150 - cardio}분 남았어요.`]);
+  return tips;
+}
+const TIP_STYLE = { positive: ["spark", "var(--mint)", "var(--mint-soft)"], neutral: ["chart", "var(--sky)", "var(--sky-soft)"], nudge: ["info", "var(--peach)", "var(--peach-soft)"] };
+const tipRow = ([tone, text], i) => { const [icn, c, sf] = TIP_STYLE[tone];
+  return `<div class="row" style="align-items:flex-start;animation:fadeUp .45s var(--ease) ${(i + 2) * 60}ms both"><span style="width:28px;height:28px;border-radius:50%;background:${sf};display:grid;place-items:center;flex:none">${ic(icn, 15, c)}</span>
+    <span style="font-size:13.5px;line-height:1.5;padding-top:4px">${text}</span></div>`; };
 function muscleWarn() {
   const p = S.profile; if (!p || p.goalType === "maintain" || p.goalType === "gain") return false;
   return muscleLossWarning(S.weights.filter(w => w.smm != null).map(w => [pd(w.date), w.smm]));
@@ -786,7 +811,7 @@ function viewToday() {
     <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px">${wos.length ? wos.map(w => { const sg = w.type === "strength", c = sg ? "var(--mint)" : "var(--sky)";
       return `<span class="pill" style="color:${c};background:${sg ? "var(--mint-soft)" : "var(--sky-soft)"};padding:6px 6px 6px 12px;animation:fadeUp .4s var(--ease)">${ic(sg ? "dumbbell" : "chart", 15)}${sg ? "근력운동" : "유산소"} · ${w.minutes}분
         <button class="iconbtn" data-act="delWorkout" data-id="${w.id}" aria-label="삭제" style="width:22px;height:22px;color:${c}">${ic("x", 12)}</button></span>`; }).join("")
-      : `<span class="muted" style="font-size:13px">아직 운동 기록이 없어요</span>`}</div></div></div>`;
+      : `<span class="muted" style="font-size:13px">아직 운동 기록이 없어요</span>`}</div>${isToday && workoutTips().length ? `<div style="margin-top:12px">${tipRow(workoutTips()[0], 0)}</div>` : ""}</div></div>`;
   if (isToday) {
     const log = weekLog(), sk = streak(), md = log.filter(d => d.meal).length, wd = log.filter(d => d.weight).length, ready = md >= 5 && wd >= 3;
     html += `<div ${st()}><div class="card" style="padding:16px 18px">
@@ -852,6 +877,7 @@ function viewTrend() {
       return `<div class="card" style="padding:16px 18px 14px"><div class="grid2" style="margin-bottom:12px">
         <div><div class="muted small">최근 7일</div><div class="h num" style="font-size:19px;color:var(--mint)">${last.strength + last.cardio}회 · ${last.minutes}분</div></div>
         <div><div class="muted small">4주 평균</div><div class="h num" style="font-size:19px;color:var(--sky)">주 ${avg.toFixed(1)}회</div></div></div>
+        <div class="col" style="gap:8px;margin-bottom:14px">${workoutTips().slice(0, 4).map(tipRow).join("")}</div>
         ${workoutBars(wk, planned)}
         <div class="row small muted" style="justify-content:center;gap:14px;margin-top:8px;flex-wrap:wrap"><span class="row" style="gap:5px"><i style="width:10px;height:10px;border-radius:3px;background:var(--mint)"></i>근력운동</span>
           <span class="row" style="gap:5px"><i style="width:10px;height:10px;border-radius:3px;background:var(--sky)"></i>유산소</span>
@@ -1009,8 +1035,10 @@ function renderSheet() {
     b.innerHTML = `<h2 class="h" style="font-size:22px;margin:0 0 16px">${ui.date ? fmtDate(ui.date) + " 운동" : "운동 기록"}</h2>
       <div class="row">${typeBtn("strength", "근력운동", "dumbbell", "var(--mint)", "var(--mint-soft)")}${typeBtn("cardio", "유산소", "chart", "var(--sky)", "var(--sky-soft)")}</div>
       <div class="muted" style="font-size:13px;margin:20px 0 8px">운동 시간</div>
-      <div class="row" style="justify-content:center;gap:14px"><span class="stepper"><button data-act="woMin" data-v="-5" aria-label="5분 줄이기">−</button></span>
-        <span class="h num" id="woMin" style="font-size:34px;min-width:110px;text-align:center">${sheet.minutes}분</span><span class="stepper"><button data-act="woMin" data-v="5" aria-label="5분 늘리기">+</button></span></div>
+      <div class="row" style="justify-content:center;gap:10px"><span class="stepper"><button data-act="woMin" data-v="-1" aria-label="1분 줄이기">−</button></span>
+        <label style="position:relative;display:block"><input class="input h num" id="woMin" inputmode="numeric" maxlength="3" value="${sheet.minutes}" aria-label="운동 시간(분)"
+          style="width:130px;font-size:30px;text-align:center;padding:8px 40px 8px 14px"><span class="muted h" style="position:absolute;right:16px;top:50%;transform:translateY(-50%)">분</span></label>
+        <span class="stepper"><button data-act="woMin" data-v="1" aria-label="1분 늘리기">+</button></span></div>
       <div class="chips" style="justify-content:center;flex-wrap:wrap;margin:14px 0">${[20, 30, 45, 60, 90].map(m => `<button class="chip tap ${sheet.minutes === m ? "on" : ""}" data-act="woPreset" data-v="${m}">${m}분</button>`).join("")}</div>
       <p class="note" style="margin:0 0 16px">운동 칼로리는 목표에 더하지 않아요. 운동으로 쓴 에너지는 체중 변화에 이미 반영되어 매주 소비량 계산에 들어가요.</p>
       <button class="btn pri" data-act="woSave">저장</button>`;
@@ -1093,9 +1121,10 @@ const actions = {
   weight: () => openSheet("weight", {}),
   workout: el => openSheet("workout", { type: el.dataset.v, minutes: el.dataset.v === "strength" ? 60 : 30 }),
   woType: el => { sheet.type = el.dataset.v; renderSheet(); },
-  woMin: el => { sheet.minutes = clamp(sheet.minutes + +el.dataset.v, 5, 300); renderSheet(); $("#woMin").animate([{ transform: "scale(1.1)" }, { transform: "scale(1)" }], { duration: 300, easing: "cubic-bezier(.34,1.56,.64,1)" }); },
-  woPreset: el => { sheet.minutes = +el.dataset.v; renderSheet(); },
-  woSave: () => { const w = { id: uid(), date: dk(ui.date || today()), type: sheet.type, minutes: sheet.minutes }; S.workouts.push(w); save();
+  woMin: el => { sheet.minutes = clamp(sheet.minutes + +el.dataset.v, 1, 600); const i = $("#woMin"); i.value = sheet.minutes;
+    i.animate([{ transform: "scale(1.08)" }, { transform: "scale(1)" }], { duration: 300, easing: "cubic-bezier(.34,1.56,.64,1)" }); syncPresets(); },
+  woPreset: el => { sheet.minutes = +el.dataset.v; $("#woMin").value = sheet.minutes; syncPresets(); },
+  woSave: () => { if (!(sheet.minutes >= 1)) { toast("운동 시간을 입력해 주세요"); return; } const w = { id: uid(), date: dk(ui.date || today()), type: sheet.type, minutes: sheet.minutes }; S.workouts.push(w); save();
     closeSheet(); render(); toast(`${w.type === "strength" ? "근력운동" : "유산소"} ${w.minutes}분 기록!`); },
   delWorkout: (el, ev) => { ev.stopPropagation(); S.workouts = S.workouts.filter(w => w.id !== el.dataset.id); save(); render(); toast("운동 기록을 지웠어요"); },
   applySug: () => { const sg = workoutSuggestion(); if (!sg) return; S.profile.strength = sg[0]; S.profile.cardio = sg[1]; save(); render(); toast("운동 횟수를 업데이트했어요"); },
@@ -1142,8 +1171,10 @@ document.addEventListener("change", ev => {
   if (el.dataset.act === "consent") actions.consent(el);
   if (el.dataset.act === "weekday") { S.settings.checkinWeekday = +el.value; save(); }
 });
+const syncPresets = () => document.querySelectorAll("[data-act=woPreset]").forEach(b => b.classList.toggle("on", +b.dataset.v === sheet.minutes));
 document.addEventListener("input", ev => {
   const el = ev.target;
+  if (el.id === "woMin" && sheet) { el.value = el.value.replace(/\D/g, "").slice(0, 3); sheet.minutes = Math.min(600, parseInt(el.value, 10) || 0); syncPresets(); }
   if (el.dataset.ob && ui.ob) {
     ui.ob[el.dataset.ob] = el.value;
     $("#obNext").disabled = !obCanNext(ui.ob);

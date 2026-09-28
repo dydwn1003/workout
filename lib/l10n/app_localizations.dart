@@ -1310,6 +1310,66 @@ abstract class L {
   /// **'운동을 기록하면 주별 추이를 볼 수 있어요'**
   String get noWorkoutData;
 
+  /// No description provided for @tipRest.
+  ///
+  /// In ko, this message translates to:
+  /// **'{days}일 연속 운동했어요! 회복도 운동의 일부예요. 하루쯤 쉬어도 괜찮아요.'**
+  String tipRest(String days);
+
+  /// No description provided for @tipStrengthForLoss.
+  ///
+  /// In ko, this message translates to:
+  /// **'감량 중엔 근력운동을 주 {target}일 이상 하면 근육을 지키는 데 도움이 돼요. (최근 7일 {days}일)'**
+  String tipStrengthForLoss(String target, String days);
+
+  /// No description provided for @tipMoreThanUsual.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 3주 평균보다 {minutes}분 더 운동했어요!'**
+  String tipMoreThanUsual(String minutes);
+
+  /// No description provided for @tipLessThanUsual.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 3주 평균보다 {minutes}분 적어요. 바쁜 한 주였다면 짧게라도 괜찮아요.'**
+  String tipLessThanUsual(String minutes);
+
+  /// No description provided for @tipPlanDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'이번 주 목표 {sessions}회를 채웠어요!'**
+  String tipPlanDone(String sessions);
+
+  /// No description provided for @tipPlanRemaining.
+  ///
+  /// In ko, this message translates to:
+  /// **'주 {planned}회 목표까지 {left}회 남았어요.'**
+  String tipPlanRemaining(String planned, String left);
+
+  /// No description provided for @tipCardioDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'유산소 {minutes}분으로 WHO 권장량(주 150분)을 채웠어요!'**
+  String tipCardioDone(String minutes);
+
+  /// No description provided for @tipCardioProgress.
+  ///
+  /// In ko, this message translates to:
+  /// **'유산소 {minutes}분 · WHO 권장량(주 150분)까지 {left}분 남았어요.'**
+  String tipCardioProgress(String minutes, String left);
+
+  /// No description provided for @workoutFeedbackTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'이번 주 운동 피드백'**
+  String get workoutFeedbackTitle;
+
+  /// No description provided for @minutesField.
+  ///
+  /// In ko, this message translates to:
+  /// **'분'**
+  String get minutesField;
+
   /// No description provided for @settingsTitle.
   ///
   /// In ko, this message translates to:

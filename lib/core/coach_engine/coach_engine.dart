@@ -5,3 +5,4 @@ library;
 export 'constants.dart';
 export 'engine.dart';
 export 'models.dart';
+export 'workout_feedback.dart';

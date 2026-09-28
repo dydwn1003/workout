@@ -8,6 +8,7 @@ import '../../state/app_state.dart';
 import '../motion.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'workout_tips.dart';
 
 /// Weekly training sessions (stacked strength/cardio bars) for the last
 /// 8 weeks, with the profile's planned sessions as a dashed line.
@@ -98,6 +99,11 @@ class WorkoutTrendCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 14),
+                for (final (i, tip) in s.workoutTips().take(4).indexed) ...[
+                  WorkoutTipRow(tip: tip, index: i),
+                  const SizedBox(height: 8),
+                ],
+                const SizedBox(height: 6),
                 SizedBox(
                   height: 150,
                   child: TweenAnimationBuilder<double>(

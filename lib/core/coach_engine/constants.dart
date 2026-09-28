@@ -100,4 +100,20 @@ class CoachConstants {
 
   /// ETA range spread (+/-) around the point estimate.
   static const double etaSpread = 0.2;
+
+  // --- Workout feedback (general activity guidelines, not medical advice) ---
+  /// WHO: 150-300 min/week of moderate aerobic activity.
+  static const int cardioGuidelineMinPerWeek = 150;
+
+  /// WHO: muscle-strengthening on 2+ days/week; also helps keep muscle
+  /// while losing weight.
+  static const int strengthDaysGuideline = 2;
+
+  /// Consecutive training days after which a rest day is suggested.
+  static const int restAfterConsecutiveDays = 7;
+
+  /// Weekly minutes vs the previous 3-week average that count as a notable
+  /// change.
+  static const int moreThanUsualMin = 30;
+  static const int lessThanUsualMin = 60;
 }

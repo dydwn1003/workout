@@ -696,6 +696,52 @@ class LEn extends L {
   String get noWorkoutData => 'Log workouts to see your weekly trend';
 
   @override
+  String tipRest(String days) {
+    return '$days days of training in a row! Recovery is part of training, so a rest day is fine.';
+  }
+
+  @override
+  String tipStrengthForLoss(String target, String days) {
+    return 'While losing weight, strength training on $target+ days a week helps keep muscle. (Last 7 days: $days)';
+  }
+
+  @override
+  String tipMoreThanUsual(String minutes) {
+    return '$minutes min more than your 3-week average!';
+  }
+
+  @override
+  String tipLessThanUsual(String minutes) {
+    return '$minutes min less than your 3-week average. Even a short session counts on a busy week.';
+  }
+
+  @override
+  String tipPlanDone(String sessions) {
+    return 'You hit your $sessions planned sessions this week!';
+  }
+
+  @override
+  String tipPlanRemaining(String planned, String left) {
+    return '$left more to reach your $planned planned sessions.';
+  }
+
+  @override
+  String tipCardioDone(String minutes) {
+    return '$minutes min of cardio: WHO\'s 150 min/week recommendation reached!';
+  }
+
+  @override
+  String tipCardioProgress(String minutes, String left) {
+    return '$minutes min of cardio, $left min to WHO\'s 150 min/week.';
+  }
+
+  @override
+  String get workoutFeedbackTitle => 'This week\'s training';
+
+  @override
+  String get minutesField => 'min';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

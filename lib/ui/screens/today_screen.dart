@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/coach_engine/coach_engine.dart';
 import '../../data/entities.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
@@ -11,6 +12,7 @@ import 'add_meal_sheet.dart';
 import 'home_shell.dart';
 import 'weight_sheet.dart';
 import 'workout_sheet.dart';
+import 'workout_tips.dart';
 
 class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
@@ -421,6 +423,7 @@ class _WorkoutCard extends StatelessWidget {
     final t = L.of(context);
     final s = AppScope.of(context);
     final list = s.workoutsOn(date);
+    final tips = isToday ? s.workoutTips() : const <WorkoutTip>[];
     Widget add(WorkoutType type, IconData icon, Color c, Color soft) => Squish(
       child: Material(
         color: soft,
@@ -513,6 +516,10 @@ class _WorkoutCard extends StatelessWidget {
                     ],
                   ),
           ),
+          if (tips.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            WorkoutTipRow(tip: tips.first),
+          ],
         ],
       ),
     );

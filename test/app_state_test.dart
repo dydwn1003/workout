@@ -155,6 +155,18 @@ void main() {
       expect(s.workoutSuggestion, isNull);
     });
 
+    test('workout tips from demo data', () async {
+      final s = AppState(MemoryCoachRepository(), clock: () => now);
+      await s.load();
+      await s.loadDemoData(korean: true);
+      final kinds = s.workoutTips().map((t) => t.kind).toList();
+      expect(kinds, contains(WorkoutTipKind.planDone)); // 6 sessions vs 4
+      expect(
+        kinds.last,
+        anyOf(WorkoutTipKind.cardioDone, WorkoutTipKind.cardioProgress),
+      );
+    });
+
     test('no suggestion without 2 weeks of workout logs', () async {
       final s = AppState(MemoryCoachRepository(), clock: () => now);
       await s.load();

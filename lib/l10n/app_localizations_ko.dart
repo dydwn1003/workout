@@ -681,6 +681,52 @@ class LKo extends L {
   String get noWorkoutData => '운동을 기록하면 주별 추이를 볼 수 있어요';
 
   @override
+  String tipRest(String days) {
+    return '$days일 연속 운동했어요! 회복도 운동의 일부예요. 하루쯤 쉬어도 괜찮아요.';
+  }
+
+  @override
+  String tipStrengthForLoss(String target, String days) {
+    return '감량 중엔 근력운동을 주 $target일 이상 하면 근육을 지키는 데 도움이 돼요. (최근 7일 $days일)';
+  }
+
+  @override
+  String tipMoreThanUsual(String minutes) {
+    return '최근 3주 평균보다 $minutes분 더 운동했어요!';
+  }
+
+  @override
+  String tipLessThanUsual(String minutes) {
+    return '최근 3주 평균보다 $minutes분 적어요. 바쁜 한 주였다면 짧게라도 괜찮아요.';
+  }
+
+  @override
+  String tipPlanDone(String sessions) {
+    return '이번 주 목표 $sessions회를 채웠어요!';
+  }
+
+  @override
+  String tipPlanRemaining(String planned, String left) {
+    return '주 $planned회 목표까지 $left회 남았어요.';
+  }
+
+  @override
+  String tipCardioDone(String minutes) {
+    return '유산소 $minutes분으로 WHO 권장량(주 150분)을 채웠어요!';
+  }
+
+  @override
+  String tipCardioProgress(String minutes, String left) {
+    return '유산소 $minutes분 · WHO 권장량(주 150분)까지 $left분 남았어요.';
+  }
+
+  @override
+  String get workoutFeedbackTitle => '이번 주 운동 피드백';
+
+  @override
+  String get minutesField => '분';
+
+  @override
   String get settingsTitle => '설정';
 
   @override

@@ -49,3 +49,17 @@ String etaText(L t, EtaRange? e) {
   final max = e.maxWeeks.ceil().clamp(min + 1, 999);
   return t.etaWeeks('$min', '$max');
 }
+
+String tipText(L t, WorkoutTip tip) => switch (tip.kind) {
+  WorkoutTipKind.rest => t.tipRest('${tip.a}'),
+  WorkoutTipKind.strengthForLoss => t.tipStrengthForLoss(
+    '${tip.b}',
+    '${tip.a}',
+  ),
+  WorkoutTipKind.moreThanUsual => t.tipMoreThanUsual('${tip.a}'),
+  WorkoutTipKind.lessThanUsual => t.tipLessThanUsual('${tip.a}'),
+  WorkoutTipKind.planDone => t.tipPlanDone('${tip.a}'),
+  WorkoutTipKind.planRemaining => t.tipPlanRemaining('${tip.b}', '${tip.a}'),
+  WorkoutTipKind.cardioDone => t.tipCardioDone('${tip.a}'),
+  WorkoutTipKind.cardioProgress => t.tipCardioProgress('${tip.a}', '${tip.b}'),
+};
