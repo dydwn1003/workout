@@ -117,7 +117,8 @@ textarea.input { resize: none; min-height: 84px; line-height: 1.5; }
 .tabs button.on { color: var(--ink); }
 .tabs button.on::after { content: ""; position: absolute; left: 30%; right: 30%; bottom: -1px; height: 3px; border-radius: 3px; background: var(--peach); animation: pop .35s var(--ease); }
 .dialog { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; }
-.dialog .box { background: var(--bg); border-radius: 24px; padding: 22px; width: 100%; max-width: 360px; animation: pop .35s var(--spring); }
+.dialog .overlay { z-index: 0; }
+.dialog .box { position: relative; z-index: 1; background: var(--bg); border-radius: 24px; padding: 22px; width: 100%; max-width: 360px; animation: pop .35s var(--spring); }
 .toast { position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); background: var(--ink); color: #fff;
   padding: 12px 18px; border-radius: 14px; z-index: 30; opacity: 0; transition: opacity .3s var(--ease), transform .45s var(--spring); pointer-events: none; max-width: calc(100% - 32px); }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
@@ -1049,7 +1050,7 @@ function renderSheet() {
   }
 }
 function dialog(html) {
-  const d = document.createElement("div"); d.className = "dialog"; d.innerHTML = `<div class="overlay open" data-act="closeDialog"></div><div class="box" role="dialog" aria-modal="true" style="position:relative;z-index:1">${html}</div>`;
+  const d = document.createElement("div"); d.className = "dialog"; d.innerHTML = `<div class="overlay open" data-act="closeDialog"></div><div class="box" role="dialog" aria-modal="true">${html}</div>`;
   document.body.appendChild(d); return d;
 }
 const closeDialog = () => document.querySelectorAll(".dialog").forEach(d => d.remove());
