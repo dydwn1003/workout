@@ -328,6 +328,47 @@
     }
   },
   "streakZero": "오늘 첫 기록으로 연속 기록을 시작해요",
+  "pickDate": "날짜 선택",
+  "logCalendarTitle": "기록 달력",
+  "logCalendarDays": "{logged}/{total}일 기록",
+  "@logCalendarDays": {
+    "placeholders": {
+      "logged": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "logCurrentStreak": "지금 {days}일 연속",
+  "@logCurrentStreak": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "logLongestStreak": "최장 {days}일 연속",
+  "@logLongestStreak": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "logMissedDays": "놓친 날 {days}일",
+  "@logMissedDays": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "logLegendDone": "기록함",
+  "logLegendMissed": "놓침",
+  "logLegendToday": "오늘",
+  "logCalendarHint": "식사나 체중을 하나라도 기록한 날은 체크, 기록이 없던 날은 X로 표시돼요. 날짜를 누르면 그날로 이동해요.",
   "weekMeals": "식사 {n}/7일",
   "@weekMeals": {
     "placeholders": {

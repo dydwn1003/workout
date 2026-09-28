@@ -393,13 +393,28 @@ class AppState extends ChangeNotifier {
     ];
   }
 
+  /// Days with any log (meal or weight), as [dateKey]s.
+  Set<String> get loggedDays => {
+    for (final m in _data.meals) m.date,
+    for (final w in _data.weights) w.date,
+  };
+
+  /// First day of the log calendar: the start of the plan, or an earlier
+  /// log (e.g. sample data), never after today.
+  DateTime get logStart {
+    var start = profile?.createdAt ?? today;
+    for (final k in loggedDays) {
+      final d = DateTime.parse(k);
+      if (d.isBefore(start)) start = d;
+    }
+    start = dayOnly(start);
+    return start.isAfter(today) ? today : start;
+  }
+
   /// Consecutive days with any log (meal or weight), counting back from
   /// today (or yesterday, if today has nothing yet).
   int get loggingStreak {
-    final days = {
-      for (final m in _data.meals) m.date,
-      for (final w in _data.weights) w.date,
-    };
+    final days = loggedDays;
     var d = today;
     if (!days.contains(dateKey(d))) d = _addDays(d, -1);
     var n = 0;
@@ -408,6 +423,17 @@ class AppState extends ChangeNotifier {
       d = _addDays(d, -1);
     }
     return n;
+  }
+
+  /// Longest run of consecutive logged days since [logStart].
+  int get longestLoggingStreak {
+    final days = loggedDays;
+    var best = 0, run = 0;
+    for (var d = logStart; !d.isAfter(today); d = _addDays(d, 1)) {
+      run = days.contains(dateKey(d)) ? run + 1 : 0;
+      if (run > best) best = run;
+    }
+    return best;
   }
 
   bool get muscleWarning {

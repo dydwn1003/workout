@@ -578,6 +578,45 @@ class LEn extends L {
   String get streakZero => 'Log something today to start a streak';
 
   @override
+  String get pickDate => 'Pick a date';
+
+  @override
+  String get logCalendarTitle => 'Log calendar';
+
+  @override
+  String logCalendarDays(String logged, String total) {
+    return '$logged of $total days logged';
+  }
+
+  @override
+  String logCurrentStreak(String days) {
+    return '$days-day streak now';
+  }
+
+  @override
+  String logLongestStreak(String days) {
+    return 'Longest: $days days';
+  }
+
+  @override
+  String logMissedDays(String days) {
+    return '$days days missed';
+  }
+
+  @override
+  String get logLegendDone => 'Logged';
+
+  @override
+  String get logLegendMissed => 'Missed';
+
+  @override
+  String get logLegendToday => 'Today';
+
+  @override
+  String get logCalendarHint =>
+      'Days with a meal or weight logged get a check, days without get an X. Tap a day to open it.';
+
+  @override
   String weekMeals(String n) {
     return 'Meals $n/7 days';
   }

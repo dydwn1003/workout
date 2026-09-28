@@ -1112,6 +1112,66 @@ abstract class L {
   /// **'오늘 첫 기록으로 연속 기록을 시작해요'**
   String get streakZero;
 
+  /// No description provided for @pickDate.
+  ///
+  /// In ko, this message translates to:
+  /// **'날짜 선택'**
+  String get pickDate;
+
+  /// No description provided for @logCalendarTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록 달력'**
+  String get logCalendarTitle;
+
+  /// No description provided for @logCalendarDays.
+  ///
+  /// In ko, this message translates to:
+  /// **'{logged}/{total}일 기록'**
+  String logCalendarDays(String logged, String total);
+
+  /// No description provided for @logCurrentStreak.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 {days}일 연속'**
+  String logCurrentStreak(String days);
+
+  /// No description provided for @logLongestStreak.
+  ///
+  /// In ko, this message translates to:
+  /// **'최장 {days}일 연속'**
+  String logLongestStreak(String days);
+
+  /// No description provided for @logMissedDays.
+  ///
+  /// In ko, this message translates to:
+  /// **'놓친 날 {days}일'**
+  String logMissedDays(String days);
+
+  /// No description provided for @logLegendDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록함'**
+  String get logLegendDone;
+
+  /// No description provided for @logLegendMissed.
+  ///
+  /// In ko, this message translates to:
+  /// **'놓침'**
+  String get logLegendMissed;
+
+  /// No description provided for @logLegendToday.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘'**
+  String get logLegendToday;
+
+  /// No description provided for @logCalendarHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'식사나 체중을 하나라도 기록한 날은 체크, 기록이 없던 날은 X로 표시돼요. 날짜를 누르면 그날로 이동해요.'**
+  String get logCalendarHint;
+
   /// No description provided for @weekMeals.
   ///
   /// In ko, this message translates to:

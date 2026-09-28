@@ -118,6 +118,29 @@ void main() {
       expect(s.mealsOn(s.today), isEmpty);
       expect(s.loggingStreak, 1); // yesterday counts when today is empty
     });
+
+    test('log calendar: start, logged days and longest streak', () async {
+      final s = AppState(MemoryCoachRepository(), clock: () => now);
+      await s.load();
+      Future<void> log(DateTime d) => s.addMeal(
+        name: 'x',
+        kcal: 100,
+        proteinG: 1,
+        carbsG: 1,
+        fatG: 1,
+        source: MealSource.manual,
+        date: d,
+      );
+      // 3 days in a row, a gap, then 2 days ending yesterday.
+      for (final d in [20, 21, 22, 25, 26, 27]) {
+        await log(DateTime(2026, 9, d));
+      }
+      expect(s.logStart, DateTime(2026, 9, 20));
+      expect(s.loggedDays, contains('2026-09-22'));
+      expect(s.loggedDays, isNot(contains('2026-09-23')));
+      expect(s.longestLoggingStreak, 3);
+      expect(s.loggingStreak, 3); // 25-27, today not logged yet
+    });
   });
 
   group('workouts', () {

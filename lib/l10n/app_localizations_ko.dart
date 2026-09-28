@@ -565,6 +565,45 @@ class LKo extends L {
   String get streakZero => '오늘 첫 기록으로 연속 기록을 시작해요';
 
   @override
+  String get pickDate => '날짜 선택';
+
+  @override
+  String get logCalendarTitle => '기록 달력';
+
+  @override
+  String logCalendarDays(String logged, String total) {
+    return '$logged/$total일 기록';
+  }
+
+  @override
+  String logCurrentStreak(String days) {
+    return '지금 $days일 연속';
+  }
+
+  @override
+  String logLongestStreak(String days) {
+    return '최장 $days일 연속';
+  }
+
+  @override
+  String logMissedDays(String days) {
+    return '놓친 날 $days일';
+  }
+
+  @override
+  String get logLegendDone => '기록함';
+
+  @override
+  String get logLegendMissed => '놓침';
+
+  @override
+  String get logLegendToday => '오늘';
+
+  @override
+  String get logCalendarHint =>
+      '식사나 체중을 하나라도 기록한 날은 체크, 기록이 없던 날은 X로 표시돼요. 날짜를 누르면 그날로 이동해요.';
+
+  @override
   String weekMeals(String n) {
     return '식사 $n/7일';
   }

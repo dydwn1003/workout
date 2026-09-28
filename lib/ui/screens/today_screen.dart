@@ -10,6 +10,7 @@ import '../theme.dart';
 import '../widgets.dart';
 import 'add_meal_sheet.dart';
 import 'home_shell.dart';
+import 'log_calendar_sheet.dart';
 import 'weight_sheet.dart';
 import 'workout_sheet.dart';
 import 'workout_tips.dart';
@@ -33,6 +34,34 @@ class _TodayScreenState extends State<TodayScreen> {
       _forward = days > 0;
       _date = next == today ? null : next;
     });
+  }
+
+  void _goTo(DateTime day, DateTime today) {
+    final d = dayOnly(day);
+    if (d.isAfter(today)) return;
+    setState(() {
+      _forward = !d.isBefore(_date ?? today);
+      _date = d == today ? null : d;
+    });
+  }
+
+  Future<void> _pickDate(AppState s) async {
+    final today = s.today;
+    final start = s.logStart;
+    final cur = _date ?? today;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: cur.isBefore(start) ? start : cur,
+      firstDate: start,
+      lastDate: today,
+      helpText: L.of(context).pickDate,
+    );
+    if (picked != null) _goTo(picked, s.today);
+  }
+
+  Future<void> _openLogCalendar(AppState s) async {
+    final picked = await showLogCalendarSheet(context);
+    if (picked != null) _goTo(picked, s.today);
   }
 
   @override
@@ -92,6 +121,7 @@ class _TodayScreenState extends State<TodayScreen> {
                     key: ValueKey(dateKey(date)),
                     date: date,
                     isToday: isToday,
+                    onOpenLogCalendar: () => _openLogCalendar(s),
                   ),
                 ),
               ],
@@ -124,15 +154,39 @@ class _TodayScreenState extends State<TodayScreen> {
                     Icons.chevron_left_rounded,
                     () => _shift(-1, s.today),
                   ),
-                  AnimatedSwitcher(
-                    duration: Motion.fast,
-                    child: Text(
-                      DateFormat.MMMEd(locale).format(date),
-                      key: ValueKey(date),
-                      style: const TextStyle(
-                        color: AppColors.inkSoft,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                  Tooltip(
+                    message: t.pickDate,
+                    child: InkWell(
+                      onTap: () => _pickDate(s),
+                      borderRadius: BorderRadius.circular(10),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AnimatedSwitcher(
+                              duration: Motion.fast,
+                              child: Text(
+                                DateFormat.MMMEd(locale).format(date),
+                                key: ValueKey(date),
+                                style: const TextStyle(
+                                  color: AppColors.inkSoft,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.calendar_month_rounded,
+                              size: 16,
+                              color: AppColors.inkSoft,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -197,7 +251,13 @@ class _TodayScreenState extends State<TodayScreen> {
 class _DayBody extends StatelessWidget {
   final DateTime date;
   final bool isToday;
-  const _DayBody({super.key, required this.date, required this.isToday});
+  final VoidCallback onOpenLogCalendar;
+  const _DayBody({
+    super.key,
+    required this.date,
+    required this.isToday,
+    required this.onOpenLogCalendar,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -370,7 +430,7 @@ class _DayBody extends StatelessWidget {
         enter(_WorkoutCard(date: date, isToday: isToday)),
         if (isToday) ...[
           const SizedBox(height: 14),
-          enter(const _StreakCard()),
+          enter(_StreakCard(onTap: onOpenLogCalendar)),
         ],
         const SizedBox(height: 10),
         SectionTitle(isToday ? t.mealsTitle : t.mealsOnDay),
@@ -658,7 +718,8 @@ class _WorkoutChip extends StatelessWidget {
 }
 
 class _StreakCard extends StatelessWidget {
-  const _StreakCard();
+  final VoidCallback onTap;
+  const _StreakCard({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -672,6 +733,7 @@ class _StreakCard extends StatelessWidget {
     final locale = Localizations.localeOf(context).toString();
     return SoftCard(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -692,6 +754,11 @@ class _StreakCard extends StatelessWidget {
                     fontSize: 16,
                   ),
                 ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.inkSoft,
+                size: 22,
               ),
             ],
           ),
