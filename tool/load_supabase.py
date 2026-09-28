@@ -30,17 +30,10 @@ SOURCES = [
     ("mfds_process", os.path.join(ROOT, "data", "mfds_api_process.csv"), "m"),
 ]
 COLUMNS = ["id", "name", "aliases", "category", "kcal", "protein", "carbs", "fat",
-           "units", "unknown", "source", "search", "cho"]
-
-CHO = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ"
-
+           "units", "unknown", "source", "search"]
 
 def norm(s):  # same as normalizeQuery() in lib/data/food.dart
     return s.lower().replace(" ", "")
-
-
-def choseong(s):
-    return "".join(CHO[(ord(ch) - 0xAC00) // 588] if "가" <= ch <= "힣" else ch for ch in s)
 
 
 def record(fd, source):
@@ -48,13 +41,12 @@ def record(fd, source):
     if source != "curated" and fd["name"].endswith(")") and " (" in fd["name"]:
         names.insert(1, fd["name"].rsplit(" (", 1)[0])  # 신라면 ((주)농심) -> 신라면
     keys = list(dict.fromkeys(norm(k) for k in names if norm(k)))
-    cho_keys = list(dict.fromkeys(choseong(k) for k in keys))
     return {
         "id": fd["id"], "name": fd["name"], "aliases": fd["aliases"], "category": fd["cat"],
         "kcal": fd["kcal"], "protein": fd["p"], "carbs": fd["c"], "fat": fd["f"],
         "units": [{"label": l, "g": g} for l, g in fd["units"]],
         "unknown": fd["unknown"], "source": source,
-        "search": "|".join(keys), "cho": "|".join(cho_keys),
+        "search": "|".join(keys),
     }
 
 
