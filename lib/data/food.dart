@@ -14,6 +14,10 @@ class Food {
   /// weights, so no gram unit is offered for them.
   final bool custom;
 
+  /// Macros the source does not publish: any of 'p', 'c', 'f' (e.g. many
+  /// franchise menus list only kcal and protein). Stored as 0.
+  final String unknown;
+
   const Food(
     this.id,
     this.name,
@@ -25,7 +29,10 @@ class Food {
     this.fatG,
     this.units, {
     this.custom = false,
+    this.unknown = '',
   });
+
+  bool get hasUnknownMacros => unknown.isNotEmpty;
 
   /// Units shown to the user: the food's own units plus grams.
   List<FoodUnit> get allUnits =>

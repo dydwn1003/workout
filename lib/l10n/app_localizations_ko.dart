@@ -762,6 +762,9 @@ class LKo extends L {
   String get createFoodDesc => '찾는 음식이 없으면 직접 만들어 저장해요';
 
   @override
+  String get foodMacrosUnknownNote => '—는 업체가 공개하지 않은 값이라 기록에 0g으로 들어가요.';
+
+  @override
   String get foodRefNote => '영양정보는 일반적인 참고값이에요. 제품·조리법에 따라 다를 수 있어요.';
 
   @override

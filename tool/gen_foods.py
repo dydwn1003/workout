@@ -33,9 +33,10 @@ def load(path=SRC, prefix="f"):
         if not line or line.startswith("#"):
             continue
         cols = line.split("\t")
-        if len(cols) != 8:
-            sys.exit(f"line {n}: expected 8 columns, got {len(cols)}")
-        name, aliases, cat, kcal, p, c, f, units = cols
+        if len(cols) not in (8, 9):
+            sys.exit(f"line {n}: expected 8 or 9 columns, got {len(cols)}")
+        name, aliases, cat, kcal, p, c, f, units = cols[:8]
+        unknown = cols[8].strip() if len(cols) == 9 else ""  # macros not published: p/c/f
         us = []
         for u in units.split(";"):
             label, grams = u.rsplit(":", 1)
@@ -47,6 +48,7 @@ def load(path=SRC, prefix="f"):
             "cat": cat.strip(),
             "kcal": float(kcal), "p": float(p), "c": float(c), "f": float(f),
             "units": us,
+            "unknown": unknown,
         })
     return foods
 
@@ -58,7 +60,7 @@ def check(foods, strict=True):
             sys.exit(f"duplicate name: {fd['name']}")
         names.add(fd["name"])
         macro = fd["p"] * 4 + fd["c"] * 4 + fd["f"] * 9
-        if not strict or fd["cat"] == "주류" or fd["kcal"] < 20:
+        if not strict or fd["unknown"] or fd["cat"] == "주류" or fd["kcal"] < 20:
             continue  # alcohol energy / near-zero drinks
         if abs(macro - fd["kcal"]) / fd["kcal"] > 0.25:
             print(f"warn: {fd['name']} kcal {fd['kcal']} vs macros {macro:.0f}")
@@ -82,7 +84,8 @@ def dart(foods) -> str:
         units = ", ".join(f"FoodUnit('{esc(l)}', {num(g)})" for l, g in fd["units"])
         out.append(
             f"  Food('{fd['id']}', '{esc(fd['name'])}', [{aliases}], '{esc(fd['cat'])}', "
-            f"{num(fd['kcal'])}, {num(fd['p'])}, {num(fd['c'])}, {num(fd['f'])}, [{units}]),"
+            f"{num(fd['kcal'])}, {num(fd['p'])}, {num(fd['c'])}, {num(fd['f'])}, [{units}]"
+            + (f", unknown: '{fd['unknown']}'" if fd["unknown"] else "") + "),"
         )
     out.append("];")
     return "\n".join(out) + "\n"
@@ -98,7 +101,8 @@ def main():
     with open(os.path.join(ROOT, "lib", "data", "food_db.g.dart"), "w", encoding="utf-8") as fh:
         fh.write(dart(foods))
     compact = [[fd["id"], fd["name"], fd["aliases"], fd["cat"], fd["kcal"], fd["p"], fd["c"], fd["f"],
-                [[l, g] for l, g in fd["units"]]] for fd in foods]
+                [[l, g] for l, g in fd["units"]]] + ([fd["unknown"]] if fd["unknown"] else [])
+               for fd in foods]
     with open(os.path.join(ROOT, "preview", "src", "foods.json"), "w", encoding="utf-8") as fh:
         json.dump(compact, fh, ensure_ascii=False, separators=(",", ":"))
     print(f"{len(foods)} foods ({len(imported)} imported), {len({f['cat'] for f in foods})} categories")

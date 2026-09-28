@@ -1436,6 +1436,12 @@ abstract class L {
   /// **'찾는 음식이 없으면 직접 만들어 저장해요'**
   String get createFoodDesc;
 
+  /// No description provided for @foodMacrosUnknownNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'—는 업체가 공개하지 않은 값이라 기록에 0g으로 들어가요.'**
+  String get foodMacrosUnknownNote;
+
   /// No description provided for @foodRefNote.
   ///
   /// In ko, this message translates to:

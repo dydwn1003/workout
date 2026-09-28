@@ -305,7 +305,7 @@ function weeklyCheckin(p, g, days, today, prevTdee, bf) {
 // ============================================================================
 // Food table generated from data/foods_ko.tsv (per 100 g, approximate reference values).
 const FOODS_DB = /*FOODS_JSON*/[];
-const BUILTIN = FOODS_DB.map(r => ({ id: r[0], name: r[1], aliases: r[2], cat: r[3], kcal: r[4], p: r[5], c: r[6], f: r[7], units: r[8].map(([label, g]) => ({ label, g })) }));
+const BUILTIN = FOODS_DB.map(r => ({ id: r[0], name: r[1], aliases: r[2], cat: r[3], kcal: r[4], p: r[5], c: r[6], f: r[7], units: r[8].map(([label, g]) => ({ label, g })), unknown: r[9] || "" }));
 const CHO = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
 const choseong = s => [...s].map(ch => { const c = ch.charCodeAt(0); return c >= 0xAC00 && c <= 0xD7A3 ? CHO[Math.floor((c - 0xAC00) / 588)] : ch; }).join("");
 const normQ = s => s.toLowerCase().replace(/\s/g, "");
@@ -1040,7 +1040,7 @@ function searchBody() {
         <label style="position:relative;display:block"><input class="input h num" id="fdQty" inputmode="decimal" value="${fmtQty(sheet.qty)}" aria-label="수량" style="width:120px;font-size:24px;text-align:center;padding:8px ${u.label === "g" ? 34 : 14}px 8px 14px">
           ${u.label === "g" ? `<span class="muted h" style="position:absolute;right:14px;top:50%;transform:translateY(-50%)">g</span>` : ""}</label>
         <span class="stepper"><button data-act="foodQty" data-v="1" aria-label="늘리기">+</button></span></div>
-      <p class="note" style="margin:12px 0 14px">영양정보는 일반적인 참고값이에요. 제품·조리법에 따라 다를 수 있어요.</p>
+      <p class="note" style="margin:12px 0 14px">${f.unknown ? "—는 업체가 공개하지 않은 값이라 기록에 0g으로 들어가요. " : ""}영양정보는 일반적인 참고값이에요. 제품·조리법에 따라 다를 수 있어요.</p>
       <button class="btn pri" data-act="foodAdd" style="display:flex;align-items:center;justify-content:center;gap:8px">${ic(SLOTS.find(x => x[0] === sheet.slot)[2], 20)}${slotName(sheet.slot)}에 추가</button>`;
   }
   if (sheet.view === "create") {
@@ -1078,7 +1078,8 @@ function renderResults() {
 function updateDetail(bump) {
   const f = sheet.food, u = allUnits(f)[sheet.unitIdx], g = u.g * sheet.qty, n = forGrams(f, g);
   const set = (id, v) => { const el = $("#" + id); if (el) el.textContent = v; };
-  set("fdK", f0(n.kcal) + " kcal"); set("fdG", f0(g) + "g"); set("fdP", f1(n.p) + "g"); set("fdC", f1(n.c) + "g"); set("fdF", f1(n.f) + "g");
+  set("fdK", f0(n.kcal) + " kcal"); set("fdG", f0(g) + "g"); const un = f.unknown || "", mg = (k, v) => un.includes(k) ? "—" : f1(v) + "g";
+  set("fdP", mg("p", n.p)); set("fdC", mg("c", n.c)); set("fdF", mg("f", n.f));
   if (bump) $("#fdK")?.animate([{ transform: "scale(1.06)" }, { transform: "scale(1)" }], { duration: 300, easing: "cubic-bezier(.34,1.56,.64,1)" });
 }
 function logFood(f, u, qty) {

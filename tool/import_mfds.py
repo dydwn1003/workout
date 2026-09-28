@@ -22,9 +22,9 @@ huge (~590k rows), so only N products per 대표식품명 are kept
 (--processed-per-group, default 10; 0 keeps all), preferring products with
 a known package weight, then the most recently updated.
 
-Rows without protein, fat or carbohydrate values (common for franchise
-menus, which often publish only kcal and protein) are skipped, because the
-app would show them as 0 g. --allow-partial imports them anyway.
+Many franchise menus publish only kcal, protein and sugar. Such rows are
+imported with the missing macros marked in a 9th column (e.g. "cf"), which
+the app shows as "—" instead of 0 g. --full-macros-only skips them.
 """
 import argparse
 import csv
@@ -110,6 +110,14 @@ CATEGORY_MAP = {
 }
 
 
+# 대표식품명 overrides for dishes MFDS files under a broad group (burgers and
+# pizza are 빵 및 과자류, fried chicken is 튀김류).
+REP_CATEGORY = {
+    **dict.fromkeys(["피자", "버거", "햄버거", "샌드위치", "핫도그", "닭튀김", "닭다리튀김"], "패스트푸드"),
+    **dict.fromkeys(["케이크", "도넛", "와플", "마카롱", "크로플", "츄러스", "머핀", "스콘"], "간식·디저트"),
+}
+
+
 def find_cols(header):
     norm = [re.sub(r"\s", "", h or "") for h in header]
     out = {}
@@ -176,7 +184,7 @@ def clean_name(n):
     return re.sub(r"\s+", " ", n.replace("_", " ")).strip()
 
 
-def convert(path, include_processed=False, per_group=10, allow_partial=False):
+def convert(path, include_processed=False, per_group=10, full_only=False):
     it = rows_from(path)
     header = None
     for row in it:  # skip title rows until a header with 식품명 appears
@@ -199,9 +207,11 @@ def convert(path, include_processed=False, per_group=10, allow_partial=False):
         if processed and not include_processed:
             skipped += 1
             continue
-        if not allow_partial and any(
-            k in col and not get(r, k).strip() for k in ("protein", "fat", "carbs")
-        ):
+        unknown = "".join(
+            m for m, k in (("p", "protein"), ("c", "carbs"), ("f", "fat"))
+            if k in col and not get(r, k).strip()
+        )
+        if unknown and full_only:
             partial += 1
             continue
         basis = grams_of(get(r, "basis")) or 100.0
@@ -218,7 +228,7 @@ def convert(path, include_processed=False, per_group=10, allow_partial=False):
             continue
         rep = get(r, "rep").strip()
         cat = (get(r, "category") or "기타").strip() or "기타"
-        cat = CATEGORY_MAP.get(cat, cat)
+        cat = REP_CATEGORY.get(rep) or CATEGORY_MAP.get(cat, cat)
         serving = grams_of(get(r, "serving"))
         # 음식: one serving as listed; 가공식품: the whole package.
         label = "1개(포장)" if processed else "1회 제공량"
@@ -230,7 +240,7 @@ def convert(path, include_processed=False, per_group=10, allow_partial=False):
             f"{kcal:.1f}", f"{num(get(r, 'protein')) * k:.1f}",
             f"{num(get(r, 'carbs')) * k:.1f}", f"{num(get(r, 'fat')) * k:.1f}",
             units,
-        ]
+        ] + ([unknown] if unknown else [])
         if processed and per_group:
             groups.setdefault((cat, rep or name), []).append(((has_serving, get(r, "date")), row))
             continue
@@ -254,11 +264,11 @@ def main():
     ap.add_argument("files", nargs="+")
     ap.add_argument("--include-processed", action="store_true")
     ap.add_argument("--processed-per-group", type=int, default=10)
-    ap.add_argument("--allow-partial", action="store_true")
+    ap.add_argument("--full-macros-only", action="store_true")
     a = ap.parse_args()
     foods, skipped, partial, names = [], 0, 0, set()
     for path in a.files:
-        fs, sk, pa = convert(path, a.include_processed, a.processed_per_group, a.allow_partial)
+        fs, sk, pa = convert(path, a.include_processed, a.processed_per_group, a.full_macros_only)
         new = [f for f in fs if f[0] not in names]
         names.update(f[0] for f in new)
         foods += new
@@ -272,7 +282,7 @@ def main():
             f.write("\t".join(row) + "\n")
     print(f"wrote {len(foods)} foods to {os.path.relpath(OUT, ROOT)}"
           + (f"; skipped {skipped} processed (see --include-processed, --processed-per-group)" if skipped else "")
-          + (f"; skipped {partial} without full macros (--allow-partial)" if partial else ""))
+          + (f"; skipped {partial} without full macros" if partial else ""))
 
 
 if __name__ == "__main__":

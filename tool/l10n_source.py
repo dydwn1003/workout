@@ -259,6 +259,8 @@ S = {
  "noResults": ("'{query}' 검색 결과가 없어요", "No results for '{query}'"),
  "createFood": ("내 음식 만들기", "Create a food"),
  "createFoodDesc": ("찾는 음식이 없으면 직접 만들어 저장해요", "Can't find it? Save your own"),
+ "foodMacrosUnknownNote": ("—는 업체가 공개하지 않은 값이라 기록에 0g으로 들어가요.",
+                           "— means the source doesn't publish it; it's logged as 0 g."),
  "foodRefNote": ("영양정보는 일반적인 참고값이에요. 제품·조리법에 따라 다를 수 있어요.", "Nutrition values are typical estimates and vary by product and recipe."),
  "unitLabel": ("단위", "Unit"),
  "quantity": ("수량", "Amount"),
