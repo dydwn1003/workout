@@ -51,6 +51,8 @@ def woff2_b64(ttf: str, text: str) -> str:
 
 def main() -> None:
     html = open(SRC, encoding="utf-8").read()
+    foods = open(os.path.join(ROOT, "preview", "src", "foods.json"), encoding="utf-8").read()
+    html = html.replace("/*FOODS_JSON*/[]", foods)
     text = charset(html)
     out = html.replace("/*FONT_B*/", woff2_b64("NanumSquareRoundB.ttf", text))
     out = out.replace("/*FONT_EB*/", woff2_b64("NanumSquareRoundEB.ttf", text))
