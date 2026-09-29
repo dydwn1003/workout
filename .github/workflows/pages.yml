@@ -1,0 +1,59 @@
+# Builds the web app and publishes it to GitHub Pages
+# (https://<owner>.github.io/<repo>/), where food search can reach Supabase.
+#
+# One-time setup in the repository settings:
+#   Settings -> Pages -> Build and deployment -> Source: GitHub Actions
+#   Settings -> Secrets and variables -> Actions -> Variables:
+#     SUPABASE_URL       https://<project>.supabase.co
+#     SUPABASE_ANON_KEY  the public anon (or sb_publishable_) key, never the service_role key
+# Without the variables the app still builds, with built-in foods only.
+name: Deploy web app to Pages
+
+on:
+  push:
+    branches: [claude/cool-gates-llcuky]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.5
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter test
+      - name: Build
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+        run: |
+          flutter build web --release --no-web-resources-cdn \
+            --base-href "/${GITHUB_REPOSITORY#*/}/" \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
