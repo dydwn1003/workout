@@ -26,6 +26,9 @@ void main() {
     expect(names('맘스터치싸이버거').first, contains('맘스터치'));
     expect(names('맘스터치 싸이버거').first, contains('싸이버거'));
     expect(names('교촌허니콤보').any((n) => n.contains('허니콤보')), isTrue);
+    // Still typing: trailing jamo ignored, a half-built syllable retried.
+    expect(names('닭가슴살ㅅ'), contains('닭가슴살'));
+    expect(names('소고깆').any((n) => n.startsWith('소고기')), isTrue);
   });
 
   group('AppState', () {

@@ -298,7 +298,7 @@ class AppState extends ChangeNotifier {
     final seenIds = {for (final f in local) f.id};
     final seenNames = {for (final f in local) f.name.toLowerCase()};
     return [
-      for (final f in await remote.search(q))
+      for (final f in await remote.search(stripComposing(q)))
         if (!seenIds.contains(f.id) &&
             !seenNames.contains(f.name.toLowerCase()))
           f,

@@ -163,9 +163,19 @@ class Nutrition {
 
 String normalizeQuery(String s) => s.toLowerCase().replaceAll(' ', '');
 
+/// Drops Korean letters still being typed at the end ("소고기ㄱ", "밥ㅓ"):
+/// lone consonants and vowels never match a food name.
+String stripComposing(String s) =>
+    s.replaceAll(RegExp(r'[\u3131-\u318E]+$'), '').trimRight();
+
 /// Ranked search: exact > prefix > contains, over names and aliases.
-List<Food> searchFoods(List<Food> foods, String query, {int limit = 40}) {
-  final q = normalizeQuery(query);
+List<Food> searchFoods(
+  List<Food> foods,
+  String query, {
+  int limit = 40,
+  bool retry = true,
+}) {
+  final q = normalizeQuery(stripComposing(query));
   if (q.isEmpty) return const [];
   final scored = <(int, int, Food)>[];
   for (var i = 0; i < foods.length; i++) {
@@ -202,6 +212,16 @@ List<Food> searchFoods(List<Food> foods, String query, {int limit = 40}) {
         }
       }
     }
+  }
+  // Nothing at all: the last syllable may still be mid-composition
+  // ("소고깆" while typing 소고기), so try once without it.
+  if (scored.isEmpty && retry && q.length >= 3) {
+    return searchFoods(
+      foods,
+      q.substring(0, q.length - 1),
+      limit: limit,
+      retry: false,
+    );
   }
   scored.sort((a, b) {
     final s = b.$1.compareTo(a.$1);
