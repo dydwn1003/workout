@@ -259,8 +259,7 @@ class AppState extends ChangeNotifier {
     // rebuild of the search sheet.
     final custom = _data.customFoods;
     final cached = _allFoods;
-    if (cached != null &&
-        identical(cached.$1, custom) &&
+    if (cached != null && identical(cached.$1, custom) &&
         cached.$2 == custom.length) {
       return cached.$3;
     }
@@ -1527,8 +1526,9 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Fills ~5 weeks of realistic sample history so the trend chart and
-  /// weekly check-in can be tried immediately. The last check-in is left due.
+  /// Fills ~5 weeks of realistic sample history (a check-in left due).
+  /// Test fixture only: the app no longer offers sample data.
+  @visibleForTesting
   Future<void> loadDemoData({required bool korean}) async {
     analytics.log('demo_data');
     final rng = math.Random(7);
@@ -1574,7 +1574,6 @@ class AppState extends ChangeNotifier {
         fatG: init.macros.fatG,
         tdeeEst: init.tdee,
         status: PlanStatus.initial,
-        sample: true,
       ),
     ];
     final names = korean
@@ -1619,7 +1618,6 @@ class AppState extends ChangeNotifier {
             skeletalMuscleKg: bodyComp
                 ? double.parse((35.2 - i * 0.004).toStringAsFixed(1))
                 : null,
-            source: WeightSource.sample,
           ),
         );
       }
@@ -1688,7 +1686,6 @@ class AppState extends ChangeNotifier {
             confidence: r.confidence,
             reason: r.reason,
             status: r.adjusted ? PlanStatus.accepted : PlanStatus.kept,
-            sample: true,
           ),
         );
         if (r.adjusted) {
@@ -1702,7 +1699,6 @@ class AppState extends ChangeNotifier {
       WeightEntry(
         date: dateKey(today),
         kg: double.parse((mass + gauss(0.45)).toStringAsFixed(1)),
-        source: WeightSource.sample,
       ),
     );
     final saved = korean
@@ -1787,84 +1783,6 @@ class AppState extends ChangeNotifier {
     await repo.savePlans(plans);
     await repo.saveSettings(_data.settings);
     notifyListeners();
-  }
-
-  static bool _isDemoId(String id) => id.startsWith('demo-');
-
-  /// Whether anything made by [loadDemoData] is still there.
-  bool get hasDemoData =>
-      _data.weights.any((w) => w.source == WeightSource.sample) ||
-      _data.plans.any((p) => p.sample) ||
-      _data.meals.any((m) => _isDemoId(m.id)) ||
-      _data.workouts.any((w) => _isDemoId(w.id)) ||
-      _data.savedMeals.any((m) => _isDemoId(m.id));
-
-  /// Removes what [loadDemoData] made and keeps everything entered since.
-  /// Without the sample plans a new starting plan is made from the latest
-  /// own weigh-in; with no own weigh-in either, the profile goes too and
-  /// the app starts over at onboarding. Returns whether it did that.
-  Future<bool> clearDemoData() async {
-    analytics.log('demo_clear');
-    _data
-      ..weights = [
-        for (final w in _data.weights)
-          if (w.source != WeightSource.sample) w,
-      ]
-      ..meals = [
-        for (final m in _data.meals)
-          if (!_isDemoId(m.id)) m,
-      ]
-      ..workouts = [
-        for (final w in _data.workouts)
-          if (!_isDemoId(w.id)) w,
-      ]
-      ..savedMeals = [
-        for (final m in _data.savedMeals)
-          if (!_isDemoId(m.id)) m,
-      ]
-      ..plans = [
-        for (final p in _data.plans)
-          if (!p.sample) p,
-      ];
-    var restart = false;
-    final profile = _data.profile;
-    if (_data.plans.isEmpty && profile != null) {
-      final last = _data.weights.isEmpty ? null : _data.weights.last;
-      if (last == null) {
-        restart = true;
-        _data.profile = null;
-      } else {
-        final init = initialPlan(
-          profile: profile.coachProfile,
-          goal: profile.coachGoal,
-          weightKg: last.kg,
-          today: today,
-          bodyFatPct: last.bodyFatPct,
-        );
-        _data.plans = [
-          Plan(
-            weekStart: dateKey(today),
-            targetKcal: init.macros.kcal,
-            proteinG: init.macros.proteinG,
-            carbsG: init.macros.carbsG,
-            fatG: init.macros.fatG,
-            tdeeEst: init.tdee,
-            status: PlanStatus.initial,
-          ),
-        ];
-      }
-    }
-    _sort();
-    await Future.wait([
-      repo.saveProfile(_data.profile),
-      repo.saveWeights(_data.weights),
-      repo.saveMeals(_data.meals),
-      repo.saveWorkouts(_data.workouts),
-      repo.saveSavedMeals(_data.savedMeals),
-      repo.savePlans(_data.plans),
-    ]);
-    notifyListeners();
-    return restart;
   }
 }
 

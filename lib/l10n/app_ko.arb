@@ -18,7 +18,6 @@
   "disclaimer": "이 앱은 의학적 조언을 제공하지 않아요. 질환이 있거나 임신·수유 중이라면 먼저 전문가와 상담해 주세요.",
   "consentLabel": "체중·체성분 같은 건강 정보를 이 기기에 저장하는 데 동의해요 (민감정보)",
   "getStarted": "시작해볼까요?",
-  "tryDemo": "샘플 데이터로 먼저 둘러보기",
   "stepGoalTitle": "어떤 목표를 가지고 있나요?",
   "goalLose": "감량",
   "goalLoseDesc": "체중을 천천히 줄여요",
@@ -1199,14 +1198,6 @@
   "notificationsDesc": "모바일 앱에서 지원 예정",
   "units": "단위",
   "sectionData": "데이터",
-  "demoData": "샘플 데이터 채우기",
-  "demoDataDesc": "5주치 예시 기록으로 체크인과 그래프를 체험해요",
-  "demoConfirm": "지금 기록이 샘플 데이터로 바뀌어요. 계속할까요?",
-  "demoLoaded": "샘플 데이터를 채웠어요. 체크인 탭을 확인해 보세요!",
-  "demoClear": "샘플 데이터만 지우기",
-  "demoClearDesc": "직접 입력한 기록은 그대로 두고 샘플만 지워요",
-  "demoClearConfirm": "샘플 체중·식사·운동·체크인 기록을 지워요. 직접 입력한 기록은 남아요.\n\n직접 입력한 체중이 하나도 없으면 처음 설정 화면으로 돌아가요.",
-  "demoCleared": "샘플 데이터를 지웠어요",
   "consentGiven": "민감정보 저장 동의일: {date}",
   "@consentGiven": {
     "placeholders": {

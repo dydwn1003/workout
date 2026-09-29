@@ -215,12 +215,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     });
   }
 
-  Future<void> _demo() async {
-    final state = AppScope.read(context);
-    final korean = Localizations.localeOf(context).languageCode == 'ko';
-    await state.loadDemoData(korean: korean);
-  }
-
   @override
   Widget build(BuildContext context) {
     final t = L.of(context);
@@ -328,10 +322,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       if (_step == _Step.welcome) ...[
                         const SizedBox(height: 8),
-                        TextButton(
-                          onPressed: _consent ? _demo : null,
-                          child: Text(t.tryDemo),
-                        ),
                         if (AppScope.of(context).auth != null)
                           TextButton(
                             onPressed: () => showSignInSheet(context),

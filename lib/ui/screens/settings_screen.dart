@@ -507,62 +507,6 @@ class SettingsScreen extends StatelessWidget {
                     mode: LaunchMode.externalApplication,
                   ),
                 ),
-                ListTile(
-                  leading: icon(
-                    Icons.science_rounded,
-                    AppColors.lilac,
-                    AppColors.lilacSoft,
-                  ),
-                  title: Text(t.demoData),
-                  subtitle: Text(
-                    t.demoDataDesc,
-                    style: const TextStyle(fontSize: 12.5),
-                  ),
-                  onTap: () async {
-                    if (!await _confirm(context, t.demoConfirm)) return;
-                    if (!context.mounted) return;
-                    await s.loadDemoData(
-                      korean:
-                          Localizations.localeOf(context).languageCode == 'ko',
-                    );
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(SnackBar(content: Text(t.demoLoaded)));
-                  },
-                ),
-                AnimatedSize(
-                  duration: Motion.medium,
-                  curve: Motion.ease,
-                  child: !s.hasDemoData
-                      ? const SizedBox(width: double.infinity)
-                      : ListTile(
-                          leading: icon(
-                            Icons.cleaning_services_rounded,
-                            AppColors.peach,
-                            AppColors.peachSoft,
-                          ),
-                          title: Text(t.demoClear),
-                          subtitle: Text(
-                            t.demoClearDesc,
-                            style: const TextStyle(fontSize: 12.5),
-                          ),
-                          onTap: () async {
-                            if (!await _confirm(
-                              context,
-                              t.demoClearConfirm,
-                              destructive: true,
-                            )) {
-                              return;
-                            }
-                            if (!context.mounted) return;
-                            final messenger = ScaffoldMessenger.of(context);
-                            await s.clearDemoData();
-                            messenger.showSnackBar(
-                              SnackBar(content: Text(t.demoCleared)),
-                            );
-                          },
-                        ),
-                ),
                 if (s.settings.consentedAt != null)
                   ListTile(
                     leading: icon(

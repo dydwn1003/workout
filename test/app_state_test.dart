@@ -246,53 +246,6 @@ void main() {
       await s.applyCheckin(s.runCheckin()!, PlanStatus.manual, manualKcal: 900);
       expect(s.currentPlan!.targetKcal, CoachConstants.minKcalMale);
     });
-
-    test('clearing sample data keeps own records', () async {
-      final repo = MemoryCoachRepository();
-      final s = AppState(repo, clock: () => now);
-      await s.load();
-      await s.loadDemoData(korean: true);
-      expect(s.hasDemoData, isTrue);
-      // Own entries after the sample: a weigh-in over a sample day, a meal
-      // and a workout.
-      await s.upsertWeight(WeightEntry(date: dateKey(s.today), kg: 71.3));
-      await s.addMeal(
-        name: '내 점심',
-        kcal: 500,
-        proteinG: 30,
-        carbsG: 50,
-        fatG: 15,
-        source: MealSource.manual,
-      );
-      await s.addWorkout(WorkoutType.cardio, 40);
-
-      final restarted = await s.clearDemoData();
-      expect(restarted, isFalse);
-      expect(s.hasDemoData, isFalse);
-      expect(s.weights.map((w) => w.kg), [71.3]);
-      expect(s.meals.map((m) => m.name), ['내 점심']);
-      expect(s.workouts, hasLength(1));
-      expect(s.savedMeals, isEmpty);
-      // A fresh starting plan from the own weigh-in.
-      expect(s.onboarded, isTrue);
-      expect(s.plans.single.status, PlanStatus.initial);
-      expect(s.plans.single.sample, isFalse);
-
-      final reloaded = AppState(repo, clock: () => now);
-      await reloaded.load();
-      expect(reloaded.hasDemoData, isFalse);
-      expect(reloaded.weights, hasLength(1));
-    });
-
-    test('clearing sample data with nothing of your own restarts', () async {
-      final s = AppState(MemoryCoachRepository(), clock: () => now);
-      await s.load();
-      await s.loadDemoData(korean: false);
-      expect(await s.clearDemoData(), isTrue);
-      expect(s.onboarded, isFalse);
-      expect(s.weights, isEmpty);
-      expect(s.meals, isEmpty);
-    });
   });
 
   group('logging helpers', () {

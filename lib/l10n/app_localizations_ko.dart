@@ -66,9 +66,6 @@ class LKo extends L {
   String get getStarted => '시작해볼까요?';
 
   @override
-  String get tryDemo => '샘플 데이터로 먼저 둘러보기';
-
-  @override
   String get stepGoalTitle => '어떤 목표를 가지고 있나요?';
 
   @override
@@ -1512,31 +1509,6 @@ class LKo extends L {
 
   @override
   String get sectionData => '데이터';
-
-  @override
-  String get demoData => '샘플 데이터 채우기';
-
-  @override
-  String get demoDataDesc => '5주치 예시 기록으로 체크인과 그래프를 체험해요';
-
-  @override
-  String get demoConfirm => '지금 기록이 샘플 데이터로 바뀌어요. 계속할까요?';
-
-  @override
-  String get demoLoaded => '샘플 데이터를 채웠어요. 체크인 탭을 확인해 보세요!';
-
-  @override
-  String get demoClear => '샘플 데이터만 지우기';
-
-  @override
-  String get demoClearDesc => '직접 입력한 기록은 그대로 두고 샘플만 지워요';
-
-  @override
-  String get demoClearConfirm =>
-      '샘플 체중·식사·운동·체크인 기록을 지워요. 직접 입력한 기록은 남아요.\n\n직접 입력한 체중이 하나도 없으면 처음 설정 화면으로 돌아가요.';
-
-  @override
-  String get demoCleared => '샘플 데이터를 지웠어요';
 
   @override
   String consentGiven(String date) {

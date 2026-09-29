@@ -67,9 +67,6 @@ class LEn extends L {
   String get getStarted => 'Let\'s start';
 
   @override
-  String get tryDemo => 'Look around with sample data first';
-
-  @override
   String get stepGoalTitle => 'What\'s your goal?';
 
   @override
@@ -1541,33 +1538,6 @@ class LEn extends L {
 
   @override
   String get sectionData => 'Data';
-
-  @override
-  String get demoData => 'Load sample data';
-
-  @override
-  String get demoDataDesc =>
-      'Try check-ins and charts with 5 weeks of sample logs';
-
-  @override
-  String get demoConfirm =>
-      'Your current logs will be replaced with sample data. Continue?';
-
-  @override
-  String get demoLoaded => 'Sample data loaded. Check the Check-in tab!';
-
-  @override
-  String get demoClear => 'Remove sample data';
-
-  @override
-  String get demoClearDesc => 'Keeps what you entered yourself';
-
-  @override
-  String get demoClearConfirm =>
-      'Sample weigh-ins, meals, workouts and check-ins will be removed. Anything you entered yourself stays.\n\nWith no weigh-in of your own, you\'ll go back to the setup screens.';
-
-  @override
-  String get demoCleared => 'Sample data removed';
 
   @override
   String consentGiven(String date) {
