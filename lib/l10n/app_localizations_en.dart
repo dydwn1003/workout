@@ -1130,7 +1130,7 @@ class LEn extends L {
     String bal,
     String obs,
   ) {
-    return '$intake $sign $bal ≈ $obs kcal';
+    return '$intake $sign $bal = ~$obs kcal';
   }
 
   @override
@@ -1146,7 +1146,7 @@ class LEn extends L {
 
   @override
   String reportTargetValue(String est, String gap, String target, String kg) {
-    return 'Burn $est − $gap = $target kcal (${kg}kg/week pace)';
+    return 'Burn $est - $gap = $target kcal (${kg}kg/week pace)';
   }
 
   @override

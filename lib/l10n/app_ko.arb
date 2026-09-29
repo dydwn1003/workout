@@ -372,7 +372,7 @@
   "appliedKeep": "기존 목표를 유지해요",
   "appliedManual": "직접 정한 목표를 적용했어요",
   "howCalculated": "어떻게 계산했나요?",
-  "howCalculatedBody": "최근 {window}일 동안 평균 {intake} kcal를 먹었고 추세 체중이 {delta}kg 변했어요. 1kg ≈ 7,700 kcal로 환산하면 실제 소비량은 약 {obs} kcal예요. 이를 공식 추정치({formula} kcal)와 섞고, 한 주 변화폭을 ±150 kcal로 제한해서 {est} kcal로 정했어요.",
+  "howCalculatedBody": "최근 {window}일 동안 평균 {intake} kcal를 먹었고 추세 체중이 {delta}kg 변했어요. 1kg을 약 7,700 kcal로 환산하면 실제 소비량은 약 {obs} kcal예요. 이를 공식 추정치({formula} kcal)와 섞고, 한 주 변화폭을 ±150 kcal로 제한해서 {est} kcal로 정했어요.",
   "@howCalculatedBody": {
     "placeholders": {
       "window": {
@@ -713,7 +713,7 @@
   "reportDeficit": "부족",
   "reportSurplus": "남음",
   "reportObserved": "실제 소비량",
-  "reportObservedValue": "{intake} {sign} {bal} ≈ {obs} kcal",
+  "reportObservedValue": "{intake} {sign} {bal} = 약 {obs} kcal",
   "@reportObservedValue": {
     "placeholders": {
       "intake": {
@@ -746,7 +746,7 @@
     }
   },
   "reportTarget": "새 목표",
-  "reportTargetValue": "소비량 {est} − {gap} = {target} kcal (주 {kg}kg 페이스)",
+  "reportTargetValue": "소비량 {est} - {gap} = {target} kcal (주 {kg}kg 페이스)",
   "@reportTargetValue": {
     "placeholders": {
       "est": {

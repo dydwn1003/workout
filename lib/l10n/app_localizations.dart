@@ -1174,7 +1174,7 @@ abstract class L {
   /// No description provided for @howCalculatedBody.
   ///
   /// In ko, this message translates to:
-  /// **'최근 {window}일 동안 평균 {intake} kcal를 먹었고 추세 체중이 {delta}kg 변했어요. 1kg ≈ 7,700 kcal로 환산하면 실제 소비량은 약 {obs} kcal예요. 이를 공식 추정치({formula} kcal)와 섞고, 한 주 변화폭을 ±150 kcal로 제한해서 {est} kcal로 정했어요.'**
+  /// **'최근 {window}일 동안 평균 {intake} kcal를 먹었고 추세 체중이 {delta}kg 변했어요. 1kg을 약 7,700 kcal로 환산하면 실제 소비량은 약 {obs} kcal예요. 이를 공식 추정치({formula} kcal)와 섞고, 한 주 변화폭을 ±150 kcal로 제한해서 {est} kcal로 정했어요.'**
   String howCalculatedBody(
     String window,
     String intake,
@@ -2045,7 +2045,7 @@ abstract class L {
   /// No description provided for @reportObservedValue.
   ///
   /// In ko, this message translates to:
-  /// **'{intake} {sign} {bal} ≈ {obs} kcal'**
+  /// **'{intake} {sign} {bal} = 약 {obs} kcal'**
   String reportObservedValue(
     String intake,
     String sign,
@@ -2074,7 +2074,7 @@ abstract class L {
   /// No description provided for @reportTargetValue.
   ///
   /// In ko, this message translates to:
-  /// **'소비량 {est} − {gap} = {target} kcal (주 {kg}kg 페이스)'**
+  /// **'소비량 {est} - {gap} = {target} kcal (주 {kg}kg 페이스)'**
   String reportTargetValue(String est, String gap, String target, String kg);
 
   /// No description provided for @reportTargetSurplus.

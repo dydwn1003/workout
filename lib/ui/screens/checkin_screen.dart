@@ -724,7 +724,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
           t.reportObserved,
           t.reportObservedValue(
             fmt0(o.avgIntake),
-            o.dailyImbalance < 0 ? '+' : '−',
+            o.dailyImbalance < 0 ? '+' : '-',
             fmt0(o.dailyImbalance.abs()),
             fmt0(o.tdee),
           ),
