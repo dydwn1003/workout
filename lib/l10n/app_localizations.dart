@@ -1100,6 +1100,114 @@ abstract class L {
   /// **'오늘로'**
   String get backToToday;
 
+  /// No description provided for @sectionAccount.
+  ///
+  /// In ko, this message translates to:
+  /// **'계정'**
+  String get sectionAccount;
+
+  /// No description provided for @signInTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인하고 기록 지키기'**
+  String get signInTitle;
+
+  /// No description provided for @signInBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인하면 기록이 계정에 저장돼서 폰을 바꾸거나 여러 기기에서 써도 그대로 이어져요.'**
+  String get signInBody;
+
+  /// No description provided for @signInCta.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인하고 동기화'**
+  String get signInCta;
+
+  /// No description provided for @signInApple.
+  ///
+  /// In ko, this message translates to:
+  /// **'Apple로 계속하기'**
+  String get signInApple;
+
+  /// No description provided for @signInGoogle.
+  ///
+  /// In ko, this message translates to:
+  /// **'Google로 계속하기'**
+  String get signInGoogle;
+
+  /// No description provided for @signInKakao.
+  ///
+  /// In ko, this message translates to:
+  /// **'카카오로 계속하기'**
+  String get signInKakao;
+
+  /// No description provided for @signInFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인하지 못했어요. 다시 시도해 주세요.'**
+  String get signInFailed;
+
+  /// No description provided for @signInUnavailable.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 빌드에서는 로그인을 쓸 수 없어요.'**
+  String get signInUnavailable;
+
+  /// No description provided for @haveAccount.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미 계정이 있어요 · 로그인해서 불러오기'**
+  String get haveAccount;
+
+  /// No description provided for @syncing.
+  ///
+  /// In ko, this message translates to:
+  /// **'동기화 중…'**
+  String get syncing;
+
+  /// No description provided for @syncedAt.
+  ///
+  /// In ko, this message translates to:
+  /// **'{time}에 동기화됨'**
+  String syncedAt(String time);
+
+  /// No description provided for @syncFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'동기화하지 못했어요. 연결되면 다시 시도할게요.'**
+  String get syncFailed;
+
+  /// No description provided for @syncNow.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 동기화'**
+  String get syncNow;
+
+  /// No description provided for @signOut.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그아웃'**
+  String get signOut;
+
+  /// No description provided for @signOutConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그아웃하면 이 기기의 기록은 지워져요. 계정에는 그대로 있어서 다시 로그인하면 불러와요.'**
+  String get signOutConfirm;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In ko, this message translates to:
+  /// **'계정 삭제'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'계정과 모든 기록을 영구적으로 삭제할까요? 되돌릴 수 없어요.'**
+  String get deleteAccountConfirm;
+
   /// No description provided for @streakTitle.
   ///
   /// In ko, this message translates to:

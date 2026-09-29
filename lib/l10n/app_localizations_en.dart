@@ -570,6 +570,65 @@ class LEn extends L {
   String get backToToday => 'Today';
 
   @override
+  String get sectionAccount => 'Account';
+
+  @override
+  String get signInTitle => 'Sign in to keep your log';
+
+  @override
+  String get signInBody =>
+      'Your log is saved to your account, so it carries over to new phones and other devices.';
+
+  @override
+  String get signInCta => 'Sign in and sync';
+
+  @override
+  String get signInApple => 'Continue with Apple';
+
+  @override
+  String get signInGoogle => 'Continue with Google';
+
+  @override
+  String get signInKakao => 'Continue with Kakao';
+
+  @override
+  String get signInFailed => 'Couldn\'t sign in. Please try again.';
+
+  @override
+  String get signInUnavailable => 'Sign-in isn\'t available in this build.';
+
+  @override
+  String get haveAccount => 'I have an account · sign in to restore';
+
+  @override
+  String get syncing => 'Syncing…';
+
+  @override
+  String syncedAt(String time) {
+    return 'Synced at $time';
+  }
+
+  @override
+  String get syncFailed => 'Couldn\'t sync. Will retry when online.';
+
+  @override
+  String get syncNow => 'Sync now';
+
+  @override
+  String get signOut => 'Sign out';
+
+  @override
+  String get signOutConfirm =>
+      'Signing out clears this device. Your log stays in your account and comes back when you sign in again.';
+
+  @override
+  String get deleteAccount => 'Delete account';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Permanently delete your account and all your data? This can\'t be undone.';
+
+  @override
   String streakTitle(String days) {
     return '$days-day logging streak!';
   }

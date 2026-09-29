@@ -9,6 +9,7 @@ import '../motion.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'labels.dart';
+import 'sign_in_sheet.dart';
 
 enum _Step { welcome, goal, body, target, pace, activity, result }
 
@@ -326,6 +327,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           onPressed: _consent ? _demo : null,
                           child: Text(t.tryDemo),
                         ),
+                        if (AppScope.of(context).auth != null)
+                          TextButton(
+                            onPressed: () => showSignInSheet(context),
+                            child: Text(t.haveAccount),
+                          ),
                       ],
                     ],
                   ),

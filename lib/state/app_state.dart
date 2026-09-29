@@ -1,13 +1,18 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show AuthChangeEvent;
 
 import '../core/coach_engine/coach_engine.dart';
 import '../data/entities.dart';
 import '../data/food.dart';
 import '../data/food_db.g.dart';
+import '../data/auth_service.dart';
 import '../data/remote_food_search.dart';
 import '../data/repository.dart';
+import '../data/supabase_sync.dart';
+import '../data/sync.dart';
 
 class WorkoutWeek {
   final DateTime start;
@@ -32,14 +37,111 @@ class AppState extends ChangeNotifier {
   /// Full server food search; null when not configured (tests, offline builds).
   final RemoteFoodSearch? remoteSearch;
 
-  AppState(this.repo, {DateTime Function()? clock, this.remoteSearch})
-    : clock = clock ?? DateTime.now;
+  /// Sign-in; null when Supabase isn't configured (tests, offline builds).
+  final AuthService? auth;
+
+  AppState(
+    this.repo, {
+    DateTime Function()? clock,
+    this.remoteSearch,
+    this.auth,
+  }) : clock = clock ?? DateTime.now;
 
   Future<void> load() async {
     _data = await repo.load();
     _sort();
     loaded = true;
     notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Account & sync
+  // ---------------------------------------------------------------------------
+
+  StreamSubscription<Object?>? _authSub;
+  var syncing = false;
+
+  /// Last sync failed (offline, server error); cleared by the next success.
+  var syncFailed = false;
+
+  SyncingRepository? get _sync =>
+      repo is SyncingRepository ? repo as SyncingRepository : null;
+
+  String? get accountLabel => auth?.accountLabel;
+  bool get signedIn => auth?.user != null;
+  DateTime? get lastSynced => _sync?.syncedAt;
+
+  /// Follows sign-in/out: attaches the account's server copy and syncs.
+  void startSync() {
+    final a = auth, sync = _sync;
+    if (a == null || sync == null || _authSub != null) return;
+    _authSub = a.changes.listen((e) async {
+      final user = e.session?.user;
+      if (user != null &&
+          (e.event == AuthChangeEvent.initialSession ||
+              e.event == AuthChangeEvent.signedIn)) {
+        await sync.attach(user.id, SupabaseRecordStore(a.client, user.id));
+        await syncNow();
+      }
+      notifyListeners();
+    });
+  }
+
+  /// Pushes this device's changes and pulls the other devices'.
+  Future<void> syncNow() async {
+    final sync = _sync;
+    if (sync == null || !sync.attached) return;
+    syncing = true;
+    notifyListeners();
+    try {
+      if (await sync.sync()) {
+        _data = await repo.load();
+        _sort();
+      }
+      syncFailed = false;
+    } catch (e) {
+      debugPrint('sync failed: $e');
+      syncFailed = true;
+    } finally {
+      syncing = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> signIn(AuthMethod m) async => auth?.signIn(m);
+
+  /// Signs out and clears this device; the account keeps its server copy,
+  /// so signing in again (here or elsewhere) brings everything back.
+  Future<void> signOut() async {
+    final sync = _sync;
+    if (sync != null) {
+      await syncNow(); // don't lose the last edits
+      await sync.detach();
+      await sync.clearDevice();
+    }
+    await auth?.signOut();
+    _data = AppData();
+    notifyListeners();
+  }
+
+  /// Deletes the account, its server copy and this device's data.
+  Future<void> deleteAccount() async {
+    final sync = _sync;
+    await auth?.deleteAccount();
+    if (sync != null) {
+      await sync.detach();
+      await sync.clearDevice();
+    } else {
+      await repo.deleteAll();
+    }
+    _data = AppData();
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
   }
 
   void _sort() {

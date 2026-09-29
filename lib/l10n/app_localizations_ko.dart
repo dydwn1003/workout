@@ -557,6 +557,63 @@ class LKo extends L {
   String get backToToday => '오늘로';
 
   @override
+  String get sectionAccount => '계정';
+
+  @override
+  String get signInTitle => '로그인하고 기록 지키기';
+
+  @override
+  String get signInBody => '로그인하면 기록이 계정에 저장돼서 폰을 바꾸거나 여러 기기에서 써도 그대로 이어져요.';
+
+  @override
+  String get signInCta => '로그인하고 동기화';
+
+  @override
+  String get signInApple => 'Apple로 계속하기';
+
+  @override
+  String get signInGoogle => 'Google로 계속하기';
+
+  @override
+  String get signInKakao => '카카오로 계속하기';
+
+  @override
+  String get signInFailed => '로그인하지 못했어요. 다시 시도해 주세요.';
+
+  @override
+  String get signInUnavailable => '이 빌드에서는 로그인을 쓸 수 없어요.';
+
+  @override
+  String get haveAccount => '이미 계정이 있어요 · 로그인해서 불러오기';
+
+  @override
+  String get syncing => '동기화 중…';
+
+  @override
+  String syncedAt(String time) {
+    return '$time에 동기화됨';
+  }
+
+  @override
+  String get syncFailed => '동기화하지 못했어요. 연결되면 다시 시도할게요.';
+
+  @override
+  String get syncNow => '지금 동기화';
+
+  @override
+  String get signOut => '로그아웃';
+
+  @override
+  String get signOutConfirm =>
+      '로그아웃하면 이 기기의 기록은 지워져요. 계정에는 그대로 있어서 다시 로그인하면 불러와요.';
+
+  @override
+  String get deleteAccount => '계정 삭제';
+
+  @override
+  String get deleteAccountConfirm => '계정과 모든 기록을 영구적으로 삭제할까요? 되돌릴 수 없어요.';
+
+  @override
   String streakTitle(String days) {
     return '연속 $days일째 기록 중!';
   }

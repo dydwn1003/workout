@@ -8,6 +8,7 @@ import '../theme.dart';
 import '../widgets.dart';
 import 'labels.dart';
 import 'onboarding_screen.dart';
+import 'sign_in_sheet.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -85,6 +86,83 @@ class SettingsScreen extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
             children: [
+              if (s.auth != null)
+                group(t.sectionAccount, [
+                  if (!s.signedIn)
+                    ListTile(
+                      leading: icon(
+                        Icons.cloud_sync_rounded,
+                        AppColors.sky,
+                        AppColors.skySoft,
+                      ),
+                      title: Text(t.signInCta),
+                      subtitle: Text(t.signInBody),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () => showSignInSheet(context),
+                    )
+                  else ...[
+                    ListTile(
+                      leading: icon(
+                        Icons.account_circle_rounded,
+                        AppColors.sky,
+                        AppColors.skySoft,
+                      ),
+                      title: Text(s.accountLabel ?? ''),
+                      subtitle: Text(
+                        s.syncing
+                            ? t.syncing
+                            : s.syncFailed
+                            ? t.syncFailed
+                            : s.lastSynced == null
+                            ? ''
+                            : t.syncedAt(
+                                DateFormat.jm(locale).format(s.lastSynced!),
+                              ),
+                        style: TextStyle(
+                          color: s.syncFailed ? const Color(0xFFE5484D) : null,
+                        ),
+                      ),
+                      trailing: IconButton(
+                        tooltip: t.syncNow,
+                        onPressed: s.syncing ? null : s.syncNow,
+                        icon: const Icon(Icons.sync_rounded),
+                      ),
+                    ),
+                    ListTile(
+                      leading: icon(
+                        Icons.logout_rounded,
+                        AppColors.inkSoft,
+                        AppColors.line,
+                      ),
+                      title: Text(t.signOut),
+                      onTap: () async {
+                        if (await _confirm(context, t.signOutConfirm)) {
+                          await s.signOut();
+                        }
+                      },
+                    ),
+                    ListTile(
+                      leading: icon(
+                        Icons.person_remove_rounded,
+                        const Color(0xFFE5484D),
+                        const Color(0xFFFFE4E4),
+                      ),
+                      title: Text(
+                        t.deleteAccount,
+                        style: const TextStyle(color: Color(0xFFE5484D)),
+                      ),
+                      onTap: () async {
+                        if (await _confirm(
+                          context,
+                          t.deleteAccountConfirm,
+                          destructive: true,
+                        )) {
+                          await s.deleteAccount();
+                        }
+                      },
+                    ),
+                  ],
+                ]),
               group(t.sectionProfile, [
                 ListTile(
                   leading: const Mascot(size: 40),
