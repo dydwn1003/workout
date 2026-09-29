@@ -152,6 +152,9 @@ class Meal {
   /// 당류 (g); null when unknown (manual entries, foods without the value).
   final double? sugarG;
 
+  /// 포화지방 (g); null when unknown.
+  final double? satFatG;
+
   const Meal({
     required this.id,
     required this.date,
@@ -167,6 +170,7 @@ class Meal {
     this.portion,
     this.foodId,
     this.sugarG,
+    this.satFatG,
   });
 
   Meal copyWith({
@@ -193,6 +197,7 @@ class Meal {
     portion: portion != null ? portion() : this.portion,
     foodId: foodId,
     sugarG: sugarG,
+    satFatG: satFatG,
   );
 
   Map<String, Object?> toJson() => {
@@ -205,6 +210,7 @@ class Meal {
     'carbsG': carbsG,
     'fatG': fatG,
     if (sugarG != null) 'sugarG': sugarG,
+    if (satFatG != null) 'satFatG': satFatG,
     'source': source.name,
     'edited': edited,
     'slot': slot.name,
@@ -229,6 +235,7 @@ class Meal {
     portion: j['portion'] as String?,
     foodId: j['foodId'] as String?,
     sugarG: _d(j['sugarG']),
+    satFatG: _d(j['satFatG']),
   );
 }
 

@@ -25,7 +25,10 @@ a known package weight, then the most recently updated.
 Many franchise menus publish only kcal, protein and sugar. Such rows are
 imported with the missing macros marked in a 9th column (e.g. "cf"), which
 the app estimates and labels as such. --full-macros-only skips them.
-Sugar (당류, per 100 g) goes in a 10th column when the source has it.
+Sugar (당류) and saturated fat (포화지방) per 100 g go in a 10th and 11th
+column when known. Where the standard data leaves them empty, they come from
+data/mfds_ntr.csv (tool/fetch_mfds_ntr.py, the 식품영양성분DB정보 API) by
+식품코드 when that file exists.
 """
 import argparse
 import csv
@@ -36,6 +39,7 @@ import sys
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 OUT = os.path.join(ROOT, "data", "foods_mfds.tsv")
+NTR = os.path.join(ROOT, "data", "mfds_ntr.csv")
 
 # Header keyword candidates, most specific first.
 COLS = {
@@ -45,6 +49,8 @@ COLS = {
     "fat": ["지방(g)", "지방"],
     "carbs": ["탄수화물(g)", "탄수화물"],
     "sugar": ["당류(g)", "당류"],
+    "satfat": ["포화지방산(g)", "포화지방산", "포화지방"],
+    "code": ["식품코드", "foodCd"],
     "basis": ["영양성분함량기준량", "영양성분기준량", "기준량"],
     "category": ["식품대분류명", "식품대분류", "대분류"],
     "rep": ["대표식품명"],
@@ -186,6 +192,24 @@ def clean_name(n):
     return re.sub(r"\s+", " ", n.replace("_", " ")).strip()
 
 
+_ntr = None
+
+
+def ntr():
+    """식품코드 -> {"sugar", "satfat"} per 100 g (as strings, "" = unknown)
+    from data/mfds_ntr.csv; empty when that file hasn't been downloaded."""
+    global _ntr
+    if _ntr is None:
+        _ntr = {}
+        if os.path.exists(NTR):
+            with open(NTR, encoding="utf-8") as f:
+                for r in csv.DictReader(f):
+                    k = 100.0 / (grams_of(r["영양성분함량기준량"]) or 100.0)
+                    per100 = lambda v: f"{num(v) * k:.1f}" if (v or "").strip() else ""
+                    _ntr[r["식품코드"]] = {"sugar": per100(r["당류(g)"]), "satfat": per100(r["포화지방산(g)"])}
+    return _ntr
+
+
 def convert(path, include_processed=False, per_group=10, full_only=False):
     it = rows_from(path)
     header = None
@@ -237,13 +261,18 @@ def convert(path, include_processed=False, per_group=10, full_only=False):
         has_serving = bool(serving and 0 < serving < 3000)
         units = f"{label}:{serving:g}" if has_serving else "100g:100"
         aliases = rep if rep and rep != name else ""
-        sugar = f"{num(get(r, 'sugar')) * k:.1f}" if get(r, "sugar").strip() else ""
+        extra = ntr().get(get(r, "code").strip(), {})
+        per100 = lambda key: (f"{num(get(r, key)) * k:.1f}" if get(r, key).strip()
+                              else extra.get(key, ""))
+        tail = [unknown, per100("sugar"), per100("satfat")]
+        while tail and not tail[-1]:
+            tail.pop()
         row = [
             name, aliases, cat,
             f"{kcal:.1f}", f"{num(get(r, 'protein')) * k:.1f}",
             f"{num(get(r, 'carbs')) * k:.1f}", f"{num(get(r, 'fat')) * k:.1f}",
             units,
-        ] + ([unknown, sugar] if sugar else [unknown] if unknown else [])
+        ] + tail
         if processed and per_group:
             groups.setdefault((cat, rep or name), []).append(((has_serving, get(r, "date")), row))
             continue

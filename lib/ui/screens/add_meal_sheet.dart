@@ -34,19 +34,53 @@ IconData slotIcon(MealSlot s) => switch (s) {
   MealSlot.snack => Icons.cookie_rounded,
 };
 
+/// [replacing]: the first food added replaces this meal and closes the sheet.
 Future<void> showAddMealSheet(
   BuildContext context, {
   DateTime? date,
   MealSlot? slot,
+  Meal? replacing,
 }) => showModalBottomSheet(
   context: context,
   isScrollControlled: true,
   sheetAnimationStyle: Motion.sheet,
   builder: (_) => FractionallySizedBox(
     heightFactor: 0.92,
-    child: AddMealSheet(date: date, slot: slot),
+    child: AddMealSheet(date: date, slot: slot, replacing: replacing),
   ),
 );
+
+/// Deletes [meal] and offers to undo it in a snackbar.
+void deleteMealWithUndo(BuildContext context, Meal meal) {
+  final s = AppScope.read(context);
+  final t = L.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  s.deleteMeal(meal.id);
+  messenger.showSnackBar(
+    SnackBar(
+      content: Text(t.mealDeleted),
+      action: SnackBarAction(
+        label: t.undo,
+        textColor: AppColors.peachSoft,
+        onPressed: () => s.addMeal(
+          name: meal.name,
+          kcal: meal.kcal,
+          proteinG: meal.proteinG,
+          carbsG: meal.carbsG,
+          fatG: meal.fatG,
+          source: meal.source,
+          edited: meal.edited,
+          date: parseDateKey(meal.date),
+          slot: meal.slot,
+          portion: meal.portion,
+          foodId: meal.foodId,
+          sugarG: meal.sugarG,
+          satFatG: meal.satFatG,
+        ),
+      ),
+    ),
+  );
+}
 
 Future<void> showEditMealSheet(BuildContext context, Meal meal) =>
     showModalBottomSheet(
@@ -59,10 +93,40 @@ Future<void> showEditMealSheet(BuildContext context, Meal meal) =>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Text(
-                L.of(ctx).editMeal,
-                style: Theme.of(ctx).textTheme.headlineSmall,
+              padding: const EdgeInsets.only(left: 24, right: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      L.of(ctx).editMeal,
+                      style: Theme.of(ctx).textTheme.headlineSmall,
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      showAddMealSheet(
+                        context,
+                        date: parseDateKey(meal.date),
+                        slot: meal.slot,
+                        replacing: meal,
+                      );
+                    },
+                    icon: const Icon(Icons.search_rounded, size: 20),
+                    label: Text(L.of(ctx).searchAgain),
+                  ),
+                  IconButton(
+                    tooltip: L.of(ctx).delete,
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      deleteMealWithUndo(context, meal);
+                    },
+                    icon: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: AppColors.peach,
+                    ),
+                  ),
+                ],
               ),
             ),
             Expanded(
@@ -123,7 +187,10 @@ class SlotChips extends StatelessWidget {
 class AddMealSheet extends StatefulWidget {
   final DateTime? date;
   final MealSlot? slot;
-  const AddMealSheet({super.key, this.date, this.slot});
+
+  /// The meal the first added food replaces (edit → 다시 검색).
+  final Meal? replacing;
+  const AddMealSheet({super.key, this.date, this.slot, this.replacing});
 
   @override
   State<AddMealSheet> createState() => _AddMealSheetState();
@@ -144,6 +211,13 @@ class _AddMealSheetState extends State<AddMealSheet>
   /// Search keeps the sheet open for more items; other tabs close it.
   void _onAdded(String name, {bool close = false}) {
     final t = L.of(context);
+    if (widget.replacing case final old?) {
+      AppScope.read(context).deleteMeal(old.id);
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(t.mealReplaced(name))));
+      return;
+    }
     if (close) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context)
@@ -171,7 +245,7 @@ class _AddMealSheetState extends State<AddMealSheet>
             children: [
               Expanded(
                 child: Text(
-                  t.addMeal,
+                  widget.replacing == null ? t.addMeal : t.replaceMeal,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
               ),
@@ -397,6 +471,7 @@ class _SearchTabState extends State<_SearchTab>
       portion: portion,
       foodId: f.id,
       sugarG: n.sugarG,
+      satFatG: n.satFatG,
     );
     widget.onAdded(f.name);
   }
@@ -881,13 +956,30 @@ class _FoodDetailState extends State<_FoodDetail> {
                 ],
               ),
               const SizedBox(height: 8),
-              Text(
-                n.sugarG == null ? t.sugarNone : t.sugarPer(fmt1(n.sugarG!)),
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.sugar,
-                  fontWeight: FontWeight.w700,
-                ),
+              Wrap(
+                spacing: 12,
+                children: [
+                  Text(
+                    n.sugarG == null
+                        ? t.sugarNone
+                        : t.sugarPer(fmt1(n.sugarG!)),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.sugar,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    n.satFatG == null
+                        ? t.satFatNone
+                        : t.satFatPer(fmt1(n.satFatG!)),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.satFat,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

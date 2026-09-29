@@ -224,6 +224,24 @@
     }
   },
   "sugarNone": "당류 정보 없음",
+  "satFat": "포화지방",
+  "satFatUnknownMeals": "포화지방 정보가 없는 기록 {n}개는 빠져 있어요",
+  "@satFatUnknownMeals": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "satFatPer": "포화지방 {g}g",
+  "@satFatPer": {
+    "placeholders": {
+      "g": {
+        "type": "String"
+      }
+    }
+  },
+  "satFatNone": "포화지방 정보 없음",
   "legendRaw": "측정값",
   "legendTrend": "추세",
   "legendGoal": "목표",
@@ -461,6 +479,16 @@
   "weekLogReady": "이번 주 기록이 충분해요. 체크인 때 정확하게 조정할 수 있어요!",
   "editMeal": "식사 수정",
   "mealUpdated": "수정했어요",
+  "searchAgain": "다시 검색",
+  "replaceMeal": "다른 음식으로 바꾸기",
+  "mealReplaced": "{name}(으)로 바꿨어요",
+  "@mealReplaced": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "recentMeals": "최근 먹은 것",
   "savedMealsTitle": "내 식사",
   "mealsOnDay": "이날 먹은 것",

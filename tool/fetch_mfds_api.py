@@ -46,6 +46,7 @@ FIELD_MAP = {
     "fatce": "지방(g)",
     "chocdf": "탄수화물(g)",
     "sugar": "당류(g)",
+    "fasat": "포화지방산(g)",
     "foodSize": "식품중량",
     "mfrNm": "업체명",
     "mkrNm": "업체명",
@@ -54,12 +55,12 @@ FIELD_MAP = {
 
 
 def get(url):
-    for attempt in range(6):
+    for attempt in range(12):
         try:
             with urllib.request.urlopen(url, timeout=120) as r:
                 return r.read().decode("utf-8")
         except Exception as e:  # the API often resets connections: back off and retry
-            if attempt == 5:
+            if attempt == 11:
                 raise
             print(f"  retry after error: {e}", file=sys.stderr)
             time.sleep(min(2 ** (attempt + 1), 30))
@@ -86,7 +87,7 @@ def items_of(payload):
 # would be close to 1 GB.
 KEEP = [
     "foodCd", "foodNm", "typeNm", "foodOriginNm", "foodLv3Nm", "foodLv4Nm",
-    "nutConSrtrQua", "enerc", "prot", "fatce", "chocdf", "sugar",
+    "nutConSrtrQua", "enerc", "prot", "fatce", "chocdf", "sugar", "fasat",
     "foodSize", "mfrNm", "restNm", "crtrYmd",
 ]
 CACHE = os.path.join("data", ".mfds_cache")
@@ -98,8 +99,10 @@ def main():
         sys.exit("set DATA_GO_KR_KEY")
     args = sys.argv[1:]
     opt = lambda name, default: args[args.index(name) + 1] if name in args else default
-    rows = int(opt("--rows", "1000"))  # the API caps pages at 1000
-    workers = int(opt("--workers", "4"))
+    # The API caps pages at 500 rows, but those take ~10 s and the connection
+    # is often cut at ~11 s; 100-row pages come back in ~4 s.
+    rows = int(opt("--rows", "100"))
+    workers = int(opt("--workers", "6"))
     names = [a for a in args if a in DATASETS] or list(DATASETS)
     for name in names:
         print(f"== {name} ({DATASETS[name]})")

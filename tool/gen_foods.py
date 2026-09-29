@@ -40,11 +40,12 @@ def load(path=SRC, prefix="f"):
         if not line or line.startswith("#"):
             continue
         cols = line.split("\t")
-        if len(cols) not in (8, 9, 10):
-            sys.exit(f"line {n}: expected 8 to 10 columns, got {len(cols)}")
+        if len(cols) not in (8, 9, 10, 11):
+            sys.exit(f"line {n}: expected 8 to 11 columns, got {len(cols)}")
         name, aliases, cat, kcal, p, c, f, units = cols[:8]
         unknown = cols[8].strip() if len(cols) >= 9 else ""  # not published: k/p/c/f
-        sugar = cols[9].strip() if len(cols) == 10 else ""  # 당류 g/100 g, "" = unknown
+        sugar = cols[9].strip() if len(cols) >= 10 else ""  # 당류 g/100 g, "" = unknown
+        satfat = cols[10].strip() if len(cols) == 11 else ""  # 포화지방 g/100 g
         us = []
         for u in units.split(";"):
             label, grams = u.rsplit(":", 1)
@@ -58,6 +59,7 @@ def load(path=SRC, prefix="f"):
             "units": us,
             "unknown": unknown,
             "sugar": float(sugar) if sugar else None,
+            "satfat": float(satfat) if satfat else None,
         })
     return foods
 
@@ -147,7 +149,8 @@ def dart(foods) -> str:
             f"  Food('{fd['id']}', '{esc(fd['name'])}', [{aliases}], '{esc(fd['cat'])}', "
             f"{num(fd['kcal'])}, {num(fd['p'])}, {num(fd['c'])}, {num(fd['f'])}, [{units}]"
             + (f", unknown: '{fd['unknown']}'" if fd["unknown"] else "")
-            + (f", sugarG: {num(fd['sugar'])}" if fd.get("sugar") is not None else "") + "),"
+            + (f", sugarG: {num(fd['sugar'])}" if fd.get("sugar") is not None else "")
+            + (f", satFatG: {num(fd['satfat'])}" if fd.get("satfat") is not None else "") + "),"
         )
     out.append("];")
     return "\n".join(out) + "\n"

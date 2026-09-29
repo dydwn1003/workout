@@ -6,7 +6,7 @@
 create table if not exists public.food_nutrients (
   id      text primary key references public.foods (id) on delete cascade,
   sugar   real,                         -- 당류 g per 100 g
-  sat_fat real                          -- 포화지방 g per 100 g (not loaded yet)
+  sat_fat real                          -- 포화지방 g per 100 g
 );
 
 alter table public.food_nutrients enable row level security;

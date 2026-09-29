@@ -434,6 +434,22 @@ class LEn extends L {
   String get sugarNone => 'No sugar info';
 
   @override
+  String get satFat => 'Saturated fat';
+
+  @override
+  String satFatUnknownMeals(String n) {
+    return '$n logged items have no saturated fat info and aren\'t counted';
+  }
+
+  @override
+  String satFatPer(String g) {
+    return 'Saturated fat ${g}g';
+  }
+
+  @override
+  String get satFatNone => 'No saturated fat info';
+
+  @override
   String get legendRaw => 'Weigh-ins';
 
   @override
@@ -755,6 +771,17 @@ class LEn extends L {
 
   @override
   String get mealUpdated => 'Updated';
+
+  @override
+  String get searchAgain => 'Search again';
+
+  @override
+  String get replaceMeal => 'Replace meal';
+
+  @override
+  String mealReplaced(String name) {
+    return 'Replaced with $name';
+  }
 
   @override
   String get recentMeals => 'Recent';

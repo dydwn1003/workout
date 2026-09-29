@@ -341,15 +341,22 @@ class AppState extends ChangeNotifier {
   }
 
   /// 당류 eaten on [d] (g) and how many of that day's meals don't know it.
-  ({double grams, int unknown}) sugarOn(DateTime d) {
+  ({double grams, int unknown}) sugarOn(DateTime d) =>
+      _sumOn(d, (m) => m.sugarG);
+
+  /// 포화지방 eaten on [d] (g) and how many of that day's meals don't know it.
+  ({double grams, int unknown}) satFatOn(DateTime d) =>
+      _sumOn(d, (m) => m.satFatG);
+
+  ({double grams, int unknown}) _sumOn(DateTime d, double? Function(Meal) of) {
     var g = 0.0;
     var unknown = 0;
     for (final m in mealsOn(d)) {
-      final s = m.sugarG;
-      if (s == null) {
+      final v = of(m);
+      if (v == null) {
         unknown++;
       } else {
-        g += s;
+        g += v;
       }
     }
     return (grams: g, unknown: unknown);
@@ -360,6 +367,13 @@ class AppState extends ChangeNotifier {
   double? sugarLimitOn(DateTime d) {
     final kcal = planOn(d)?.targetKcal;
     return kcal == null ? null : kcal * 0.10 / 4;
+  }
+
+  /// Daily 포화지방 limit: 7% of the day's calorie target (한국인 영양소
+  /// 섭취기준; about 16 g at 2,000 kcal).
+  double? satFatLimitOn(DateTime d) {
+    final kcal = planOn(d)?.targetKcal;
+    return kcal == null ? null : kcal * 0.07 / 9;
   }
 
   DateTime? get _firstDataDay {
@@ -770,6 +784,7 @@ class AppState extends ChangeNotifier {
     String? portion,
     String? foodId,
     double? sugarG,
+    double? satFatG,
   }) async {
     final now = clock();
     final d = date ?? today;
@@ -801,6 +816,7 @@ class AppState extends ChangeNotifier {
         portion: portion,
         foodId: foodId,
         sugarG: sugarG,
+        satFatG: satFatG,
       ),
     );
     _sort();

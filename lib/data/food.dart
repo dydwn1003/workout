@@ -34,13 +34,17 @@ class Food {
     this.custom = false,
     this.unknown = '',
     this.sugarG,
+    this.satFatG,
   });
-
-  /// 당류 per 100 g; null when the source doesn't have it.
 
   bool get hasEstimatedMacros => unknown.isNotEmpty;
   bool get kcalEstimated => unknown.contains('k');
+
+  /// 당류 per 100 g; null when the source doesn't have it.
   final double? sugarG;
+
+  /// 포화지방 per 100 g; null when the source doesn't have it.
+  final double? satFatG;
 
   /// Same shape as a row of the server's public.foods table
   /// (supabase/schema.sql), so server results and cached ones share a parser.
@@ -58,6 +62,7 @@ class Food {
     ],
     'unknown': unknown,
     if (sugarG != null) 'sugar': sugarG,
+    if (satFatG != null) 'sat_fat': satFatG,
   };
 
   factory Food.fromJson(Map<String, Object?> j) {
@@ -77,6 +82,7 @@ class Food {
       ],
       unknown: j['unknown'] as String? ?? '',
       sugarG: (j['sugar'] as num?)?.toDouble(),
+      satFatG: (j['sat_fat'] as num?)?.toDouble(),
     );
   }
 
@@ -90,6 +96,7 @@ class Food {
     carbsG: carbsG * grams / 100,
     fatG: fatG * grams / 100,
     sugarG: sugarG == null ? null : sugarG! * grams / 100,
+    satFatG: satFatG == null ? null : satFatG! * grams / 100,
   );
 
   Nutrition forPortion(FoodUnit unit, double qty) => forGrams(unit.grams * qty);
@@ -139,12 +146,14 @@ class Nutrition {
   final double carbsG;
   final double fatG;
   final double? sugarG;
+  final double? satFatG;
   const Nutrition({
     required this.kcal,
     required this.proteinG,
     required this.carbsG,
     required this.fatG,
     this.sugarG,
+    this.satFatG,
   });
 }
 

@@ -14,7 +14,10 @@ Usage:
   python3 tool/load_supabase.py --skip 260000   # resume after an interrupted upload
   python3 tool/load_supabase.py --only-estimated  # re-upload just the rows with estimated macros
   python3 tool/load_supabase.py --source estimated  # just the estimated franchise menus
-  python3 tool/load_supabase.py --nutrients      # 당류 into public.food_nutrients
+  python3 tool/load_supabase.py --nutrients      # 당류·포화지방 into public.food_nutrients
+
+For 포화지방, download data/mfds_ntr.csv first (tool/fetch_mfds_ntr.py): the
+standard data leaves it empty for many foods.
 """
 import argparse
 import csv
@@ -51,7 +54,8 @@ def record(fd, source):
         "units": [{"label": l, "g": g} for l, g in fd["units"]],
         "unknown": fd["unknown"], "source": source,
         "search": "|".join(keys),
-        "_sugar": fd.get("sugar"),  # public.food_nutrients, not a foods column
+        "_sugar": fd.get("sugar"),  # public.food_nutrients, not foods columns
+        "_satfat": fd.get("satfat"),
     }
 
 
@@ -161,8 +165,11 @@ def main():
         recs = [r for r in recs if r["source"] == a.source]
     print(f"{len(recs)} foods total")
     if a.nutrients:
-        rows = [{"id": r["id"], "sugar": r["_sugar"]} for r in recs if r["_sugar"] is not None]
-        print(f"{len(rows)} foods with 당류")
+        rows = [{"id": r["id"], "sugar": r["_sugar"], "sat_fat": r["_satfat"]}
+                for r in recs if r["_sugar"] is not None or r["_satfat"] is not None]
+        print(f"{len(rows)} foods with 당류 or 포화지방 "
+              f"({sum(r['sugar'] is not None for r in rows)} 당류, "
+              f"{sum(r['sat_fat'] is not None for r in rows)} 포화지방)")
         upload(rows, 5000, a.skip, table="food_nutrients")
         return
     recs = [{k: v for k, v in r.items() if not k.startswith("_")} for r in recs]

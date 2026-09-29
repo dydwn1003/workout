@@ -24,6 +24,8 @@ class AppColors {
 
   static const sugar = Color(0xFFC27C3A); // caramel: 당류 (an upper limit)
   static const sugarSoft = Color(0xFFF7E6D6);
+  static const satFat = Color(0xFF9B4F8C); // plum: 포화지방 (an upper limit)
+  static const satFatSoft = Color(0xFFF5E1EF);
   static const over = Color(0xFFE5484D);
 
   // Meal slots: time-of-day colors, kept apart from the kcal/macro ones.

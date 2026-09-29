@@ -865,6 +865,30 @@ abstract class L {
   /// **'당류 정보 없음'**
   String get sugarNone;
 
+  /// No description provided for @satFat.
+  ///
+  /// In ko, this message translates to:
+  /// **'포화지방'**
+  String get satFat;
+
+  /// No description provided for @satFatUnknownMeals.
+  ///
+  /// In ko, this message translates to:
+  /// **'포화지방 정보가 없는 기록 {n}개는 빠져 있어요'**
+  String satFatUnknownMeals(String n);
+
+  /// No description provided for @satFatPer.
+  ///
+  /// In ko, this message translates to:
+  /// **'포화지방 {g}g'**
+  String satFatPer(String g);
+
+  /// No description provided for @satFatNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'포화지방 정보 없음'**
+  String get satFatNone;
+
   /// No description provided for @legendRaw.
   ///
   /// In ko, this message translates to:
@@ -1411,6 +1435,24 @@ abstract class L {
   /// In ko, this message translates to:
   /// **'수정했어요'**
   String get mealUpdated;
+
+  /// No description provided for @searchAgain.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 검색'**
+  String get searchAgain;
+
+  /// No description provided for @replaceMeal.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 음식으로 바꾸기'**
+  String get replaceMeal;
+
+  /// No description provided for @mealReplaced.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name}(으)로 바꿨어요'**
+  String mealReplaced(String name);
 
   /// No description provided for @recentMeals.
   ///

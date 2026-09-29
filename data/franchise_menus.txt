@@ -208,25 +208,62 @@
 초콜릿 쉐이크	shake:초코|초콜릿
 
 @서브웨이|써브웨이|Subway
-에그마요	sandwich:에그|계란
-이탈리안 비엠티	sandwich:햄|살라미|페퍼로니
-스파이시 이탈리안	sandwich:살라미|페퍼로니|햄
-로티세리 바비큐 치킨	sandwich:치킨|닭
-치킨 데리야끼	sandwich:치킨|닭
-써브웨이 클럽	sandwich:햄|터키|칠면조
-햄	sandwich:햄
-참치	sandwich:참치
-비엘티	sandwich:베이컨|BLT
-스테이크 & 치즈	sandwich:스테이크|비프|불고기
-풀드포크 바비큐	sandwich:포크|돼지|바비큐
-K-바비큐	sandwich:불고기|바비큐
-치킨 베이컨 아보카도	sandwich:아보카도|치킨
-쉬림프	sandwich:새우|쉬림프
-베지	sandwich:야채|베지|채소
-로티세리 치킨 샐러드	salad:치킨|닭
+에그마요	sub:에그|계란
+이탈리안 비엠티	sub:햄|살라미|페퍼로니
+스파이시 이탈리안	sub:살라미|페퍼로니|햄
+로티세리 바비큐 치킨	sub:치킨|닭
+로스트 치킨	sub:치킨|닭
+치킨 슬라이스	sub:치킨|닭
+치킨 데리야끼	sub:치킨|닭
+써브웨이 클럽	sub:햄|터키|칠면조
+햄	sub:햄
+참치	sub:참치
+비엘티	sub:베이컨|BLT
+스테이크 & 치즈	sub:스테이크|비프|불고기
+풀드포크 바비큐	sub:포크|돼지|바비큐
+K-바비큐	sub:불고기|바비큐
+스파이시 바비큐	sub:바비큐|불고기
+치킨 베이컨 아보카도	sub:아보카도|치킨
+쉬림프	sub:새우|쉬림프
+스파이시 쉬림프	sub:새우|쉬림프
+머쉬룸	sub:버섯|머쉬룸
+베지	sub:야채|베지|채소
+# 아침 메뉴
+웨스턴 에그 & 치즈	sub:에그|계란
+베이컨 에그 & 치즈	sub:베이컨|에그
+햄 에그 & 치즈	sub:햄|에그
+# 랩
+스테이크 & 치즈 아보카도 랩	wrap:스테이크|비프|불고기
+쉬림프 에그마요 랩	wrap:새우|쉬림프
+치킨 베이컨 미니 랩	wrap:치킨|닭
+# 샐러드
 에그마요 샐러드	salad:에그|계란
+이탈리안 비엠티 샐러드	salad:햄|살라미|페퍼로니
+스파이시 이탈리안 샐러드	salad:살라미|페퍼로니|햄
+로티세리 바비큐 치킨 샐러드	salad:치킨|닭
+로스트 치킨 샐러드	salad:치킨|닭
+치킨 슬라이스 샐러드	salad:치킨|닭
+치킨 데리야끼 샐러드	salad:치킨|닭
+써브웨이 클럽 샐러드	salad:햄|터키|칠면조
+햄 샐러드	salad:햄
+참치 샐러드	salad:참치
+비엘티 샐러드	salad:베이컨|BLT
+스테이크 & 치즈 샐러드	salad:스테이크|비프|불고기
+풀드포크 바비큐 샐러드	salad:포크|돼지|바비큐
+K-바비큐 샐러드	salad:불고기|바비큐
+스파이시 바비큐 샐러드	salad:바비큐|불고기
+치킨 베이컨 아보카도 샐러드	salad:아보카도|치킨
+쉬림프 샐러드	salad:새우|쉬림프
+스파이시 쉬림프 샐러드	salad:새우|쉬림프
+머쉬룸 샐러드	salad:버섯|머쉬룸
+베지 샐러드	salad:야채|베지|채소
+# 사이드·쿠키
+웨지 포테이토	seasoned_fries
 초코칩 쿠키	cookie:초코
 더블 초코칩 쿠키	cookie:초코
+오트밀 레이즌 쿠키	cookie:오트|귀리
+라즈베리 치즈케익 쿠키	cookie
+화이트 초코 마카다미아 쿠키	cookie:마카다미아|화이트
 
 @이삭토스트|이삭
 햄스페셜	toast:햄
@@ -425,3 +462,78 @@ K-바비큐	sandwich:불고기|바비큐
 닭가슴살 샐러드	salad:닭|치킨
 연어 샐러드	salad:연어
 멕시칸 랩	wrap
+
+# ---- Added: brands with no MFDS data ----
+@파이브가이즈|Five Guys
+햄버거	burger:비프|쇠고기|소고기|패티
+치즈버거	burger:치즈
+베이컨 치즈버거	burger:베이컨
+리틀 햄버거	burger
+리틀 치즈버거	burger:치즈
+리틀 베이컨 치즈버거	burger:베이컨
+베지 샌드위치	sandwich:야채|채소
+그릴드 치즈	sandwich:치즈
+파이브가이즈 스타일 프라이	fries
+케이준 스타일 프라이	seasoned_fries
+밀크쉐이크	shake
+
+@라화쿵부|라화쿵부마라탕
+마라탕	malatang
+마라샹궈	malaxiangguo
+꿔바로우	tangsuyuk
+
+@응급실떡볶이|응급실
+응급실떡볶이	tteokbokki
+로제떡볶이	tteokbokki:로제|크림
+짜장떡볶이	tteokbokki:짜장
+모둠튀김	twigim
+주먹밥	rice_ball
+
+@국대떡볶이|국대
+국대떡볶이	tteokbokki
+순대	sundae
+모둠튀김	twigim
+어묵	eomuk
+
+@걸작떡볶이|걸작떡볶이치킨
+걸작떡볶이	tteokbokki
+로제떡볶이	tteokbokki:로제|크림
+순살치킨	fried
+모둠튀김	twigim
+
+@석봉토스트
+햄치즈토스트	toast:햄|치즈
+베이컨토스트	toast:베이컨
+불고기토스트	toast:불고기
+치킨토스트	toast:치킨|닭
+
+@김밥천국
+김밥	gimbap
+참치김밥	gimbap:참치
+치즈김밥	gimbap:치즈
+돈까스	donkatsu
+라면	ramyeon
+떡볶이	tteokbokki
+쫄면	jjolmyeon
+제육덮밥	dosirak:제육|돼지
+오므라이스	omurice
+김치볶음밥	fried_rice:김치
+우동	udon
+
+@얌샘김밥|얌샘
+얌샘김밥	gimbap
+참치김밥	gimbap:참치
+돈까스김밥	gimbap:돈가스|돈까스
+라볶이	rabokki
+떡볶이	tteokbokki
+
+@쿠차라|Cuchara
+치킨 부리또	wrap:치킨|닭
+비프 부리또	wrap:비프|소고기|쇠고기
+포크 부리또	wrap:포크|돼지
+치킨 부리또볼	salad:치킨|닭
+
+@포케올데이|Poke All Day
+연어 포케	salad:연어
+참치 포케	salad:참치
+닭가슴살 포케	salad:닭|치킨

@@ -14,7 +14,8 @@ Input:  data/franchise_menus.txt   (curated brand/menu list, see its header)
         data/mfds_api_food.csv, data/mfds_api_process.csv
         (downloads from tool/fetch_mfds_api.py)
 Output: data/foods_franchise.tsv   (read by gen_foods.py and load_supabase.py;
-        unknown = "kpcf": kcal and all macros estimated)
+        unknown = "kpcf": kcal and all macros estimated; 당류 and 포화지방
+        are medians of the same reference foods)
 
 Run: python3 tool/gen_franchise.py && python3 tool/gen_foods.py
 """
@@ -74,7 +75,8 @@ UNITS = {
     "jjimdak": [("1인분", 500)],
     "malatang": [("1그릇", 600)],
     "burger": [("1개", 230)],
-    "sandwich": [("1개(15cm)", 230)],
+    "sandwich": [("1개", 230)],
+    "sub": [("1개(15cm)", 230), ("1개(30cm)", 460)],
     "salad": [("1개", 250)],
     "wrap": [("1개", 220)],
     "toast": [("1개", 200)],
@@ -167,6 +169,7 @@ TYPES = {
     # Burgers, sandwiches, toast, salads
     "burger": dict(rep=r"^(버거|햄버거)$", unit="burger"),
     "sandwich": dict(rep=r"^샌드위치$", unit="sandwich"),
+    "sub": dict(rep=r"^샌드위치$", fb="sandwich", unit="sub"),
     "salad": dict(rep=r"^샐러드$", unit="salad"),
     "wrap": dict(rep=r"^(또띠아|샌드위치)$", name=r"랩|또띠아", fb="sandwich", unit="wrap"),
     "toast": dict(rep=r"^토스트$", unit="toast"),
@@ -261,6 +264,12 @@ def estimate_menu(rows):
     return (round(kcal), *(round(kcal * sh[i] / total / per, 1) for i, per in enumerate((4, 4, 9))))
 
 
+def median_of(rows, key):
+    """Median 당류/포화지방 per 100 g of the reference foods that have it."""
+    vals = [fd[key] for fd in rows if fd.get(key) is not None]
+    return f"{statistics.median(vals):.1f}" if len(vals) >= MIN_POOL else ""
+
+
 def main():
     menus = load_menus()
     curated = gen_foods.load()
@@ -292,7 +301,8 @@ def main():
         lines.append("\t".join([
             name, ",".join([group, *search]), cat, str(kcal), str(p), str(c), str(f),
             ";".join(f"{l}:{g}" for l, g in unit), "kpcf",
-        ]))
+            median_of(rows, "sugar"), median_of(rows, "satfat"),
+        ]).rstrip("\t"))
     with open(OUT, "w", encoding="utf-8") as fh:
         fh.write("\n".join(lines) + "\n")
     print(f"{len(menus)} menus from {len({m[0] for m in menus})} brands -> {os.path.relpath(OUT, ROOT)}")

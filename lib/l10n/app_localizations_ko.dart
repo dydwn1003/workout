@@ -422,6 +422,22 @@ class LKo extends L {
   String get sugarNone => '당류 정보 없음';
 
   @override
+  String get satFat => '포화지방';
+
+  @override
+  String satFatUnknownMeals(String n) {
+    return '포화지방 정보가 없는 기록 $n개는 빠져 있어요';
+  }
+
+  @override
+  String satFatPer(String g) {
+    return '포화지방 ${g}g';
+  }
+
+  @override
+  String get satFatNone => '포화지방 정보 없음';
+
+  @override
   String get legendRaw => '측정값';
 
   @override
@@ -739,6 +755,17 @@ class LKo extends L {
 
   @override
   String get mealUpdated => '수정했어요';
+
+  @override
+  String get searchAgain => '다시 검색';
+
+  @override
+  String get replaceMeal => '다른 음식으로 바꾸기';
+
+  @override
+  String mealReplaced(String name) {
+    return '$name(으)로 바꿨어요';
+  }
 
   @override
   String get recentMeals => '최근 먹은 것';

@@ -268,6 +268,7 @@ class _DayBody extends StatelessWidget {
     final plan = s.planOn(date)!;
     final totals = s.totalsOn(date);
     final sugar = s.sugarOn(date);
+    final satFat = s.satFatOn(date);
     final meals = s.mealsOn(date).reversed.toList();
     final left = plan.targetKcal - totals.kcal;
     final w = s.weightOn(date);
@@ -383,6 +384,29 @@ class _DayBody extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
                         t.sugarUnknownMeals('${sugar.unknown}'),
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          color: AppColors.inkSoft,
+                        ),
+                      ),
+                    ),
+                ],
+                if (s.satFatLimitOn(date) case final limit?) ...[
+                  const SizedBox(height: 12),
+                  MacroBar(
+                    label: t.satFat,
+                    value: satFat.grams,
+                    target: limit,
+                    color: AppColors.satFat,
+                    track: AppColors.satFatSoft,
+                    isLimit: true,
+                    amountText: t.sugarOfLimit(fmt0(satFat.grams), fmt0(limit)),
+                  ),
+                  if (satFat.unknown > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        t.satFatUnknownMeals('${satFat.unknown}'),
                         style: const TextStyle(
                           fontSize: 11.5,
                           color: AppColors.inkSoft,
@@ -938,7 +962,6 @@ class _MealRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = L.of(context);
-    final s = AppScope.read(context);
     return Dismissible(
       key: ValueKey(meal.id),
       direction: DismissDirection.endToStart,
@@ -948,32 +971,7 @@ class _MealRow extends StatelessWidget {
         color: AppColors.peachSoft,
         child: const Icon(Icons.delete_outline_rounded, color: AppColors.peach),
       ),
-      onDismissed: (_) {
-        s.deleteMeal(meal.id);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(t.mealDeleted),
-            action: SnackBarAction(
-              label: t.undo,
-              textColor: AppColors.peachSoft,
-              onPressed: () => s.addMeal(
-                name: meal.name,
-                kcal: meal.kcal,
-                proteinG: meal.proteinG,
-                carbsG: meal.carbsG,
-                fatG: meal.fatG,
-                source: meal.source,
-                edited: meal.edited,
-                date: parseDateKey(meal.date),
-                slot: meal.slot,
-                portion: meal.portion,
-                foodId: meal.foodId,
-                sugarG: meal.sugarG,
-              ),
-            ),
-          ),
-        );
-      },
+      onDismissed: (_) => deleteMealWithUndo(context, meal),
       child: ListTile(
         onTap: () => showEditMealSheet(context, meal),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
