@@ -461,28 +461,6 @@ class SettingsScreen extends StatelessWidget {
                       if (v && context.mounted) showReminderResult(context, r);
                     },
                   ),
-                if (s.remindersOn)
-                  ListTile(
-                    leading: const SizedBox(width: 40),
-                    title: Text(
-                      t.reminderTest,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.peach,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    onTap: () async {
-                      await s.sendTestReminder(
-                        t.reminderTestTitle,
-                        t.reminderTestBody,
-                      );
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(t.reminderTestSent)),
-                      );
-                    },
-                  ),
                 ListTile(
                   leading: icon(
                     Icons.straighten_rounded,
