@@ -82,6 +82,9 @@ jobs:
           SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
           GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
         run: |
+          if [ -z "$GOOGLE_WEB_CLIENT_ID" ]; then
+            echo "::warning::GOOGLE_WEB_CLIENT_ID variable is empty: Google sign-in won't work in this build"
+          fi
           CODE=$(git rev-list --count HEAD)
           flutter build appbundle --release \
             --build-number="$CODE" \
