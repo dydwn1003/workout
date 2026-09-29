@@ -466,6 +466,45 @@ class LKo extends L {
   String get weightHistory => '체중 기록';
 
   @override
+  String get bodyFat => '체지방률';
+
+  @override
+  String get smm => '골격근량';
+
+  @override
+  String compSince(String date) {
+    return '$date보다';
+  }
+
+  @override
+  String get compRecent => '최근 측정';
+
+  @override
+  String get weightDeleted => '체중 기록을 지웠어요';
+
+  @override
+  String showAllN(String n) {
+    return '전체 보기 ($n)';
+  }
+
+  @override
+  String get showLess => '접기';
+
+  @override
+  String get noWeights => '아직 체중 기록이 없어요. 오른쪽 위 + 로 기록해 보세요.';
+
+  @override
+  String get weightRowHint => '눌러서 수정 · 옆으로 밀어서 삭제';
+
+  @override
+  String get workoutWeeklyGoal => '주간 목표 달성';
+
+  @override
+  String workoutGoalValue(String done, String goal) {
+    return '$done/$goal회';
+  }
+
+  @override
   String get trendExplain =>
       '매일 체중은 수분 때문에 오르락내리락해요. 추세선은 그 흔들림을 걸러낸 진짜 방향이에요.';
 

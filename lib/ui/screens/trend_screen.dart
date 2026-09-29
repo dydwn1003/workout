@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' show DateFormat;
 
-import '../../data/entities.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'intake_trend.dart';
 import 'labels.dart';
+import 'trend_sections.dart';
 import 'weight_sheet.dart';
 import 'workout_trend.dart';
 
@@ -217,130 +217,16 @@ class _TrendScreenState extends State<TrendScreen> {
                 ),
                 const SizedBox(height: 10),
               ],
-              SoftCard(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: comp.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Text(
-                          t.noBodyComp,
-                          style: const TextStyle(color: AppColors.inkSoft),
-                        ),
-                      )
-                    : Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
-                            child: Row(
-                              children: [
-                                const Expanded(child: SizedBox()),
-                                Expanded(
-                                  child: Text(
-                                    t.bodyFatField,
-                                    textAlign: TextAlign.end,
-                                    style: _hdr,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    t.smmField,
-                                    textAlign: TextAlign.end,
-                                    style: _hdr,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          for (final w in comp.reversed.take(6))
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      DateFormat.MMMd(locale)
-                                          .format(parseDateKey(w.date)),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Text(
-                                      w.bodyFatPct == null
-                                          ? '—'
-                                          : '${fmt1(w.bodyFatPct!)}%',
-                                      textAlign: TextAlign.end,
-                                      style: const TextStyle(
-                                        fontFamily: headingFont,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Text(
-                                      w.skeletalMuscleKg == null
-                                          ? '—'
-                                          : '${fmt1(w.skeletalMuscleKg!)}kg',
-                                      textAlign: TextAlign.end,
-                                      style: const TextStyle(
-                                        fontFamily: headingFont,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-              ),
+              BodyCompCard(entries: comp),
               const SizedBox(height: 8),
               SectionTitle(t.weightHistory),
-              SoftCard(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Column(
-                  children: [
-                    for (final w in s.weights.reversed.take(10))
-                      ListTile(
-                        dense: true,
-                        contentPadding: const EdgeInsets.only(
-                          left: 20,
-                          right: 8,
-                        ),
-                        title: Text(
-                          DateFormat.MMMEd(locale).format(parseDateKey(w.date)),
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '${fmt1(w.kg)} kg',
-                              style: const TextStyle(
-                                fontFamily: headingFont,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 16,
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.close_rounded,
-                                size: 18,
-                                color: AppColors.inkSoft,
-                              ),
-                              onPressed: () => s.deleteWeight(w.date),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+              const WeightHistoryCard(),
             ],
           ),
         ),
       ),
     );
   }
-
-  static const _hdr = TextStyle(fontSize: 12, color: AppColors.inkSoft);
 
   Widget _stat(String label, String value, Color c, Color soft) => SoftCard(
     padding: const EdgeInsets.all(16),

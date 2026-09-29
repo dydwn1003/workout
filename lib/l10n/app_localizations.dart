@@ -943,6 +943,72 @@ abstract class L {
   /// **'체중 기록'**
   String get weightHistory;
 
+  /// No description provided for @bodyFat.
+  ///
+  /// In ko, this message translates to:
+  /// **'체지방률'**
+  String get bodyFat;
+
+  /// No description provided for @smm.
+  ///
+  /// In ko, this message translates to:
+  /// **'골격근량'**
+  String get smm;
+
+  /// No description provided for @compSince.
+  ///
+  /// In ko, this message translates to:
+  /// **'{date}보다'**
+  String compSince(String date);
+
+  /// No description provided for @compRecent.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 측정'**
+  String get compRecent;
+
+  /// No description provided for @weightDeleted.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중 기록을 지웠어요'**
+  String get weightDeleted;
+
+  /// No description provided for @showAllN.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 보기 ({n})'**
+  String showAllN(String n);
+
+  /// No description provided for @showLess.
+  ///
+  /// In ko, this message translates to:
+  /// **'접기'**
+  String get showLess;
+
+  /// No description provided for @noWeights.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 체중 기록이 없어요. 오른쪽 위 + 로 기록해 보세요.'**
+  String get noWeights;
+
+  /// No description provided for @weightRowHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'눌러서 수정 · 옆으로 밀어서 삭제'**
+  String get weightRowHint;
+
+  /// No description provided for @workoutWeeklyGoal.
+  ///
+  /// In ko, this message translates to:
+  /// **'주간 목표 달성'**
+  String get workoutWeeklyGoal;
+
+  /// No description provided for @workoutGoalValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'{done}/{goal}회'**
+  String workoutGoalValue(String done, String goal);
+
   /// No description provided for @trendExplain.
   ///
   /// In ko, this message translates to:

@@ -478,6 +478,45 @@ class LEn extends L {
   String get weightHistory => 'Weigh-ins';
 
   @override
+  String get bodyFat => 'Body fat';
+
+  @override
+  String get smm => 'Skeletal muscle';
+
+  @override
+  String compSince(String date) {
+    return 'since $date';
+  }
+
+  @override
+  String get compRecent => 'Recent measurements';
+
+  @override
+  String get weightDeleted => 'Weigh-in removed';
+
+  @override
+  String showAllN(String n) {
+    return 'Show all ($n)';
+  }
+
+  @override
+  String get showLess => 'Show less';
+
+  @override
+  String get noWeights => 'No weigh-ins yet. Tap + at the top right.';
+
+  @override
+  String get weightRowHint => 'Tap to edit · swipe to delete';
+
+  @override
+  String get workoutWeeklyGoal => 'Weekly goal';
+
+  @override
+  String workoutGoalValue(String done, String goal) {
+    return '$done/$goal';
+  }
+
+  @override
   String get trendExplain =>
       'Daily weight bounces with water. The trend line filters that noise to show the real direction.';
 

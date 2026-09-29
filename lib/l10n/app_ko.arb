@@ -251,6 +251,41 @@
   "muscleWarn": "최근 4주간 골격근량이 측정 오차보다 크게 줄었어요. 감량 속도를 낮추고 단백질 섭취를 확인해 보세요.",
   "notEnoughData": "체중을 2일 이상 기록하면 그래프가 나타나요",
   "weightHistory": "체중 기록",
+  "bodyFat": "체지방률",
+  "smm": "골격근량",
+  "compSince": "{date}보다",
+  "@compSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "compRecent": "최근 측정",
+  "weightDeleted": "체중 기록을 지웠어요",
+  "showAllN": "전체 보기 ({n})",
+  "@showAllN": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "showLess": "접기",
+  "noWeights": "아직 체중 기록이 없어요. 오른쪽 위 + 로 기록해 보세요.",
+  "weightRowHint": "눌러서 수정 · 옆으로 밀어서 삭제",
+  "workoutWeeklyGoal": "주간 목표 달성",
+  "workoutGoalValue": "{done}/{goal}회",
+  "@workoutGoalValue": {
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
   "trendExplain": "매일 체중은 수분 때문에 오르락내리락해요. 추세선은 그 흔들림을 걸러낸 진짜 방향이에요.",
   "checkinTitle": "주간 체크인",
   "nextCheckin": "다음 체크인: {date}",

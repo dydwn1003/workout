@@ -28,25 +28,61 @@ class WorkoutTrendCard extends StatelessWidget {
     final locale = Localizations.localeOf(context).toString();
     final hasData = weeks.any((w) => w.sessions > 0);
 
-    Widget stat(String label, String value, Color c) => Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 12.5, color: AppColors.inkSoft),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: TextStyle(
-              fontFamily: headingFont,
-              fontWeight: FontWeight.w800,
-              fontSize: 19,
-              color: c,
+    Widget stat(
+      String label,
+      String value,
+      Color c,
+      Color soft,
+      IconData icon,
+    ) => Expanded(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+        decoration: BoxDecoration(
+          color: soft.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 18, color: c),
             ),
-          ),
-        ],
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.inkSoft,
+                    ),
+                  ),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      value,
+                      style: TextStyle(
+                        fontFamily: headingFont,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 17,
+                        color: c,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
 
@@ -90,14 +126,27 @@ class WorkoutTrendCard extends StatelessWidget {
                         '${last.minutes}',
                       ),
                       AppColors.mint,
+                      AppColors.mintSoft,
+                      Icons.local_fire_department_rounded,
                     ),
+                    const SizedBox(width: 10),
                     stat(
                       t.workoutAvg4w,
                       t.workoutAvgValue(avg.toStringAsFixed(1)),
                       AppColors.sky,
+                      AppColors.skySoft,
+                      Icons.insights_rounded,
                     ),
                   ],
                 ),
+                if (planned > 0) ...[
+                  const SizedBox(height: 12),
+                  _GoalProgress(
+                    label: t.workoutWeeklyGoal,
+                    value: t.workoutGoalValue('${last.sessions}', '$planned'),
+                    progress: last.sessions / planned,
+                  ),
+                ],
                 const SizedBox(height: 14),
                 for (final (i, tip) in s.workoutTips().take(4).indexed) ...[
                   WorkoutTipRow(tip: tip, index: i),
@@ -134,6 +183,75 @@ class WorkoutTrendCard extends StatelessWidget {
                 ),
               ],
             ),
+    );
+  }
+}
+
+/// "주간 목표 달성 3/4회" with a rounded bar that fills in.
+class _GoalProgress extends StatelessWidget {
+  final String label;
+  final String value;
+  final double progress;
+  const _GoalProgress({
+    required this.label,
+    required this.value,
+    required this.progress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final done = progress >= 1;
+    final c = done ? AppColors.mint : AppColors.peach;
+    return Column(
+      children: [
+        Row(
+          children: [
+            if (done) ...[
+              const Icon(
+                Icons.check_circle_rounded,
+                size: 16,
+                color: AppColors.mint,
+              ),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: AppColors.inkSoft,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              value,
+              style: TextStyle(
+                fontFamily: headingFont,
+                fontWeight: FontWeight.w800,
+                fontSize: 13,
+                color: c,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: SizedBox(
+            height: 8,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: progress.clamp(0.0, 1.0)),
+              duration: Motion.slow,
+              curve: Motion.emphasized,
+              builder: (context, v, _) => LinearProgressIndicator(
+                value: v,
+                backgroundColor: AppColors.line,
+                valueColor: AlwaysStoppedAnimation(c),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -191,6 +309,28 @@ class _WorkoutBarsPainter extends CustomPainter {
       final sH = chart.height * w.strength / top * local;
       final cH = chart.height * w.cardio / top * local;
       final r = const Radius.circular(7);
+      final latest = i == weeks.length - 1;
+      // Faint full-height track behind every bar.
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(cx - barW / 2, chart.top, barW, chart.height),
+          r,
+        ),
+        Paint()..color = AppColors.line.withValues(alpha: 0.6),
+      );
+      // Past weeks a little softer so this week stands out.
+      final a = latest ? 1.0 : 0.62;
+      if (latest && w.sessions > 0 && local >= 1) {
+        _text(
+          canvas,
+          '${w.sessions}',
+          Offset(cx - 20, chart.bottom - sH - cH - 17),
+          width: 40,
+          align: TextAlign.center,
+          color: AppColors.ink,
+          bold: true,
+        );
+      }
       if (w.cardio > 0) {
         canvas.drawRRect(
           RRect.fromRectAndCorners(
@@ -200,7 +340,7 @@ class _WorkoutBarsPainter extends CustomPainter {
             bottomLeft: w.strength == 0 ? r : Radius.zero,
             bottomRight: w.strength == 0 ? r : Radius.zero,
           ),
-          Paint()..color = AppColors.sky,
+          Paint()..color = AppColors.sky.withValues(alpha: a),
         );
       }
       if (w.strength > 0) {
@@ -212,7 +352,7 @@ class _WorkoutBarsPainter extends CustomPainter {
             bottomLeft: r,
             bottomRight: r,
           ),
-          Paint()..color = AppColors.mint,
+          Paint()..color = AppColors.mint.withValues(alpha: a),
         );
       }
       if (i == 0 || i == weeks.length - 1 || i == weeks.length ~/ 2) {
@@ -247,15 +387,17 @@ class _WorkoutBarsPainter extends CustomPainter {
     Offset o, {
     double width = 40,
     TextAlign align = TextAlign.left,
+    Color color = AppColors.inkSoft,
+    bool bold = false,
   }) {
     final tp = TextPainter(
       text: TextSpan(
         text: s,
-        style: const TextStyle(
-          fontSize: 11,
-          color: AppColors.inkSoft,
-          fontFamily: bodyFont,
-          fontWeight: bodyWeight,
+        style: TextStyle(
+          fontSize: bold ? 12 : 11,
+          color: color,
+          fontFamily: bold ? headingFont : bodyFont,
+          fontWeight: bold ? FontWeight.w800 : bodyWeight,
         ),
       ),
       textDirection: TextDirection.ltr,
