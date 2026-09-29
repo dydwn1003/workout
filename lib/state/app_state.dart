@@ -523,6 +523,12 @@ class AppState extends ChangeNotifier {
     return granted ? ReminderResult.on : ReminderResult.denied;
   }
 
+  /// Shows a sample reminder now, to check notifications arrive.
+  Future<void> sendTestReminder(String title, String body) async {
+    await reminderScheduler?.showNow(title, body);
+    analytics.log('reminder_test');
+  }
+
   /// Offer reminders once, after the first meal is logged.
   bool get shouldOfferReminders =>
       reminderScheduler != null &&

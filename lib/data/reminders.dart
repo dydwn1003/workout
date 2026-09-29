@@ -17,6 +17,9 @@ abstract class ReminderScheduler {
   Future<void> schedule(List<ReminderNotice> notices);
 
   Future<void> cancelAll();
+
+  /// Shows a notification right away (Settings -> 테스트 알림).
+  Future<void> showNow(String title, String body);
 }
 
 class LocalReminders implements ReminderScheduler {
@@ -98,5 +101,16 @@ class LocalReminders implements ReminderScheduler {
   Future<void> cancelAll() async {
     await _init();
     await _plugin.cancelAll();
+  }
+
+  @override
+  Future<void> showNow(String title, String body) async {
+    await _init();
+    await _plugin.show(
+      id: 999,
+      title: title,
+      body: body,
+      notificationDetails: _details,
+    );
   }
 }
