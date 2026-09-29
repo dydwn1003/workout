@@ -254,10 +254,32 @@ class AppState extends ChangeNotifier {
   List<CustomFood> get customFoods => List.unmodifiable(_data.customFoods);
 
   /// Custom foods first so they win ties in search.
-  List<Food> get allFoods => [
-    for (final c in _data.customFoods) c.toFood(),
-    ...builtInFoods,
-  ];
+  List<Food> get allFoods {
+    // Built once per custom-food change: ~20k foods, read on every
+    // rebuild of the search sheet.
+    final custom = _data.customFoods;
+    final cached = _allFoods;
+    if (cached != null && identical(cached.$1, custom) &&
+        cached.$2 == custom.length) {
+      return cached.$3;
+    }
+    final list = List<Food>.unmodifiable([
+      for (final c in custom) c.toFood(),
+      ...builtInFoods,
+    ]);
+    _allFoods = (custom, custom.length, list);
+    _searchMemo.clear();
+    return list;
+  }
+
+  (List<CustomFood>, int, List<Food>)? _allFoods;
+
+  /// Recent local search results by query (the sheet rebuilds often while
+  /// the same query is shown).
+  final _searchMemo = <String, List<Food>>{};
+
+  /// Builds the search keys of every food ahead of the first search.
+  void warmUpSearch() => searchFoods(allFoods, 'ㄱ가');
 
   static final _builtInById = {for (final f in builtInFoods) f.id: f};
 
@@ -319,7 +341,13 @@ class AppState extends ChangeNotifier {
     return out;
   }
 
-  List<Food> searchAllFoods(String q) => searchFoods(allFoods, q);
+  List<Food> searchAllFoods(String q) {
+    final foods = allFoods; // may reset the memo
+    final hit = _searchMemo[q];
+    if (hit != null) return hit;
+    if (_searchMemo.length > 30) _searchMemo.clear();
+    return _searchMemo[q] = searchFoods(foods, q);
+  }
 
   static const _recentSearchesKept = 30;
 
@@ -545,8 +573,12 @@ class AppState extends ChangeNotifier {
     return last == null ? null : parseDateKey(last);
   }
 
+  /// Bumped on every change; keys the memoized day logs / trend below.
+  int _rev = 0;
+
   @override
   void notifyListeners() {
+    _rev++;
     super.notifyListeners();
     _syncReminders();
   }
@@ -699,8 +731,22 @@ class AppState extends ChangeNotifier {
     return first;
   }
 
-  /// Contiguous day logs from the first data day to today.
+  /// Contiguous day logs from the first data day to today. Memoized: the
+  /// today and trend screens read it (and [trendPoints]) many times a build.
   List<DayLog> dayLogs() {
+    final key = (_rev, _data, today);
+    final hit = _dayLogs;
+    if (hit != null && hit.$1 == key) return hit.$2;
+    final logs = List<DayLog>.unmodifiable(_buildDayLogs());
+    _dayLogs = (key, logs);
+    _trend = null;
+    return logs;
+  }
+
+  ((int, AppData, DateTime), List<DayLog>)? _dayLogs;
+  (List<DayLog>, List<(DateTime, double?, double?)>)? _trend;
+
+  List<DayLog> _buildDayLogs() {
     final first = _firstDataDay;
     if (first == null) return [];
     final weightsByDay = {for (final w in _data.weights) w.date: w.kg};
@@ -724,11 +770,15 @@ class AppState extends ChangeNotifier {
   /// (date, raw weight, trend) for each day.
   List<(DateTime, double?, double?)> trendPoints() {
     final logs = dayLogs();
+    final hit = _trend;
+    if (hit != null && identical(hit.$1, logs)) return hit.$2;
     final trend = trendSeries(logs.map((d) => d.weightKg).toList());
-    return [
+    final pts = List<(DateTime, double?, double?)>.unmodifiable([
       for (var i = 0; i < logs.length; i++)
         (logs[i].date, logs[i].weightKg, trend[i]),
-    ];
+    ]);
+    _trend = (logs, pts);
+    return pts;
   }
 
   double? get trendWeight {
@@ -1186,6 +1236,7 @@ class AppState extends ChangeNotifier {
     }
     _data.weights.removeWhere((w) => w.date == e.date);
     _data.weights.add(e);
+    _rev++;
     _sort();
     await repo.saveWeights(_data.weights);
     if (notify) notifyListeners();
@@ -1193,6 +1244,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> deleteWeight(String date) async {
     _data.weights.removeWhere((w) => w.date == date);
+    _rev++;
     await repo.saveWeights(_data.weights);
     notifyListeners();
   }

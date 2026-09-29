@@ -498,6 +498,7 @@ class _SearchTabState extends State<_SearchTab>
 
   Future<void> _toggle(Food f) async {
     if (!_busy.add(f.id)) return; // ignore taps while saving
+    HapticFeedback.selectionClick();
     try {
       final id = _picked[f.id];
       if (id == null) {
@@ -720,9 +721,11 @@ class _SearchTabState extends State<_SearchTab>
               style: const TextStyle(color: AppColors.inkSoft),
             ),
           ),
+        // Keyed without the query: rows still matching after a keystroke
+        // stay put instead of all fading in again.
         for (final (i, f) in foods.indexed)
           FadeSlideIn(
-            key: ValueKey('${f.id}-$q-$category'),
+            key: ValueKey('${f.id}-$category'),
             delay: stagger(i),
             dy: 8,
             child: _FoodRow(
@@ -831,7 +834,7 @@ class _SearchTabState extends State<_SearchTab>
       ),
       for (final (i, f) in _remote.indexed)
         FadeSlideIn(
-          key: ValueKey('remote-${f.id}-$q'),
+          key: ValueKey('remote-${f.id}'),
           delay: stagger(i),
           dy: 8,
           child: _FoodRow(

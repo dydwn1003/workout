@@ -168,6 +168,17 @@ String normalizeQuery(String s) => s.toLowerCase().replaceAll(' ', '');
 String stripComposing(String s) =>
     s.replaceAll(RegExp(r'[\u3131-\u318E]+$'), '').trimRight();
 
+/// Normalized search keys of a food (name first, then aliases) and all of
+/// them joined with '|', computed once per food: normalizing 20k names on
+/// every keystroke made typing in search stutter.
+final _searchKeys = Expando<(List<String>, String)>('searchKeys');
+
+(List<String>, String) _keysOf(Food f) =>
+    _searchKeys[f] ??= () {
+      final keys = [for (final n in [f.name, ...f.aliases]) normalizeQuery(n)];
+      return (keys, keys.join('|'));
+    }();
+
 /// Ranked search: exact > prefix > contains, over names and aliases.
 List<Food> searchFoods(
   List<Food> foods,
@@ -180,9 +191,10 @@ List<Food> searchFoods(
   final scored = <(int, int, Food)>[];
   for (var i = 0; i < foods.length; i++) {
     final f = foods[i];
+    final (keys, joined) = _keysOf(f);
+    if (!joined.contains(q)) continue; // most foods: one check
     var best = -1;
-    for (final raw in [f.name, ...f.aliases]) {
-      final n = normalizeQuery(raw);
+    for (final n in keys) {
       final score = n == q
           ? 3
           : n.startsWith(q)
@@ -200,14 +212,16 @@ List<Food> searchFoods(
   // both halves of it, for some split into two parts of 2+ letters.
   if (scored.length < 5 && q.length >= 4) {
     final found = {for (final s in scored) s.$2};
+    final cuts = [
+      for (var cut = 2; cut <= q.length - 2; cut++)
+        (q.substring(0, cut), q.substring(cut)),
+    ];
     for (var i = 0; i < foods.length; i++) {
       if (found.contains(i)) continue;
-      final f = foods[i];
-      final all = [f.name, ...f.aliases].map(normalizeQuery).join('|');
-      for (var cut = 2; cut <= q.length - 2; cut++) {
-        if (all.contains(q.substring(0, cut)) &&
-            all.contains(q.substring(cut))) {
-          scored.add((0, i, f));
+      final joined = _keysOf(foods[i]).$2;
+      for (final (a, b) in cuts) {
+        if (joined.contains(a) && joined.contains(b)) {
+          scored.add((0, i, foods[i]));
           break;
         }
       }

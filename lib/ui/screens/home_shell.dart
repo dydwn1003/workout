@@ -37,6 +37,14 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _checkForUpdate();
     _maybeAskReview();
+    _warmUpSearch();
+  }
+
+  /// Builds the food search index once the first screen is up, so the
+  /// first keystroke in 식사 기록 doesn't pause for it.
+  Future<void> _warmUpSearch() async {
+    await Future<void>.delayed(const Duration(milliseconds: 1200));
+    if (mounted) AppScope.read(context).warmUpSearch();
   }
 
   var _reviewShown = false;
