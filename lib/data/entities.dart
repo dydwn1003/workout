@@ -78,7 +78,8 @@ class UserProfile {
   );
 }
 
-enum WeightSource { manual, health }
+/// sample: made by AppState.loadDemoData, removed by clearDemoData.
+enum WeightSource { manual, health, sample }
 
 class WeightEntry {
   final String date; // yyyy-mm-dd
@@ -386,6 +387,9 @@ class Plan {
   /// Diet break end (yyyy-mm-dd): the next check-in waits until then.
   final String? breakUntil;
 
+  /// Made by AppState.loadDemoData (sample history).
+  final bool sample;
+
   const Plan({
     required this.weekStart,
     required this.targetKcal,
@@ -397,6 +401,7 @@ class Plan {
     this.reason,
     required this.status,
     this.breakUntil,
+    this.sample = false,
   });
 
   Map<String, Object?> toJson() => {
@@ -410,6 +415,7 @@ class Plan {
     'reason': reason?.name,
     'status': status.name,
     if (breakUntil != null) 'breakUntil': breakUntil,
+    if (sample) 'sample': true,
   };
 
   factory Plan.fromJson(Map<String, Object?> j) => Plan(
@@ -427,6 +433,7 @@ class Plan {
         : _enumByName(CheckinReason.values, j['reason'], CheckinReason.onTrack),
     status: _enumByName(PlanStatus.values, j['status'], PlanStatus.initial),
     breakUntil: j['breakUntil'] as String?,
+    sample: j['sample'] == true,
   );
 }
 

@@ -1526,6 +1526,19 @@ class LKo extends L {
   String get demoLoaded => '샘플 데이터를 채웠어요. 체크인 탭을 확인해 보세요!';
 
   @override
+  String get demoClear => '샘플 데이터만 지우기';
+
+  @override
+  String get demoClearDesc => '직접 입력한 기록은 그대로 두고 샘플만 지워요';
+
+  @override
+  String get demoClearConfirm =>
+      '샘플 체중·식사·운동·체크인 기록을 지워요. 직접 입력한 기록은 남아요.\n\n직접 입력한 체중이 하나도 없으면 처음 설정 화면으로 돌아가요.';
+
+  @override
+  String get demoCleared => '샘플 데이터를 지웠어요';
+
+  @override
   String consentGiven(String date) {
     return '민감정보 저장 동의일: $date';
   }

@@ -1557,6 +1557,19 @@ class LEn extends L {
   String get demoLoaded => 'Sample data loaded. Check the Check-in tab!';
 
   @override
+  String get demoClear => 'Remove sample data';
+
+  @override
+  String get demoClearDesc => 'Keeps what you entered yourself';
+
+  @override
+  String get demoClearConfirm =>
+      'Sample weigh-ins, meals, workouts and check-ins will be removed. Anything you entered yourself stays.\n\nWith no weigh-in of your own, you\'ll go back to the setup screens.';
+
+  @override
+  String get demoCleared => 'Sample data removed';
+
+  @override
   String consentGiven(String date) {
     return 'Sensitive data consent: $date';
   }
