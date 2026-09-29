@@ -481,13 +481,7 @@ class _SearchTabState extends State<_SearchTab>
                     icon: const Icon(Icons.close_rounded),
                     onPressed: () => _query.clear(),
                   )
-                : IconButton(
-                    icon: const Icon(Icons.photo_camera_rounded),
-                    tooltip: t.photoSoonShort,
-                    onPressed: () => ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text(t.photoSoonShort))),
-                  ),
+                : null,
           ),
         ),
         const SizedBox(height: 12),
