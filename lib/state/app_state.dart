@@ -109,8 +109,8 @@ class AppState extends ChangeNotifier {
       changed = true;
     }
     if (!changed) return;
-    await repo.saveMeals(_data.meals);
     notifyListeners();
+    _saveMeals();
   }
 
   // ---------------------------------------------------------------------------
@@ -1196,8 +1196,8 @@ class AppState extends ChangeNotifier {
             servings: m.servings + 1,
           )
           .withNutrients(plus(m.sugarG, sugarG), plus(m.satFatG, satFatG));
-      await repo.saveMeals(_data.meals);
       notifyListeners();
+      _saveMeals();
       return m.id;
     }
     final id =
@@ -1229,8 +1229,8 @@ class AppState extends ChangeNotifier {
       ),
     );
     _sort();
-    await repo.saveMeals(_data.meals);
     notifyListeners();
+    _saveMeals();
     return id;
   }
 
@@ -1238,8 +1238,8 @@ class AppState extends ChangeNotifier {
     final i = _data.meals.indexWhere((m) => m.id == meal.id);
     if (i < 0) return;
     _data.meals[i] = meal;
-    await repo.saveMeals(_data.meals);
     notifyListeners();
+    _saveMeals();
   }
 
   /// Takes one serving back out of a meal (the whole meal when it's the
@@ -1262,8 +1262,8 @@ class AppState extends ChangeNotifier {
           m.sugarG == null ? null : m.sugarG! * k,
           m.satFatG == null ? null : m.satFatG! * k,
         );
-    await repo.saveMeals(_data.meals);
     notifyListeners();
+    _saveMeals();
   }
 
   /// Puts a deleted meal back as it was (undo).
@@ -1271,14 +1271,29 @@ class AppState extends ChangeNotifier {
     if (_data.meals.any((m) => m.id == meal.id)) return;
     _data.meals.add(meal);
     _sort();
-    await repo.saveMeals(_data.meals);
     notifyListeners();
+    _saveMeals();
   }
+
+  Future<void> _mealsSaving = Future.value();
+
+  /// Saves meals after the screen has already updated: storing a few
+  /// hundred meals takes long enough to make adding or removing one feel
+  /// laggy if the UI waits. Saves run one after another, each with the
+  /// meals as they are when it starts, so the last change always wins.
+  void _saveMeals() {
+    _mealsSaving = _mealsSaving
+        .then((_) => repo.saveMeals(List.of(_data.meals)))
+        .catchError((Object e) => debugPrint('saving meals failed: $e'));
+  }
+
+  /// Completes when pending meal saves are done (tests).
+  Future<void> get mealsSaved => _mealsSaving;
 
   Future<void> deleteMeal(String id) async {
     _data.meals.removeWhere((m) => m.id == id);
-    await repo.saveMeals(_data.meals);
     notifyListeners();
+    _saveMeals();
   }
 
   Future<void> saveMealTemplate({

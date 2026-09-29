@@ -660,6 +660,140 @@ class _DailyTipCard extends StatelessWidget {
   }
 }
 
+/// A slot's meal rows. New rows unfold and fade in, removed ones fold
+/// away, and the rows around them slide instead of jumping.
+class _AnimatedMeals extends StatefulWidget {
+  final List<Meal> meals;
+  const _AnimatedMeals({required this.meals});
+
+  @override
+  State<_AnimatedMeals> createState() => _AnimatedMealsState();
+}
+
+class _AnimatedMealsState extends State<_AnimatedMeals> {
+  /// Meals swiped away: their Dismissible already animated out and must
+  /// leave the tree right away, so they don't fold.
+  static final swiped = <String>{};
+
+  /// Rows on screen: the current meals plus ones still folding away.
+  late List<Meal> _rows = [...widget.meals];
+  final _leaving = <String>{};
+  // Rows present on first build don't animate in.
+  late final _initial = {for (final m in widget.meals) m.id};
+
+  @override
+  void didUpdateWidget(_AnimatedMeals old) {
+    super.didUpdateWidget(old);
+    final now = {for (final m in widget.meals) m.id};
+    final rows = [...widget.meals];
+    // A removed row keeps its old place while it folds away.
+    for (final (i, r) in _rows.indexed) {
+      if (now.contains(r.id) || swiped.remove(r.id)) continue;
+      rows.insert(i.clamp(0, rows.length), r);
+      _leaving.add(r.id);
+    }
+    _leaving.removeAll(now);
+    _rows = rows;
+  }
+
+  void _gone(String id) {
+    if (!mounted || !_leaving.contains(id)) return;
+    setState(() {
+      _leaving.remove(id);
+      _rows.removeWhere((m) => m.id == id);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      for (final m in _rows)
+        _RowTransition(
+          key: ValueKey(m.id),
+          visible: !_leaving.contains(m.id),
+          animateIn: !_initial.contains(m.id),
+          onHidden: () => _gone(m.id),
+          child: Column(
+            children: [
+              const Divider(height: 1, indent: 20, endIndent: 20),
+              _MealRow(meal: m),
+            ],
+          ),
+        ),
+    ],
+  );
+}
+
+/// Unfolds (size + fade) when shown, folds away when [visible] turns off.
+class _RowTransition extends StatefulWidget {
+  final bool visible;
+  final bool animateIn;
+  final VoidCallback onHidden;
+  final Widget child;
+  const _RowTransition({
+    super.key,
+    required this.visible,
+    required this.animateIn,
+    required this.onHidden,
+    required this.child,
+  });
+
+  @override
+  State<_RowTransition> createState() => _RowTransitionState();
+}
+
+class _RowTransitionState extends State<_RowTransition>
+    with SingleTickerProviderStateMixin {
+  late final _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 420),
+    reverseDuration: const Duration(milliseconds: 300),
+    value: widget.animateIn ? 0 : 1,
+  );
+  late final _size = CurvedAnimation(
+    parent: _c,
+    curve: Curves.easeOutCubic,
+    reverseCurve: Curves.easeInCubic,
+  );
+  late final _fade = CurvedAnimation(
+    parent: _c,
+    curve: const Interval(0.3, 1, curve: Curves.easeOut),
+    reverseCurve: const Interval(0.4, 1, curve: Curves.easeIn),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.animateIn) _c.forward();
+  }
+
+  @override
+  void didUpdateWidget(_RowTransition old) {
+    super.didUpdateWidget(old);
+    if (widget.visible == old.visible) return;
+    if (widget.visible) {
+      _c.forward();
+    } else {
+      _c.reverse().whenComplete(() {
+        if (!widget.visible) widget.onHidden();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizeTransition(
+    sizeFactor: _size,
+    alignment: Alignment.topCenter,
+    child: FadeTransition(opacity: _fade, child: widget.child),
+  );
+}
+
 /// A meal slot (아침/점심/저녁/간식): tap its header to fold the list away.
 class _SlotCard extends StatefulWidget {
   final MealSlot slot;
@@ -778,14 +912,7 @@ class _SlotCardState extends State<_SlotCard> {
               opacity: open ? 1 : 0,
               duration: Motion.fast,
               child: open
-                  ? Column(
-                      children: [
-                        for (final m in meals) ...[
-                          const Divider(height: 1, indent: 20, endIndent: 20),
-                          _MealRow(meal: m),
-                        ],
-                      ],
-                    )
+                  ? _AnimatedMeals(meals: meals)
                   : const SizedBox(width: double.infinity),
             ),
           ),
@@ -1160,7 +1287,10 @@ class _MealRow extends StatelessWidget {
         color: AppColors.peachSoft,
         child: const Icon(Icons.delete_outline_rounded, color: AppColors.peach),
       ),
-      onDismissed: (_) => deleteMealWithUndo(context, meal),
+      onDismissed: (_) {
+        _AnimatedMealsState.swiped.add(meal.id);
+        deleteMealWithUndo(context, meal);
+      },
       child: ListTile(
         onTap: () => showEditMealSheet(context, meal),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
