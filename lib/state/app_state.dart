@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show AuthChangeEvent;
@@ -12,9 +13,12 @@ import '../data/analytics.dart';
 import '../data/auth_service.dart';
 import '../data/remote_food_search.dart';
 import '../data/reminders.dart';
+import '../l10n/app_localizations.dart';
 import 'coach_tips.dart';
+import 'reminder_plan.dart';
+import 'reminder_text.dart';
 
-export '../data/reminders.dart' show ReminderResult;
+export 'reminder_plan.dart' show ReminderResult;
 
 export 'coach_tips.dart';
 import '../data/repository.dart';
@@ -50,11 +54,15 @@ class AppState extends ChangeNotifier {
   /// Usage events; a no-op without a sink (tests, offline builds).
   final Analytics analytics;
 
+  /// Reminder notifications; null where there are none (web, tests).
+  final ReminderScheduler? reminderScheduler;
+
   AppState(
     this.repo, {
     DateTime Function()? clock,
     this.remoteSearch,
     this.auth,
+    this.reminderScheduler,
     Analytics? analytics,
   }) : clock = clock ?? DateTime.now,
        analytics = analytics ?? Analytics();
@@ -490,57 +498,99 @@ class AppState extends ChangeNotifier {
   // Reminders and review prompt
   // ---------------------------------------------------------------------------
 
-  /// Reminder pushes; null without Supabase (tests, offline builds).
-  Reminders? get reminders {
-    final a = auth;
-    return a == null ? null : (_reminders ??= Reminders(a.client));
-  }
-
-  Reminders? _reminders;
-
-  /// Reminders are on for this device: wanted, and the browser allows them.
+  /// Reminders are on: wanted and allowed on this device.
   bool get remindersOn =>
-      settings.notifications && reminders?.permission == 'granted';
+      reminderScheduler != null &&
+      settings.notifications &&
+      settings.remindersAsked;
 
-  /// Turns reminders on (asks for permission) or off for this device.
+  /// This device can show reminders (the apps, not the web).
+  bool get remindersSupported => reminderScheduler != null;
+
+  /// Turns reminders on (asks for notification permission) or off.
   Future<ReminderResult> setReminders(bool on) async {
-    final r = reminders;
+    final r = reminderScheduler;
     if (r == null) return ReminderResult.unsupported;
     if (!on) {
-      await r.disable();
       await updateSettings(settings.copyWith(notifications: false));
       return ReminderResult.on;
     }
-    final result = await r.enable();
+    final granted = await r.requestPermission();
     await updateSettings(
-      settings.copyWith(
-        notifications: result == ReminderResult.on,
-        remindersAsked: true,
-      ),
+      settings.copyWith(notifications: granted, remindersAsked: true),
     );
-    analytics.log('reminders', {
-      'result': result.name,
-      if (r.lastError case final e?)
-        'error': e.length > 120 ? e.substring(0, 120) : e,
-    });
-    return result;
+    analytics.log('reminders', {'result': granted ? 'on' : 'denied'});
+    return granted ? ReminderResult.on : ReminderResult.denied;
   }
 
-  /// Offer reminders once, after the first meal is logged, when this
-  /// device can receive them and the user is signed in (the server needs
-  /// their logs to know when to remind).
-  bool get shouldOfferReminders {
-    final r = reminders;
-    return r != null &&
-        signedIn &&
-        !settings.remindersAsked &&
-        _data.meals.isNotEmpty &&
-        r.supported &&
-        r.permission == 'default';
+  /// Offer reminders once, after the first meal is logged.
+  bool get shouldOfferReminders =>
+      reminderScheduler != null &&
+      !settings.remindersAsked &&
+      _data.meals.isNotEmpty;
+
+  Future<void> declineReminders() => updateSettings(
+    settings.copyWith(remindersAsked: true, notifications: false),
+  );
+
+  /// Last day with a meal or a weigh-in.
+  DateTime? get lastLogDay {
+    String? last;
+    for (final m in _data.meals) {
+      if (last == null || m.date.compareTo(last) > 0) last = m.date;
+    }
+    for (final w in _data.weights) {
+      if (last == null || w.date.compareTo(last) > 0) last = w.date;
+    }
+    return last == null ? null : parseDateKey(last);
   }
 
-  Future<void> declineReminders() =>
-      updateSettings(settings.copyWith(remindersAsked: true));
+  @override
+  void notifyListeners() {
+    super.notifyListeners();
+    _syncReminders();
+  }
+
+  String? _remindersKey;
+
+  /// Reschedules this device's reminders when what they depend on (the
+  /// last log, the next check-in, on/off, language) changed.
+  void _syncReminders() {
+    final r = reminderScheduler;
+    if (r == null || !loaded) return;
+    final on = remindersOn;
+    final last = lastLogDay;
+    final next = on ? nextCheckinDate : null;
+    final lang = settings.language ?? '';
+    final key = '$on|$last|$next|$lang';
+    if (key == _remindersKey) return;
+    _remindersKey = key;
+    if (!on) {
+      unawaited(r.cancelAll().catchError((_) {}));
+      return;
+    }
+    final code =
+        settings.language ?? PlatformDispatcher.instance.locale.languageCode;
+    final t = lookupL(Locale(code == 'en' ? 'en' : 'ko'));
+    final notices = [
+      for (final p in planReminders(
+        now: clock(),
+        lastLog: last,
+        nextCheckin: next,
+      ))
+        (
+          id: p.id,
+          at: p.at,
+          title: reminderTitle(t, p),
+          body: reminderBody(t, p),
+        ),
+    ];
+    unawaited(
+      r.schedule(notices).catchError((Object e) {
+        debugPrint('scheduling reminders failed: $e');
+      }),
+    );
+  }
 
   /// A good moment to ask "알아서핏 어떠세요?": something went well (7 days
   /// logged in a row, a check-in accepted today, or 1 kg toward the goal),

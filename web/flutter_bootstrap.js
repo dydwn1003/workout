@@ -1,5 +1,5 @@
 {{flutter_js}}
 {{flutter_build_config}}
-// No Flutter service worker: web/push_sw.js (reminder pushes) owns the
-// scope, registered by web/push.js when the user turns reminders on.
+// No service worker: it only cached old builds (see the Pages workflow's
+// cache-busting), and reminders are app notifications, not web pushes.
 _flutter.loader.load();

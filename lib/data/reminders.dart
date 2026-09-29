@@ -1,89 +1,102 @@
-import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tzdata;
+import 'package:timezone/timezone.dart' as tz;
 
-import 'package:supabase_flutter/supabase_flutter.dart';
+/// A reminder ready to schedule: when, and what it says.
+typedef ReminderNotice = ({int id, DateTime at, String title, String body});
 
-import '../ui/platform/push.dart';
+/// Reminder notifications scheduled on this device (the Android/iOS apps;
+/// the web has none). Nothing goes through a server: the app reschedules
+/// the whole plan whenever the last log or the next check-in changes.
+abstract class ReminderScheduler {
+  /// Asks for notification permission; true when reminders can be shown.
+  Future<bool> requestPermission();
 
-/// VAPID public key for Web Push (the private key is a Supabase secret of
-/// supabase/functions/daily-push). Public by design; override per build
-/// with --dart-define=VAPID_PUBLIC_KEY.
-const vapidPublicKey = String.fromEnvironment(
-  'VAPID_PUBLIC_KEY',
-  defaultValue: 'BD1438Acaz9xDqYVd6OzqU5t4_HNwTxVi241E8Ct0em6KyaynvL07bNgrTzaHHWZQtohe9VBViSNjyp7o8ApaBY',
-);
+  /// Replaces everything scheduled with [notices].
+  Future<void> schedule(List<ReminderNotice> notices);
 
-enum ReminderResult {
-  on,
-
-  /// Notifications are blocked for this site.
-  denied,
-
-  /// The permission prompt was closed or quietly not shown.
-  dismissed,
-
-  /// No Web Push here (in-app browsers, iPhone outside the home screen).
-  unsupported,
-  signedOut,
-  failed,
+  Future<void> cancelAll();
 }
 
-/// Reminder pushes (supabase/push.sql): this device's Web Push
-/// subscription, stored for the signed-in user so the server's daily job
-/// can reach it.
-class Reminders {
-  final SupabaseClient client;
-  Reminders(this.client);
+class LocalReminders implements ReminderScheduler {
+  final _plugin = FlutterLocalNotificationsPlugin();
+  Future<void>? _ready;
 
-  /// Why the last enable() failed, for the usage log (no personal data).
-  String? lastError;
+  /// Local notifications exist on Android and iOS only.
+  static bool get supported =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
 
-  bool get supported => pushSupported();
+  Future<void> _init() => _ready ??= () async {
+    // Times are scheduled as instants, so UTC is enough (no zone lookup).
+    tzdata.initializeTimeZones();
+    await _plugin.initialize(
+      settings: const InitializationSettings(
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        iOS: DarwinInitializationSettings(
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
+        ),
+      ),
+    );
+  }();
 
-  /// Browser permission: 'default' (not asked), 'granted' or 'denied'.
-  String get permission => pushPermission();
+  static const _details = NotificationDetails(
+    android: AndroidNotificationDetails(
+      'reminders',
+      '기록·체크인 알림',
+      channelDescription: '기록을 쉬거나 체크인 날일 때 알려 드려요',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+    ),
+    iOS: DarwinNotificationDetails(),
+  );
 
-  Future<ReminderResult> enable() async {
-    final user = client.auth.currentUser;
-    if (user == null) return ReminderResult.signedOut;
-    if (!supported) return ReminderResult.unsupported;
-    try {
-      final res = jsonDecode(await pushSubscribe(vapidPublicKey)) as Map;
-      switch (res['result']) {
-        case 'denied':
-          return ReminderResult.denied;
-        case 'dismissed':
-          return ReminderResult.dismissed;
-        case 'unsupported':
-          return ReminderResult.unsupported;
-        case 'error':
-          lastError = res['error'] as String?;
-          return ReminderResult.failed;
-      }
-      final sub = (res['subscription'] as Map).cast<String, Object?>();
-      final keys = (sub['keys'] as Map).cast<String, Object?>();
-      await client.from('push_subscriptions').upsert({
-        'endpoint': sub['endpoint'],
-        'user_id': user.id,
-        'platform': 'web',
-        'p256dh': keys['p256dh'],
-        'auth': keys['auth'],
-      });
-      return ReminderResult.on;
-    } catch (e) {
-      lastError = '$e';
-      return ReminderResult.failed;
+  @override
+  Future<bool> requestPermission() async {
+    await _init();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (android != null) {
+      return await android.requestNotificationsPermission() ?? false;
+    }
+    final ios = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
+    return await ios?.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        ) ??
+        false;
+  }
+
+  @override
+  Future<void> schedule(List<ReminderNotice> notices) async {
+    await _init();
+    await _plugin.cancelAll();
+    for (final n in notices) {
+      await _plugin.zonedSchedule(
+        id: n.id,
+        title: n.title,
+        body: n.body,
+        scheduledDate: tz.TZDateTime.from(n.at, tz.UTC),
+        notificationDetails: _details,
+        // No exact-alarm permission needed; a few minutes late is fine.
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      );
     }
   }
 
-  Future<void> disable() async {
-    try {
-      final endpoint = await pushUnsubscribe();
-      if (endpoint.isNotEmpty) {
-        await client
-            .from('push_subscriptions')
-            .delete()
-            .eq('endpoint', endpoint);
-      }
-    } catch (_) {} // the server drops dead subscriptions on its own
+  @override
+  Future<void> cancelAll() async {
+    await _init();
+    await _plugin.cancelAll();
   }
 }

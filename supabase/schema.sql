@@ -33,25 +33,60 @@ create policy "foods are readable by everyone" on public.foods for select using 
 -- search on the server: it cost ~55 MB of the free-tier disk.
 create or replace function public.search_foods(q text, lim int default 40)
 returns setof public.foods
-language sql stable
+language plpgsql stable
 as $$
-  with p as (
-    select replace(lower(replace(q, ' ', '')), '|', '') as q
-  ), e as (
-    select q, replace(replace(replace(q, '\', '\\'), '%', '\%'), '_', '\_') as lq from p
-  )
-  select f.*
-  from public.foods f, e
-  where e.q <> '' and f.search like '%' || e.lq || '%'
-  order by
-    case
-      when '|' || f.search || '|' like '%|' || e.lq || '|%' then 3
-      when '|' || f.search like '%|' || e.lq || '%' then 2
-      else 1
-    end desc,
-    length(f.name),
-    f.id
-  limit least(greatest(lim, 1), 100);
-$$;
+-- Spaces never matter ("닭가슴살샐러드" = "닭가슴살 샐러드"). When fewer than
+-- 5 foods contain the whole query, foods containing both halves of it are
+-- added for each split into parts of 2+ letters, so words in another order
+-- or run together still match ("교촌허니콤보", "맘스터치싸이버거"). Each split
+-- is its own query so the trigram index is used.
+declare
+  nq text := replace(lower(replace(q, ' ', '')), '|', '');
+  n int := least(greatest(lim, 1), 100);
+  seen text[] := '{}';
+  got int;
+  cut int;
+  a text;
+  b text;
+begin
+  if nq = '' then
+    return;
+  end if;
+  a := replace(replace(replace(nq, '\', '\\'), '%', '\%'), '_', '\_');
+  return query
+    select f.* from public.foods f
+    where f.search like '%' || a || '%'
+    order by
+      case
+        when '|' || f.search || '|' like '%|' || a || '|%' then 3
+        when '|' || f.search like '%|' || a || '%' then 2
+        else 1
+      end desc,
+      length(f.name),
+      f.id
+    limit n;
+  get diagnostics got = row_count;
+  if got >= 5 or char_length(nq) < 4 then
+    return;
+  end if;
+  select coalesce(array_agg(f.id), '{}') into seen
+  from public.foods f where f.search like '%' || a || '%';
+  for cut in 2 .. char_length(nq) - 2 loop
+    exit when got >= n;
+    a := replace(replace(replace(left(nq, cut), '\', '\\'), '%', '\%'), '_', '\_');
+    b := replace(replace(replace(substr(nq, cut + 1), '\', '\\'), '%', '\%'), '_', '\_');
+    return query
+      select f.* from public.foods f
+      where f.search like '%' || a || '%'
+        and f.search like '%' || b || '%'
+        and not (f.id = any (seen))
+      order by length(f.name), f.id
+      limit n - got;
+    select seen || coalesce(array_agg(f.id), '{}') into seen
+    from public.foods f
+    where f.search like '%' || a || '%' and f.search like '%' || b || '%';
+    got := cardinality(seen);
+  end loop;
+end $$;
 
 grant execute on function public.search_foods(text, int) to anon, authenticated;

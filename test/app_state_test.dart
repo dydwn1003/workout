@@ -18,6 +18,16 @@ void main() {
     expect(isNewerVersion('0.9.9', '1.0.0'), isFalse);
   });
 
+  test('search finds words run together or in another order', () {
+    List<String> names(String q) => [
+      for (final f in searchFoods(builtInFoods, q)) f.name,
+    ];
+    expect(names('닭가슴살샐러드'), contains('닭가슴살 샐러드 (샐러디)'));
+    expect(names('맘스터치싸이버거').first, contains('맘스터치'));
+    expect(names('맘스터치 싸이버거').first, contains('싸이버거'));
+    expect(names('교촌허니콤보').any((n) => n.contains('허니콤보')), isTrue);
+  });
+
   group('AppState', () {
     Future<AppState> dieter(List<double> weights, {double target = 70}) async {
       final s = AppState(MemoryCoachRepository(), clock: () => now);

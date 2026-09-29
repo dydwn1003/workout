@@ -441,24 +441,26 @@ class SettingsScreen extends StatelessWidget {
                     }
                   },
                 ),
-                SwitchListTile(
-                  secondary: icon(
-                    Icons.notifications_rounded,
-                    const Color(0xFFD49B1F),
-                    AppColors.butterSoft,
+                // Reminders are local notifications: apps only.
+                if (s.remindersSupported)
+                  SwitchListTile(
+                    secondary: icon(
+                      Icons.notifications_rounded,
+                      const Color(0xFFD49B1F),
+                      AppColors.butterSoft,
+                    ),
+                    title: Text(t.remindersTitle),
+                    subtitle: Text(
+                      t.remindersDesc,
+                      style: const TextStyle(fontSize: 12.5),
+                    ),
+                    value: s.remindersOn,
+                    activeThumbColor: AppColors.peach,
+                    onChanged: (v) async {
+                      final r = await s.setReminders(v);
+                      if (v && context.mounted) showReminderResult(context, r);
+                    },
                   ),
-                  title: Text(t.remindersTitle),
-                  subtitle: Text(
-                    t.remindersDesc,
-                    style: const TextStyle(fontSize: 12.5),
-                  ),
-                  value: s.remindersOn,
-                  activeThumbColor: AppColors.peach,
-                  onChanged: (v) async {
-                    final r = await s.setReminders(v);
-                    if (v && context.mounted) showReminderResult(context, r);
-                  },
-                ),
                 ListTile(
                   leading: icon(
                     Icons.straighten_rounded,

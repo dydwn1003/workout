@@ -11,7 +11,7 @@ import '../theme.dart';
 import '../widgets.dart';
 
 /// "알아서핏 어떠세요?": happy users go on to a store rating, unhappy ones
-/// tell us why (supabase/push.sql, app_feedback) instead.
+/// tell us why (supabase/feedback.sql, app_feedback) instead.
 Future<void> showReviewSheet(BuildContext context) async {
   final s = AppScope.read(context);
   await s.reviewAsked();

@@ -184,6 +184,25 @@ List<Food> searchFoods(List<Food> foods, String query, {int limit = 40}) {
     }
     if (best >= 0) scored.add((best, i, f));
   }
+  // Words in another order or run together ("교촌허니콤보" for "닭튀김
+  // 허니콤보 치킨 (교촌치킨)", "맘스터치싸이버거" for "싸이버거 (맘스터치)"):
+  // when few foods contain the whole query, also take foods containing
+  // both halves of it, for some split into two parts of 2+ letters.
+  if (scored.length < 5 && q.length >= 4) {
+    final found = {for (final s in scored) s.$2};
+    for (var i = 0; i < foods.length; i++) {
+      if (found.contains(i)) continue;
+      final f = foods[i];
+      final all = [f.name, ...f.aliases].map(normalizeQuery).join('|');
+      for (var cut = 2; cut <= q.length - 2; cut++) {
+        if (all.contains(q.substring(0, cut)) &&
+            all.contains(q.substring(cut))) {
+          scored.add((0, i, f));
+          break;
+        }
+      }
+    }
+  }
   scored.sort((a, b) {
     final s = b.$1.compareTo(a.$1);
     if (s != 0) return s;

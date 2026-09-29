@@ -933,6 +933,73 @@ class LEn extends L {
   }
 
   @override
+  String get notifDay1Title => 'Log today?';
+
+  @override
+  String get notifDay1Body =>
+      'Even a rough entry keeps your estimate accurate.';
+
+  @override
+  String get notifDay3Title => '3 days off';
+
+  @override
+  String get notifDay3Body =>
+      'Log one meal today and your trend picks up again.';
+
+  @override
+  String get notifDay7Title => 'It\'s been a week';
+
+  @override
+  String get notifDay7Body => 'Just a weigh-in restarts your coaching.';
+
+  @override
+  String get notifDay14Title => 'Start again?';
+
+  @override
+  String get notifDay14Body =>
+      'We\'ll fit your calorie target to where you are now.';
+
+  @override
+  String get notifDay21Title => '3 weeks off';
+
+  @override
+  String get notifDay21Body =>
+      'It doesn\'t have to be perfect. Start with one meal today.';
+
+  @override
+  String get notifDay28Title => 'It\'s been a month';
+
+  @override
+  String get notifDay28Body => 'Weigh in once and we\'ll pick up from there.';
+
+  @override
+  String get notifLong1Title => 'We\'re here when you\'re ready';
+
+  @override
+  String get notifLong1Body =>
+      'Come back anytime and we\'ll pick up from there.';
+
+  @override
+  String get notifLong2Title => 'Just a weigh-in?';
+
+  @override
+  String get notifLong2Body => 'A weigh-in alone gets your trend going again.';
+
+  @override
+  String get notifLong3Title => 'A good day to restart';
+
+  @override
+  String get notifLong3Body =>
+      'We\'ll set a target that fits where you are now.';
+
+  @override
+  String get notifCheckinTitle => 'Check-in day';
+
+  @override
+  String get notifCheckinBody =>
+      'Last week\'s logs will tune this week\'s target.';
+
+  @override
   String get remindersOffer =>
       'Want a gentle nudge when you skip logging? Weekly for the first month, then every two weeks. Turn it off anytime in Settings.';
 
@@ -947,29 +1014,17 @@ class LEn extends L {
 
   @override
   String get remindersDesc =>
-      'At 8 pm after 1 and 3 days without logs, weekly for the first month, then every two weeks, and on check-in day (needs sign-in)';
+      'At 8 pm after 1 and 3 days without logs, weekly for the first month, then every two weeks, and on check-in day';
 
   @override
   String get remindersOnMsg => 'Reminders on';
 
   @override
   String get remindersDenied =>
-      'Notifications are blocked for this site. Allow them via the lock icon left of the address → Notifications, then try again';
+      'Notifications are off. Turn them on in phone Settings → Apps → 알아서핏 → Notifications, then try again';
 
   @override
-  String get remindersDismissed =>
-      'The permission prompt closed. Turn it on again and choose Allow; if no prompt shows, tap the bell icon in the address bar';
-
-  @override
-  String get remindersUnsupported =>
-      'This browser can\'t receive notifications. In an in-app browser, open it in Chrome or Safari; on iPhone, add it to the home screen first';
-
-  @override
-  String get remindersSignedOut => 'Sign in to get reminders';
-
-  @override
-  String get remindersFailed =>
-      'Couldn\'t turn reminders on. Try again in a bit';
+  String get remindersUnsupported => 'Reminders work in the app';
 
   @override
   String get reviewTitle => 'How\'s 알아서핏 going?';

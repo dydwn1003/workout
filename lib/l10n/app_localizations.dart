@@ -1700,6 +1700,126 @@ abstract class L {
   /// **'유지 모드로 바꿨어요. 목표는 {kcal} kcal예요.'**
   String maintainStarted(String kcal);
 
+  /// No description provided for @notifDay1Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘 기록 잊지 않으셨죠?'**
+  String get notifDay1Title;
+
+  /// No description provided for @notifDay1Body.
+  ///
+  /// In ko, this message translates to:
+  /// **'대충이라도 괜찮아요. 한 끼만 넣어도 추정이 정확해져요.'**
+  String get notifDay1Body;
+
+  /// No description provided for @notifDay3Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'3일 쉬셨네요'**
+  String get notifDay3Title;
+
+  /// No description provided for @notifDay3Body.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘 한 끼만 기록해도 추세가 다시 이어져요.'**
+  String get notifDay3Body;
+
+  /// No description provided for @notifDay7Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'일주일 만이에요'**
+  String get notifDay7Title;
+
+  /// No description provided for @notifDay7Body.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중만 재도 코칭이 다시 시작돼요.'**
+  String get notifDay7Body;
+
+  /// No description provided for @notifDay14Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 시작해 볼까요?'**
+  String get notifDay14Title;
+
+  /// No description provided for @notifDay14Body.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표 칼로리를 지금 몸에 맞게 다시 맞춰 드릴게요.'**
+  String get notifDay14Body;
+
+  /// No description provided for @notifDay21Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'3주째 쉬고 계시네요'**
+  String get notifDay21Title;
+
+  /// No description provided for @notifDay21Body.
+  ///
+  /// In ko, this message translates to:
+  /// **'완벽하지 않아도 돼요. 오늘 한 끼부터 다시 시작해 봐요.'**
+  String get notifDay21Body;
+
+  /// No description provided for @notifDay28Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'한 달이 됐어요'**
+  String get notifDay28Title;
+
+  /// No description provided for @notifDay28Body.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 체중 한 번만 재 주시면, 거기서부터 다시 맞춰 드릴게요.'**
+  String get notifDay28Body;
+
+  /// No description provided for @notifLong1Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'알아서핏이 기다리고 있어요'**
+  String get notifLong1Title;
+
+  /// No description provided for @notifLong1Body.
+  ///
+  /// In ko, this message translates to:
+  /// **'언제든 돌아오시면 거기서부터 다시 맞춰 드려요.'**
+  String get notifLong1Body;
+
+  /// No description provided for @notifLong2Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중만 재 볼까요?'**
+  String get notifLong2Title;
+
+  /// No description provided for @notifLong2Body.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록 없이 체중만 넣어도 추세를 다시 이어 갈 수 있어요.'**
+  String get notifLong2Body;
+
+  /// No description provided for @notifLong3Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'새로 시작하기 좋은 날이에요'**
+  String get notifLong3Title;
+
+  /// No description provided for @notifLong3Body.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표를 지금 모습에 맞게 다시 세워 드릴게요.'**
+  String get notifLong3Body;
+
+  /// No description provided for @notifCheckinTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘은 체크인 날이에요'**
+  String get notifCheckinTitle;
+
+  /// No description provided for @notifCheckinBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'지난주 기록으로 이번 주 목표를 맞춰 드릴게요.'**
+  String get notifCheckinBody;
+
   /// No description provided for @remindersOffer.
   ///
   /// In ko, this message translates to:
@@ -1727,7 +1847,7 @@ abstract class L {
   /// No description provided for @remindersDesc.
   ///
   /// In ko, this message translates to:
-  /// **'기록을 쉬면 1·3일째, 첫 한 달은 매주, 그 뒤로는 2주마다, 체크인 날에도 저녁 8시에 알려 드려요 (로그인 필요)'**
+  /// **'기록을 쉬면 1·3일째, 첫 한 달은 매주, 그 뒤로는 2주마다, 체크인 날에도 저녁 8시에 알려 드려요'**
   String get remindersDesc;
 
   /// No description provided for @remindersOnMsg.
@@ -1739,32 +1859,14 @@ abstract class L {
   /// No description provided for @remindersDenied.
   ///
   /// In ko, this message translates to:
-  /// **'이 사이트의 알림이 차단돼 있어요. 주소창 왼쪽 자물쇠(사이트 설정) → 알림 → 허용으로 바꾼 뒤 다시 켜 주세요'**
+  /// **'알림이 꺼져 있어요. 휴대폰 설정 → 애플리케이션 → 알아서핏 → 알림을 켠 뒤 다시 켜 주세요'**
   String get remindersDenied;
-
-  /// No description provided for @remindersDismissed.
-  ///
-  /// In ko, this message translates to:
-  /// **'알림 허용 창이 닫혔어요. 다시 켜고 \'허용\'을 눌러 주세요. 창이 안 보이면 주소창의 종 모양 아이콘을 눌러 주세요'**
-  String get remindersDismissed;
 
   /// No description provided for @remindersUnsupported.
   ///
   /// In ko, this message translates to:
-  /// **'이 브라우저에서는 알림을 받을 수 없어요. 카카오톡 등 앱 안 브라우저라면 크롬·사파리로 열어 주세요. 아이폰은 홈 화면에 추가한 뒤 켜 주세요'**
+  /// **'알림은 앱에서 받을 수 있어요'**
   String get remindersUnsupported;
-
-  /// No description provided for @remindersSignedOut.
-  ///
-  /// In ko, this message translates to:
-  /// **'알림은 로그인하면 받을 수 있어요'**
-  String get remindersSignedOut;
-
-  /// No description provided for @remindersFailed.
-  ///
-  /// In ko, this message translates to:
-  /// **'알림을 켜지 못했어요. 잠시 후 다시 시도해 주세요'**
-  String get remindersFailed;
 
   /// No description provided for @reviewTitle.
   ///

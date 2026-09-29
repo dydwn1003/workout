@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'data/analytics.dart';
 import 'data/auth_service.dart';
+import 'data/reminders.dart';
 import 'data/remote_food_search.dart';
 import 'data/repository.dart';
 import 'data/sync.dart';
@@ -30,6 +31,7 @@ Future<void> main() async {
     SyncingRepository(LocalCoachRepository()),
     remoteSearch: RemoteFoodSearch.fromEnvironment(),
     auth: auth,
+    reminderScheduler: LocalReminders.supported ? LocalReminders() : null,
     analytics: Analytics(
       sink: auth == null ? null : SupabaseEventSink(auth.client),
     ),

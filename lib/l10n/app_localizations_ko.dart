@@ -915,6 +915,66 @@ class LKo extends L {
   }
 
   @override
+  String get notifDay1Title => '오늘 기록 잊지 않으셨죠?';
+
+  @override
+  String get notifDay1Body => '대충이라도 괜찮아요. 한 끼만 넣어도 추정이 정확해져요.';
+
+  @override
+  String get notifDay3Title => '3일 쉬셨네요';
+
+  @override
+  String get notifDay3Body => '오늘 한 끼만 기록해도 추세가 다시 이어져요.';
+
+  @override
+  String get notifDay7Title => '일주일 만이에요';
+
+  @override
+  String get notifDay7Body => '체중만 재도 코칭이 다시 시작돼요.';
+
+  @override
+  String get notifDay14Title => '다시 시작해 볼까요?';
+
+  @override
+  String get notifDay14Body => '목표 칼로리를 지금 몸에 맞게 다시 맞춰 드릴게요.';
+
+  @override
+  String get notifDay21Title => '3주째 쉬고 계시네요';
+
+  @override
+  String get notifDay21Body => '완벽하지 않아도 돼요. 오늘 한 끼부터 다시 시작해 봐요.';
+
+  @override
+  String get notifDay28Title => '한 달이 됐어요';
+
+  @override
+  String get notifDay28Body => '지금 체중 한 번만 재 주시면, 거기서부터 다시 맞춰 드릴게요.';
+
+  @override
+  String get notifLong1Title => '알아서핏이 기다리고 있어요';
+
+  @override
+  String get notifLong1Body => '언제든 돌아오시면 거기서부터 다시 맞춰 드려요.';
+
+  @override
+  String get notifLong2Title => '체중만 재 볼까요?';
+
+  @override
+  String get notifLong2Body => '기록 없이 체중만 넣어도 추세를 다시 이어 갈 수 있어요.';
+
+  @override
+  String get notifLong3Title => '새로 시작하기 좋은 날이에요';
+
+  @override
+  String get notifLong3Body => '목표를 지금 모습에 맞게 다시 세워 드릴게요.';
+
+  @override
+  String get notifCheckinTitle => '오늘은 체크인 날이에요';
+
+  @override
+  String get notifCheckinBody => '지난주 기록으로 이번 주 목표를 맞춰 드릴게요.';
+
+  @override
   String get remindersOffer =>
       '기록을 쉬면 살짝 알려 드릴까요? 첫 한 달은 일주일에 한 번, 그 뒤로는 2주에 한 번이에요. 설정에서 언제든 끌 수 있어요.';
 
@@ -929,28 +989,17 @@ class LKo extends L {
 
   @override
   String get remindersDesc =>
-      '기록을 쉬면 1·3일째, 첫 한 달은 매주, 그 뒤로는 2주마다, 체크인 날에도 저녁 8시에 알려 드려요 (로그인 필요)';
+      '기록을 쉬면 1·3일째, 첫 한 달은 매주, 그 뒤로는 2주마다, 체크인 날에도 저녁 8시에 알려 드려요';
 
   @override
   String get remindersOnMsg => '알림을 켰어요';
 
   @override
   String get remindersDenied =>
-      '이 사이트의 알림이 차단돼 있어요. 주소창 왼쪽 자물쇠(사이트 설정) → 알림 → 허용으로 바꾼 뒤 다시 켜 주세요';
+      '알림이 꺼져 있어요. 휴대폰 설정 → 애플리케이션 → 알아서핏 → 알림을 켠 뒤 다시 켜 주세요';
 
   @override
-  String get remindersDismissed =>
-      '알림 허용 창이 닫혔어요. 다시 켜고 \'허용\'을 눌러 주세요. 창이 안 보이면 주소창의 종 모양 아이콘을 눌러 주세요';
-
-  @override
-  String get remindersUnsupported =>
-      '이 브라우저에서는 알림을 받을 수 없어요. 카카오톡 등 앱 안 브라우저라면 크롬·사파리로 열어 주세요. 아이폰은 홈 화면에 추가한 뒤 켜 주세요';
-
-  @override
-  String get remindersSignedOut => '알림은 로그인하면 받을 수 있어요';
-
-  @override
-  String get remindersFailed => '알림을 켜지 못했어요. 잠시 후 다시 시도해 주세요';
+  String get remindersUnsupported => '알림은 앱에서 받을 수 있어요';
 
   @override
   String get reviewTitle => '알아서핏 어떠세요?';

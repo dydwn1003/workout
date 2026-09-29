@@ -610,10 +610,7 @@ void showReminderResult(BuildContext context, ReminderResult r) {
       content: Text(switch (r) {
         ReminderResult.on => t.remindersOnMsg,
         ReminderResult.denied => t.remindersDenied,
-        ReminderResult.dismissed => t.remindersDismissed,
         ReminderResult.unsupported => t.remindersUnsupported,
-        ReminderResult.signedOut => t.remindersSignedOut,
-        ReminderResult.failed => t.remindersFailed,
       }),
     ),
   );
