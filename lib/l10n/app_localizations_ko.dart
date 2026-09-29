@@ -915,6 +915,71 @@ class LKo extends L {
   }
 
   @override
+  String get remindersOffer => '기록을 며칠 쉬면 살짝 알려 드릴까요? 오래 쉴수록 드물게, 30일 뒤엔 멈춰요.';
+
+  @override
+  String get remindersYes => '알려 주세요';
+
+  @override
+  String get remindersNo => '괜찮아요';
+
+  @override
+  String get remindersTitle => '기록·체크인 알림';
+
+  @override
+  String get remindersDesc =>
+      '기록을 쉬면 1·3·7·14·30일째에, 체크인 날 저녁 8시에 알려 드려요 (로그인 필요)';
+
+  @override
+  String get remindersOnMsg => '알림을 켰어요';
+
+  @override
+  String get remindersDenied => '브라우저에서 알림이 막혀 있어요. 사이트 설정에서 알림을 허용해 주세요';
+
+  @override
+  String get remindersUnsupported =>
+      '이 브라우저에서는 알림을 받을 수 없어요. 아이폰은 홈 화면에 추가한 뒤 켜 주세요';
+
+  @override
+  String get remindersSignedOut => '알림은 로그인하면 받을 수 있어요';
+
+  @override
+  String get remindersFailed => '알림을 켜지 못했어요. 잠시 후 다시 시도해 주세요';
+
+  @override
+  String get reviewTitle => '알아서핏 어떠세요?';
+
+  @override
+  String get reviewGood => '좋아요';
+
+  @override
+  String get reviewBad => '아쉬워요';
+
+  @override
+  String get reviewThanks => '고마워요! 큰 힘이 돼요';
+
+  @override
+  String get reviewAskStore => '스토어에 별점을 남겨 주시면 더 많은 분이 알아서핏을 만날 수 있어요.';
+
+  @override
+  String get reviewRate => '별점 남기기';
+
+  @override
+  String get reviewLater => '다음에';
+
+  @override
+  String get reviewBadTitle => '무엇이 아쉬웠나요?';
+
+  @override
+  String get reviewBadHint => '불편했던 점을 알려 주시면 고쳐 볼게요';
+
+  @override
+  String get reviewSend => '보내기';
+
+  @override
+  String get reviewSent => '의견 고마워요. 꼭 참고할게요';
+
+  @override
   String get reportTitle => '이번 주 코칭 리포트';
 
   @override

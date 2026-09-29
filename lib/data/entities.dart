@@ -475,12 +475,24 @@ class AppSettings {
   /// Send anonymous usage events (lib/data/analytics.dart).
   final bool usageAnalytics;
 
+  /// Asked once whether to turn on reminder pushes.
+  final bool remindersAsked;
+
+  /// "알아서핏 어떠세요?": times asked, when last, and answered at all.
+  final int reviewAsks;
+  final DateTime? reviewAskedAt;
+  final bool reviewAnswered;
+
   const AppSettings({
     this.language,
     this.checkinWeekday = DateTime.monday,
     this.notifications = true,
     this.consentedAt,
     this.usageAnalytics = true,
+    this.remindersAsked = false,
+    this.reviewAsks = 0,
+    this.reviewAskedAt,
+    this.reviewAnswered = false,
   });
 
   AppSettings copyWith({
@@ -489,12 +501,20 @@ class AppSettings {
     bool? notifications,
     DateTime? consentedAt,
     bool? usageAnalytics,
+    bool? remindersAsked,
+    int? reviewAsks,
+    DateTime? reviewAskedAt,
+    bool? reviewAnswered,
   }) => AppSettings(
     language: language != null ? language() : this.language,
     checkinWeekday: checkinWeekday ?? this.checkinWeekday,
     notifications: notifications ?? this.notifications,
     consentedAt: consentedAt ?? this.consentedAt,
     usageAnalytics: usageAnalytics ?? this.usageAnalytics,
+    remindersAsked: remindersAsked ?? this.remindersAsked,
+    reviewAsks: reviewAsks ?? this.reviewAsks,
+    reviewAskedAt: reviewAskedAt ?? this.reviewAskedAt,
+    reviewAnswered: reviewAnswered ?? this.reviewAnswered,
   );
 
   Map<String, Object?> toJson() => {
@@ -503,6 +523,10 @@ class AppSettings {
     'notifications': notifications,
     'consentedAt': consentedAt?.toIso8601String(),
     'usageAnalytics': usageAnalytics,
+    if (remindersAsked) 'remindersAsked': true,
+    if (reviewAsks > 0) 'reviewAsks': reviewAsks,
+    'reviewAskedAt': ?reviewAskedAt?.toIso8601String(),
+    if (reviewAnswered) 'reviewAnswered': true,
   };
 
   factory AppSettings.fromJson(Map<String, Object?> j) => AppSettings(
@@ -513,5 +537,11 @@ class AppSettings {
         ? null
         : DateTime.parse(j['consentedAt'] as String),
     usageAnalytics: j['usageAnalytics'] as bool? ?? true,
+    remindersAsked: j['remindersAsked'] as bool? ?? false,
+    reviewAsks: j['reviewAsks'] as int? ?? 0,
+    reviewAskedAt: j['reviewAskedAt'] == null
+        ? null
+        : DateTime.parse(j['reviewAskedAt'] as String),
+    reviewAnswered: j['reviewAnswered'] as bool? ?? false,
   );
 }

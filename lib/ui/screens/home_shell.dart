@@ -10,6 +10,7 @@ import '../motion.dart';
 import '../platform/reload.dart';
 import '../theme.dart';
 import 'checkin_screen.dart';
+import 'review_sheet.dart';
 import 'settings_screen.dart';
 import 'today_screen.dart';
 import 'trend_screen.dart';
@@ -35,6 +36,20 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _checkForUpdate();
+    _maybeAskReview();
+  }
+
+  var _reviewShown = false;
+
+  /// "알아서핏 어떠세요?" at a good moment (AppState.shouldAskReview), once
+  /// per launch, a little after the screen settles.
+  Future<void> _maybeAskReview() async {
+    if (_reviewShown) return;
+    await Future<void>.delayed(const Duration(seconds: 2));
+    if (!mounted || !AppScope.read(context).shouldAskReview) return;
+    if (ModalRoute.of(context)?.isCurrent == false) return; // a sheet is open
+    _reviewShown = true;
+    await showReviewSheet(context);
   }
 
   @override
@@ -45,7 +60,10 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _checkForUpdate();
+    if (state == AppLifecycleState.resumed) {
+      _checkForUpdate();
+      _maybeAskReview();
+    }
   }
 
   /// Offers the newer version: a reload on the web, the store in the apps.

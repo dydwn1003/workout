@@ -281,6 +281,10 @@ class _DayBody extends StatelessWidget {
           enter(_DailyTipCard(tip: tip)),
           const SizedBox(height: 12),
         ],
+        if (isToday && s.shouldOfferReminders) ...[
+          enter(const _RemindersOffer()),
+          const SizedBox(height: 12),
+        ],
         if (isToday && s.dietBreakUntil != null) ...[
           enter(
             Row(
@@ -542,6 +546,76 @@ class _DayBody extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Offered once after the first meal: reminder pushes when logging stops.
+class _RemindersOffer extends StatelessWidget {
+  const _RemindersOffer();
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L.of(context);
+    final s = AppScope.read(context);
+    return SoftCard(
+      color: AppColors.butterSoft,
+      padding: const EdgeInsets.fromLTRB(16, 14, 12, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.notifications_active_rounded,
+                color: Color(0xFFD49B1F),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  t.remindersOffer,
+                  style: const TextStyle(fontSize: 14, height: 1.5),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: s.declineReminders,
+                style: TextButton.styleFrom(foregroundColor: AppColors.inkSoft),
+                child: Text(t.remindersNo),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final r = await s.setReminders(true);
+                  if (!context.mounted) return;
+                  showReminderResult(context, r);
+                },
+                child: Text(t.remindersYes),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Snackbar for the outcome of turning reminders on.
+void showReminderResult(BuildContext context, ReminderResult r) {
+  final t = L.of(context);
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(switch (r) {
+        ReminderResult.on => t.remindersOnMsg,
+        ReminderResult.denied => t.remindersDenied,
+        ReminderResult.unsupported => t.remindersUnsupported,
+        ReminderResult.signedOut => t.remindersSignedOut,
+        ReminderResult.failed => t.remindersFailed,
+      }),
+    ),
+  );
 }
 
 /// Today's one-line coaching (AppState.dailyTip); the text cross-fades when

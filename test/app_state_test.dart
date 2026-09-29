@@ -49,6 +49,26 @@ void main() {
       return s;
     }
 
+    test('review is asked at a good moment, then not again soon', () async {
+      final s = await dieter(List.filled(10, 80.0));
+      expect(s.shouldAskReview, isFalse); // no streak, no progress yet
+      for (var i = 1; i <= 7; i++) {
+        await s.addMeal(
+          name: 'x',
+          kcal: 500,
+          proteinG: 0,
+          carbsG: 0,
+          fatG: 0,
+          source: MealSource.manual,
+          date: DateTime(now.year, now.month, now.day - i),
+        );
+      }
+      expect(s.shouldAskReview, isTrue); // 7 days logged in a row
+      await s.reviewAsked();
+      expect(s.shouldAskReview, isFalse); // asked today
+      expect(s.settings.reviewAsks, 1);
+    });
+
     test(
       'a flat trend for 3 weeks is a stall; losing on pace is not',
       () async {

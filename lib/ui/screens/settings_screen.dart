@@ -11,6 +11,7 @@ import '../widgets.dart';
 import 'labels.dart';
 import 'onboarding_screen.dart';
 import 'sign_in_sheet.dart';
+import 'today_screen.dart' show showReminderResult;
 
 /// Where the privacy policy is published (web/privacy.html on GitHub Pages).
 const privacyPolicyUrl = String.fromEnvironment(
@@ -446,15 +447,17 @@ class SettingsScreen extends StatelessWidget {
                     const Color(0xFFD49B1F),
                     AppColors.butterSoft,
                   ),
-                  title: Text(t.notifications),
+                  title: Text(t.remindersTitle),
                   subtitle: Text(
-                    t.notificationsDesc,
+                    t.remindersDesc,
                     style: const TextStyle(fontSize: 12.5),
                   ),
-                  value: s.settings.notifications,
+                  value: s.remindersOn,
                   activeThumbColor: AppColors.peach,
-                  onChanged: (v) =>
-                      s.updateSettings(s.settings.copyWith(notifications: v)),
+                  onChanged: (v) async {
+                    final r = await s.setReminders(v);
+                    if (v && context.mounted) showReminderResult(context, r);
+                  },
                 ),
                 ListTile(
                   leading: icon(

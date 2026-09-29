@@ -1700,6 +1700,132 @@ abstract class L {
   /// **'유지 모드로 바꿨어요. 목표는 {kcal} kcal예요.'**
   String maintainStarted(String kcal);
 
+  /// No description provided for @remindersOffer.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록을 며칠 쉬면 살짝 알려 드릴까요? 오래 쉴수록 드물게, 30일 뒤엔 멈춰요.'**
+  String get remindersOffer;
+
+  /// No description provided for @remindersYes.
+  ///
+  /// In ko, this message translates to:
+  /// **'알려 주세요'**
+  String get remindersYes;
+
+  /// No description provided for @remindersNo.
+  ///
+  /// In ko, this message translates to:
+  /// **'괜찮아요'**
+  String get remindersNo;
+
+  /// No description provided for @remindersTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록·체크인 알림'**
+  String get remindersTitle;
+
+  /// No description provided for @remindersDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록을 쉬면 1·3·7·14·30일째에, 체크인 날 저녁 8시에 알려 드려요 (로그인 필요)'**
+  String get remindersDesc;
+
+  /// No description provided for @remindersOnMsg.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림을 켰어요'**
+  String get remindersOnMsg;
+
+  /// No description provided for @remindersDenied.
+  ///
+  /// In ko, this message translates to:
+  /// **'브라우저에서 알림이 막혀 있어요. 사이트 설정에서 알림을 허용해 주세요'**
+  String get remindersDenied;
+
+  /// No description provided for @remindersUnsupported.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 브라우저에서는 알림을 받을 수 없어요. 아이폰은 홈 화면에 추가한 뒤 켜 주세요'**
+  String get remindersUnsupported;
+
+  /// No description provided for @remindersSignedOut.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림은 로그인하면 받을 수 있어요'**
+  String get remindersSignedOut;
+
+  /// No description provided for @remindersFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림을 켜지 못했어요. 잠시 후 다시 시도해 주세요'**
+  String get remindersFailed;
+
+  /// No description provided for @reviewTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'알아서핏 어떠세요?'**
+  String get reviewTitle;
+
+  /// No description provided for @reviewGood.
+  ///
+  /// In ko, this message translates to:
+  /// **'좋아요'**
+  String get reviewGood;
+
+  /// No description provided for @reviewBad.
+  ///
+  /// In ko, this message translates to:
+  /// **'아쉬워요'**
+  String get reviewBad;
+
+  /// No description provided for @reviewThanks.
+  ///
+  /// In ko, this message translates to:
+  /// **'고마워요! 큰 힘이 돼요'**
+  String get reviewThanks;
+
+  /// No description provided for @reviewAskStore.
+  ///
+  /// In ko, this message translates to:
+  /// **'스토어에 별점을 남겨 주시면 더 많은 분이 알아서핏을 만날 수 있어요.'**
+  String get reviewAskStore;
+
+  /// No description provided for @reviewRate.
+  ///
+  /// In ko, this message translates to:
+  /// **'별점 남기기'**
+  String get reviewRate;
+
+  /// No description provided for @reviewLater.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음에'**
+  String get reviewLater;
+
+  /// No description provided for @reviewBadTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'무엇이 아쉬웠나요?'**
+  String get reviewBadTitle;
+
+  /// No description provided for @reviewBadHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'불편했던 점을 알려 주시면 고쳐 볼게요'**
+  String get reviewBadHint;
+
+  /// No description provided for @reviewSend.
+  ///
+  /// In ko, this message translates to:
+  /// **'보내기'**
+  String get reviewSend;
+
+  /// No description provided for @reviewSent.
+  ///
+  /// In ko, this message translates to:
+  /// **'의견 고마워요. 꼭 참고할게요'**
+  String get reviewSent;
+
   /// No description provided for @reportTitle.
   ///
   /// In ko, this message translates to:

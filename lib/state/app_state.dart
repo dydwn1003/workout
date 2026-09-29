@@ -11,7 +11,10 @@ import '../data/food_db.g.dart';
 import '../data/analytics.dart';
 import '../data/auth_service.dart';
 import '../data/remote_food_search.dart';
+import '../data/reminders.dart';
 import 'coach_tips.dart';
+
+export '../data/reminders.dart' show ReminderResult;
 
 export 'coach_tips.dart';
 import '../data/repository.dart';
@@ -481,6 +484,116 @@ class AppState extends ChangeNotifier {
           totalsOn(_addDays(today, -i)).proteinG,
     ];
     return days.isEmpty ? null : days.reduce((a, b) => a + b) / days.length;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Reminders and review prompt
+  // ---------------------------------------------------------------------------
+
+  /// Reminder pushes; null without Supabase (tests, offline builds).
+  Reminders? get reminders {
+    final a = auth;
+    return a == null ? null : (_reminders ??= Reminders(a.client));
+  }
+
+  Reminders? _reminders;
+
+  /// Reminders are on for this device: wanted, and the browser allows them.
+  bool get remindersOn =>
+      settings.notifications && reminders?.permission == 'granted';
+
+  /// Turns reminders on (asks for permission) or off for this device.
+  Future<ReminderResult> setReminders(bool on) async {
+    final r = reminders;
+    if (r == null) return ReminderResult.unsupported;
+    if (!on) {
+      await r.disable();
+      await updateSettings(settings.copyWith(notifications: false));
+      return ReminderResult.on;
+    }
+    final result = await r.enable();
+    await updateSettings(
+      settings.copyWith(
+        notifications: result == ReminderResult.on,
+        remindersAsked: true,
+      ),
+    );
+    analytics.log('reminders', {'result': result.name});
+    return result;
+  }
+
+  /// Offer reminders once, after the first meal is logged, when this
+  /// device can receive them and the user is signed in (the server needs
+  /// their logs to know when to remind).
+  bool get shouldOfferReminders {
+    final r = reminders;
+    return r != null &&
+        signedIn &&
+        !settings.remindersAsked &&
+        _data.meals.isNotEmpty &&
+        r.supported &&
+        r.permission == 'default';
+  }
+
+  Future<void> declineReminders() =>
+      updateSettings(settings.copyWith(remindersAsked: true));
+
+  /// A good moment to ask "알아서핏 어떠세요?": something went well (7 days
+  /// logged in a row, a check-in accepted today, or 1 kg toward the goal),
+  /// the app is 5+ days old for this user, asked fewer than 3 times, not in
+  /// the last 60 days, and never answered.
+  bool get shouldAskReview {
+    final p = profile;
+    final st = settings;
+    if (p == null || st.reviewAnswered || st.reviewAsks >= 3) return false;
+    if (today.difference(dayOnly(p.createdAt)).inDays < 5) return false;
+    final last = st.reviewAskedAt;
+    if (last != null && today.difference(dayOnly(last)).inDays < 60) {
+      return false;
+    }
+    final week = [for (var i = 1; i <= 7; i++) _addDays(today, -i)];
+    final streak = week.every((d) => mealsOn(d).isNotEmpty);
+    final plan = currentPlan;
+    final accepted =
+        plan != null &&
+        plan.status == PlanStatus.accepted &&
+        plan.weekStart == dateKey(today);
+    return streak || accepted || _progressKg >= 1;
+  }
+
+  /// Trend weight moved toward the goal since the first weigh-in (kg).
+  double get _progressKg {
+    final pts = trendPoints().where((p) => p.$3 != null).toList();
+    if (pts.length < 2) return 0;
+    final moved = pts.last.$3! - pts.first.$3!;
+    return switch (profile?.goalType) {
+      GoalType.lose || GoalType.recomp => -moved,
+      GoalType.gain => moved,
+      _ => 0,
+    };
+  }
+
+  Future<void> reviewAsked() => updateSettings(
+    settings.copyWith(
+      reviewAsks: settings.reviewAsks + 1,
+      reviewAskedAt: clock(),
+    ),
+  );
+
+  /// Answer to "알아서핏 어떠세요?"; [message] is optional feedback.
+  Future<void> answerReview({required bool good, String? message}) async {
+    analytics.log('review_answer', {'good': good});
+    await updateSettings(settings.copyWith(reviewAnswered: true));
+    final a = auth;
+    if (a == null || (good && (message == null || message.isEmpty))) return;
+    try {
+      await a.client.from('app_feedback').insert({
+        'rating': good ? 'good' : 'bad',
+        if (message != null && message.isNotEmpty) 'message': message,
+        'platform': analytics.platform,
+        'app_version': analytics.appVersion,
+      });
+    } catch (_) {} // feedback is best-effort
   }
 
   /// Today's one-line coaching (today screen), or null for nothing to say.
