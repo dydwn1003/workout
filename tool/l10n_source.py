@@ -3,7 +3,7 @@
 import json, re, os
 
 S = {
- "appName": ("Adapt", "Adapt"),
+ "appName": ("알아서핏", "알아서핏"),
  "next": ("다음", "Next"),
  "back": ("이전", "Back"),
  "save": ("저장", "Save"),

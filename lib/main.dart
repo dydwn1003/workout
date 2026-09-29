@@ -85,7 +85,7 @@ class _CoachAppState extends State<CoachApp> with WidgetsBindingObserver {
         builder: (context, _) {
           final lang = state.settings.language;
           return MaterialApp(
-            title: 'Adapt',
+            onGenerateTitle: (context) => L.of(context).appName,
             debugShowCheckedModeBanner: false,
             theme: buildTheme(),
             locale: lang == null ? null : Locale(lang),

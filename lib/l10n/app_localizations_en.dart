@@ -10,7 +10,7 @@ class LEn extends L {
   LEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'Adapt';
+  String get appName => '알아서핏';
 
   @override
   String get next => 'Next';

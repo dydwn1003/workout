@@ -10,7 +10,7 @@ class LKo extends L {
   LKo([String locale = 'ko']) : super(locale);
 
   @override
-  String get appName => 'Adapt';
+  String get appName => '알아서핏';
 
   @override
   String get next => '다음';

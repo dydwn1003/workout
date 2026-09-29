@@ -100,7 +100,7 @@ abstract class L {
   /// No description provided for @appName.
   ///
   /// In ko, this message translates to:
-  /// **'Adapt'**
+  /// **'알아서핏'**
   String get appName;
 
   /// No description provided for @next.

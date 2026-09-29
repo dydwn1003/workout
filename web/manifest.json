@@ -1,11 +1,11 @@
 {
-    "name": "adapt_coach",
-    "short_name": "adapt_coach",
+    "name": "알아서핏",
+    "short_name": "알아서핏",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "매주 알아서 맞춰주는 칼로리 코치",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
