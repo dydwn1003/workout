@@ -760,6 +760,9 @@ class LKo extends L {
   String get searchAgain => '다시 검색';
 
   @override
+  String get pressBackAgainToExit => '한 번 더 누르면 앱이 닫혀요';
+
+  @override
   String get replaceMeal => '다른 음식으로 바꾸기';
 
   @override

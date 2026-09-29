@@ -223,6 +223,7 @@
   "editMeal": "Edit meal",
   "mealUpdated": "Updated",
   "searchAgain": "Search again",
+  "pressBackAgainToExit": "Press back again to exit",
   "replaceMeal": "Replace meal",
   "mealReplaced": "Replaced with {name}",
   "recentMeals": "Recent",

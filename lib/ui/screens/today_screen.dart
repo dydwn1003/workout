@@ -19,12 +19,22 @@ class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
 
   @override
-  State<TodayScreen> createState() => _TodayScreenState();
+  State<TodayScreen> createState() => TodayScreenState();
 }
 
-class _TodayScreenState extends State<TodayScreen> {
+class TodayScreenState extends State<TodayScreen> {
   DateTime? _date; // null = today
   var _forward = true;
+
+  /// Back button: back to today when another day is shown.
+  bool handleBack() {
+    if (_date == null) return false;
+    setState(() {
+      _forward = true;
+      _date = null;
+    });
+    return true;
+  }
 
   void _shift(int days, DateTime today) {
     final cur = _date ?? today;

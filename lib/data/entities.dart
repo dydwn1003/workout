@@ -182,6 +182,8 @@ class Meal {
     MealSlot? slot,
     bool? edited,
     String? Function()? portion,
+    double? sugarG,
+    double? satFatG,
   }) => Meal(
     id: id,
     date: date,
@@ -196,8 +198,8 @@ class Meal {
     slot: slot ?? this.slot,
     portion: portion != null ? portion() : this.portion,
     foodId: foodId,
-    sugarG: sugarG,
-    satFatG: satFatG,
+    sugarG: sugarG ?? this.sugarG,
+    satFatG: satFatG ?? this.satFatG,
   );
 
   Map<String, Object?> toJson() => {

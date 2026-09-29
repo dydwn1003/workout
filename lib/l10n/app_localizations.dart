@@ -1442,6 +1442,12 @@ abstract class L {
   /// **'다시 검색'**
   String get searchAgain;
 
+  /// No description provided for @pressBackAgainToExit.
+  ///
+  /// In ko, this message translates to:
+  /// **'한 번 더 누르면 앱이 닫혀요'**
+  String get pressBackAgainToExit;
+
   /// No description provided for @replaceMeal.
   ///
   /// In ko, this message translates to:

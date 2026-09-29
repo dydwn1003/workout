@@ -776,6 +776,9 @@ class LEn extends L {
   String get searchAgain => 'Search again';
 
   @override
+  String get pressBackAgainToExit => 'Press back again to exit';
+
+  @override
   String get replaceMeal => 'Replace meal';
 
   @override

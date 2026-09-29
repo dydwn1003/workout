@@ -11,6 +11,34 @@ void main() {
   final now = DateTime(2026, 9, 28, 20);
 
   group('AppState', () {
+    test('meals logged before 포화지방 get it from their food', () async {
+      final s = AppState(MemoryCoachRepository(), clock: () => now);
+      await s.load();
+      final butter = builtInFoods.firstWhere((f) => f.name == '버터');
+      await s.addMeal(
+        name: butter.name,
+        kcal: butter.kcal / 10, // 10 g
+        proteinG: 0,
+        carbsG: 0,
+        fatG: butter.fatG / 10,
+        source: MealSource.search,
+        foodId: butter.id,
+      );
+      await s.addMeal(
+        name: 'manual',
+        kcal: 100,
+        proteinG: 0,
+        carbsG: 0,
+        fatG: 0,
+        source: MealSource.manual,
+      );
+      await s.fillMissingNutrients();
+      final m = s.meals.firstWhere((m) => m.foodId == butter.id);
+      expect(m.satFatG, closeTo(butter.satFatG! / 10, 0.01));
+      expect(m.sugarG, closeTo(butter.sugarG! / 10, 0.01));
+      expect(s.meals.firstWhere((m) => m.name == 'manual').satFatG, isNull);
+    });
+
     test('onboarding creates profile, weight and initial plan', () async {
       final s = AppState(MemoryCoachRepository(), clock: () => now);
       await s.load();

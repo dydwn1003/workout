@@ -52,6 +52,49 @@ class RemoteFoodSearch {
     return _cache[q] = foods;
   }
 
+  /// Per 100 g (kcal, 당류, 포화지방) of the given server food ids; ids the
+  /// server doesn't know are left out.
+  Future<Map<String, ({double kcal, double? sugarG, double? satFatG})>>
+  nutrientsOf(List<String> ids) async {
+    final out = <String, ({double kcal, double? sugarG, double? satFatG})>{};
+    for (var i = 0; i < ids.length; i += 50) {
+      final list = ids.skip(i).take(50).map((id) => '"$id"').join(',');
+      final foods = await _get('foods?select=id,kcal&id=in.($list)');
+      final nutrients = {
+        for (final n in await _get(
+          'food_nutrients?select=id,sugar,sat_fat&id=in.($list)',
+        ))
+          n['id'] as String: n,
+      };
+      for (final f in foods) {
+        final n = nutrients[f['id']];
+        out[f['id'] as String] = (
+          kcal: (f['kcal'] as num).toDouble(),
+          sugarG: (n?['sugar'] as num?)?.toDouble(),
+          satFatG: (n?['sat_fat'] as num?)?.toDouble(),
+        );
+      }
+    }
+    return out;
+  }
+
+  Future<List<Map<String, Object?>>> _get(String path) async {
+    final res = await _client
+        .get(
+          Uri.parse('${url.replaceAll(RegExp(r'/+$'), '')}/rest/v1/$path'),
+          headers: {
+            'apikey': anonKey,
+            if (!anonKey.startsWith('sb_')) 'Authorization': 'Bearer $anonKey',
+          },
+        )
+        .timeout(const Duration(seconds: 15));
+    if (res.statusCode != 200) throw Exception('$path: HTTP ${res.statusCode}');
+    return [
+      for (final r in jsonDecode(utf8.decode(res.bodyBytes)) as List)
+        (r as Map).cast<String, Object?>(),
+    ];
+  }
+
   Future<http.Response> _call(String fn, String query, int limit) => _client
       .post(
         Uri.parse('${url.replaceAll(RegExp(r'/+$'), '')}/rest/v1/rpc/$fn'),

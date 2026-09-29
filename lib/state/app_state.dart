@@ -59,6 +59,52 @@ class AppState extends ChangeNotifier {
     analytics.setEnabled(_data.settings.usageAnalytics);
     loaded = true;
     notifyListeners();
+    unawaited(fillMissingNutrients());
+  }
+
+  /// Meals logged from search before 당류/포화지방 were tracked get them from
+  /// their food: built-in foods here, server foods from the server. The
+  /// amount is the meal's kcal share of the food's per-100 g kcal.
+  Future<void> fillMissingNutrients() async {
+    final missing = [
+      for (final m in _data.meals)
+        if (m.foodId != null && (m.sugarG == null || m.satFatG == null)) m,
+    ];
+    if (missing.isEmpty) return;
+    final per100 = <String, ({double kcal, double? sugarG, double? satFatG})>{};
+    final unknown = <String>{};
+    for (final m in missing) {
+      final f = _builtInById[m.foodId];
+      if (f != null) {
+        per100[f.id] = (kcal: f.kcal, sugarG: f.sugarG, satFatG: f.satFatG);
+      } else {
+        unknown.add(m.foodId!);
+      }
+    }
+    final remote = remoteSearch;
+    if (unknown.isNotEmpty && remote != null) {
+      try {
+        per100.addAll(await remote.nutrientsOf(unknown.toList()));
+      } catch (e) {
+        debugPrint('nutrients lookup failed: $e'); // try again next launch
+      }
+    }
+    var changed = false;
+    for (final m in missing) {
+      final f = per100[m.foodId];
+      if (f == null || f.kcal <= 0) continue;
+      final k = m.kcal / f.kcal;
+      final sugar = m.sugarG ?? (f.sugarG == null ? null : f.sugarG! * k);
+      final sat = m.satFatG ?? (f.satFatG == null ? null : f.satFatG! * k);
+      if (sugar == m.sugarG && sat == m.satFatG) continue;
+      final i = _data.meals.indexWhere((x) => x.id == m.id);
+      if (i < 0) continue;
+      _data.meals[i] = m.copyWith(sugarG: sugar, satFatG: sat);
+      changed = true;
+    }
+    if (!changed) return;
+    await repo.saveMeals(_data.meals);
+    notifyListeners();
   }
 
   // ---------------------------------------------------------------------------
@@ -118,6 +164,7 @@ class AppState extends ChangeNotifier {
       if (await sync.sync()) {
         _data = await repo.load();
         _sort();
+        unawaited(fillMissingNutrients());
       }
       syncFailed = false;
     } catch (e) {

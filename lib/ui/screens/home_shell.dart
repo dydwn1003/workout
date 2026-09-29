@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
@@ -21,6 +22,8 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   var _tab = 0;
+  final _today = GlobalKey<TodayScreenState>();
+  DateTime? _lastBack;
 
   static const _tabNames = ['today', 'trend', 'checkin', 'settings'];
 
@@ -31,18 +34,52 @@ class _HomeShellState extends State<HomeShell> {
     setState(() => _tab = i);
   }
 
+  /// Back button (Android, or the browser's on the web; open sheets close
+  /// first on their own): other tab -> 오늘, another day -> today, then a
+  /// second press within 2 s leaves the app.
+  void _onBack() {
+    if (_tab != 0) {
+      _select(0);
+      return;
+    }
+    if (_today.currentState?.handleBack() ?? false) return;
+    final now = DateTime.now();
+    if (_lastBack != null &&
+        now.difference(_lastBack!) < const Duration(seconds: 2)) {
+      SystemNavigator.pop();
+      return;
+    }
+    _lastBack = now;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(L.of(context).pressBackAgainToExit),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = L.of(context);
     final due = AppScope.of(context).checkinDue;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onBack();
+      },
+      child: _scaffold(t, due),
+    );
+  }
+
+  Widget _scaffold(L t, bool due) {
     return Scaffold(
       body: FadeIndexedStack(
         index: _tab,
-        children: const [
-          TodayScreen(),
-          TrendScreen(),
-          CheckinScreen(),
-          SettingsScreen(),
+        children: [
+          TodayScreen(key: _today),
+          const TrendScreen(),
+          const CheckinScreen(),
+          const SettingsScreen(),
         ],
       ),
       bottomNavigationBar: NavigationBar(

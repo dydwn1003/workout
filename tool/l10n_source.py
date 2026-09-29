@@ -261,6 +261,7 @@ S = {
  "editMeal": ("식사 수정", "Edit meal"),
  "mealUpdated": ("수정했어요", "Updated"),
  "searchAgain": ("다시 검색", "Search again"),
+ "pressBackAgainToExit": ("한 번 더 누르면 앱이 닫혀요", "Press back again to exit"),
  "replaceMeal": ("다른 음식으로 바꾸기", "Replace meal"),
  "mealReplaced": ("{name}(으)로 바꿨어요", "Replaced with {name}"),
  "recentMeals": ("최근 먹은 것", "Recent"),

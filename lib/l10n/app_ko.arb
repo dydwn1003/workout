@@ -480,6 +480,7 @@
   "editMeal": "식사 수정",
   "mealUpdated": "수정했어요",
   "searchAgain": "다시 검색",
+  "pressBackAgainToExit": "한 번 더 누르면 앱이 닫혀요",
   "replaceMeal": "다른 음식으로 바꾸기",
   "mealReplaced": "{name}(으)로 바꿨어요",
   "@mealReplaced": {
