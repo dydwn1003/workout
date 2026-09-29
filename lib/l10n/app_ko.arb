@@ -713,6 +713,63 @@
       }
     }
   },
+  "swapsTitle": "가볍게 바꿔 볼까요?",
+  "swapsDesc": "최근 4주에 자주 드신 음식과 같은 종류 중에서, 1회분 칼로리가 적고 단백질은 비슷한 음식이에요.",
+  "swapTimes": "{n}번 드심",
+  "@swapTimes": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "swapSaves": "1회분 {kcal} kcal 적어요",
+  "@swapSaves": {
+    "placeholders": {
+      "kcal": {
+        "type": "String"
+      }
+    }
+  },
+  "swapSavesSugar": "1회분 {kcal} kcal · 당류 {sugar}g 적어요",
+  "@swapSavesSugar": {
+    "placeholders": {
+      "kcal": {
+        "type": "String"
+      },
+      "sugar": {
+        "type": "String"
+      }
+    }
+  },
+  "patternsTitle": "최근 4주 식사 패턴",
+  "patternWeekend": "주말에 평일보다 하루 평균 {kcal} kcal 더 드세요. 주말 한 끼만 미리 정해 두면 차이가 확 줄어요.",
+  "@patternWeekend": {
+    "placeholders": {
+      "kcal": {
+        "type": "String"
+      }
+    }
+  },
+  "patternSnack": "간식이 전체 칼로리의 {pct}%예요. 가장 많이 드신 간식은 '{food}'예요. 양을 반으로 줄이거나 단백질 간식으로 바꿔 보세요.",
+  "@patternSnack": {
+    "placeholders": {
+      "pct": {
+        "type": "String"
+      },
+      "food": {
+        "type": "String"
+      }
+    }
+  },
+  "patternSkipBreakfast": "아침을 거른 날은 하루에 {kcal} kcal 더 드시는 편이에요. 가벼운 아침(계란·요거트)이 오히려 도움이 될 수 있어요.",
+  "@patternSkipBreakfast": {
+    "placeholders": {
+      "kcal": {
+        "type": "String"
+      }
+    }
+  },
   "focusTitle": "다음 주 한 가지",
   "focusLogMore": "식사를 5일 이상 기록해 주세요 (이번 주 {n}일). 그래야 소비량을 제대로 계산할 수 있어요.",
   "@focusLogMore": {

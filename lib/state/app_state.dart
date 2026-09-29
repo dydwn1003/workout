@@ -450,6 +450,29 @@ class AppState extends ChangeNotifier {
     return kcal == null ? null : kcal * 0.10 / 4;
   }
 
+  (String, int, List<FoodSwap>)? _swapsMemo;
+
+  /// Lighter foods of the same kind for what was eaten often lately.
+  /// Scans the built-in table, so it's cached until meals or the day change.
+  List<FoodSwap> foodSwaps() {
+    final key = dateKey(today);
+    final memo = _swapsMemo;
+    if (memo != null && memo.$1 == key && memo.$2 == _data.meals.length) {
+      return memo.$3;
+    }
+    final swaps = findFoodSwaps(
+      meals: _data.meals,
+      today: today,
+      foodById: foodById,
+      foods: builtInFoods,
+    );
+    _swapsMemo = (key, _data.meals.length, swaps);
+    return swaps;
+  }
+
+  /// Eating habits of the last 4 weeks, strongest first.
+  List<MealPattern> mealPatterns() => findMealPatterns(_data.meals, today);
+
   /// Average protein (g) over the days with meals in the last 7 days.
   double? avgProteinLastWeek() {
     final days = [

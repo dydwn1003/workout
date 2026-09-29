@@ -698,6 +698,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
       avgProteinG: s.avgProteinLastWeek(),
       targetProteinG: current.proteinG,
     );
+    final patterns = s.mealPatterns();
     final focusText = switch (focus.kind) {
       WeeklyFocusKind.logMore => t.focusLogMore(fmt0(focus.amount)),
       WeeklyFocusKind.weighMore => t.focusWeighMore(fmt0(focus.amount)),
@@ -823,6 +824,52 @@ class _CheckinScreenState extends State<CheckinScreen> {
                 ],
               ),
             ),
+          if (patterns.isNotEmpty) ...[
+            const Divider(height: 18),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.insights_rounded,
+                  color: AppColors.sky,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        t.patternsTitle,
+                        style: const TextStyle(
+                          fontFamily: headingFont,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      for (final p in patterns.take(2))
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            switch (p.kind) {
+                              MealPatternKind.weekendHigher => t.patternWeekend(
+                                fmt0(p.amount),
+                              ),
+                              MealPatternKind.snackHeavy => t.patternSnack(
+                                fmt0(p.amount),
+                                p.food ?? '',
+                              ),
+                              MealPatternKind.skipBreakfast =>
+                                t.patternSkipBreakfast(fmt0(p.amount)),
+                            },
+                            style: const TextStyle(fontSize: 13.5, height: 1.5),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
           const Divider(height: 18),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,

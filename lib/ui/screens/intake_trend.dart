@@ -313,3 +313,89 @@ class _DashPainter extends CustomPainter {
   @override
   bool shouldRepaint(_DashPainter old) => false;
 }
+
+/// "가볍게 바꿔 볼까요?": lighter foods of the same kind for frequent ones.
+class FoodSwapsCard extends StatelessWidget {
+  final List<FoodSwap> swaps;
+  const FoodSwapsCard({super.key, required this.swaps});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L.of(context);
+    return SoftCard(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            t.swapsDesc,
+            style: const TextStyle(
+              fontSize: 12.5,
+              color: AppColors.inkSoft,
+              height: 1.5,
+            ),
+          ),
+          for (final w in swaps)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${w.from.name} · ${t.swapTimes('${w.timesEaten}')}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            color: AppColors.inkSoft,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 16,
+                              color: AppColors.mint,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                w.to.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: headingFont,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          w.sugarSaved != null && w.sugarSaved! >= 3
+                              ? t.swapSavesSugar(
+                                  fmt0(w.kcalSaved),
+                                  fmt0(w.sugarSaved!),
+                                )
+                              : t.swapSaves(fmt0(w.kcalSaved)),
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            color: AppColors.mint,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}

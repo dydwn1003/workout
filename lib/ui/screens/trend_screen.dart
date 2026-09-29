@@ -200,6 +200,11 @@ class _TrendScreenState extends State<TrendScreen> {
               SectionTitle(t.intakeTrendTitle),
               IntakeTrendCard(key: ValueKey(_range), days: logs),
               const SizedBox(height: 8),
+              if (s.foodSwaps() case final swaps when swaps.isNotEmpty) ...[
+                SectionTitle(t.swapsTitle),
+                FoodSwapsCard(swaps: swaps),
+                const SizedBox(height: 8),
+              ],
               SectionTitle(t.workoutTrendTitle),
               const WorkoutTrendCard(),
               const SizedBox(height: 8),

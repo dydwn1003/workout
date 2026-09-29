@@ -991,6 +991,46 @@ class LEn extends L {
   }
 
   @override
+  String get swapsTitle => 'Lighter swaps';
+
+  @override
+  String get swapsDesc =>
+      'Same kind as foods you ate often in the last 4 weeks, with fewer kcal per serving and similar protein.';
+
+  @override
+  String swapTimes(String n) {
+    return 'eaten $n×';
+  }
+
+  @override
+  String swapSaves(String kcal) {
+    return '$kcal kcal less per serving';
+  }
+
+  @override
+  String swapSavesSugar(String kcal, String sugar) {
+    return '$kcal kcal and ${sugar}g sugars less per serving';
+  }
+
+  @override
+  String get patternsTitle => 'Patterns in the last 4 weeks';
+
+  @override
+  String patternWeekend(String kcal) {
+    return 'Weekends run $kcal kcal/day above weekdays. Planning one weekend meal ahead closes most of the gap.';
+  }
+
+  @override
+  String patternSnack(String pct, String food) {
+    return 'Snacks are $pct% of your calories, mostly \'$food\'. Try half the amount or a protein snack.';
+  }
+
+  @override
+  String patternSkipBreakfast(String kcal) {
+    return 'Days without breakfast total $kcal kcal more. A light breakfast (eggs, yogurt) may help.';
+  }
+
+  @override
   String get focusTitle => 'One thing for next week';
 
   @override

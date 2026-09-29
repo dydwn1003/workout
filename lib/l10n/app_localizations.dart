@@ -1783,6 +1783,60 @@ abstract class L {
   /// **'아직 기록이 2주가 안 돼서 공식으로 소비량을 {formula} kcal로 추정했어요. 기록이 쌓이면 실제 데이터로 바뀌어요.'**
   String reportNoObserved(String formula);
 
+  /// No description provided for @swapsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'가볍게 바꿔 볼까요?'**
+  String get swapsTitle;
+
+  /// No description provided for @swapsDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 4주에 자주 드신 음식과 같은 종류 중에서, 1회분 칼로리가 적고 단백질은 비슷한 음식이에요.'**
+  String get swapsDesc;
+
+  /// No description provided for @swapTimes.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}번 드심'**
+  String swapTimes(String n);
+
+  /// No description provided for @swapSaves.
+  ///
+  /// In ko, this message translates to:
+  /// **'1회분 {kcal} kcal 적어요'**
+  String swapSaves(String kcal);
+
+  /// No description provided for @swapSavesSugar.
+  ///
+  /// In ko, this message translates to:
+  /// **'1회분 {kcal} kcal · 당류 {sugar}g 적어요'**
+  String swapSavesSugar(String kcal, String sugar);
+
+  /// No description provided for @patternsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 4주 식사 패턴'**
+  String get patternsTitle;
+
+  /// No description provided for @patternWeekend.
+  ///
+  /// In ko, this message translates to:
+  /// **'주말에 평일보다 하루 평균 {kcal} kcal 더 드세요. 주말 한 끼만 미리 정해 두면 차이가 확 줄어요.'**
+  String patternWeekend(String kcal);
+
+  /// No description provided for @patternSnack.
+  ///
+  /// In ko, this message translates to:
+  /// **'간식이 전체 칼로리의 {pct}%예요. 가장 많이 드신 간식은 \'{food}\'예요. 양을 반으로 줄이거나 단백질 간식으로 바꿔 보세요.'**
+  String patternSnack(String pct, String food);
+
+  /// No description provided for @patternSkipBreakfast.
+  ///
+  /// In ko, this message translates to:
+  /// **'아침을 거른 날은 하루에 {kcal} kcal 더 드시는 편이에요. 가벼운 아침(계란·요거트)이 오히려 도움이 될 수 있어요.'**
+  String patternSkipBreakfast(String kcal);
+
   /// No description provided for @focusTitle.
   ///
   /// In ko, this message translates to:
