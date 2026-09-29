@@ -480,6 +480,8 @@
   "searchAgain": "다시 검색",
   "updateAvailable": "새 버전이 나왔어요",
   "reload": "새로고침",
+  "updateInStore": "새 버전이 나왔어요. 스토어에서 업데이트해 주세요",
+  "updateStoreAction": "업데이트",
   "pressBackAgainToExit": "한 번 더 누르면 앱이 닫혀요",
   "replaceMeal": "다른 음식으로 바꾸기",
   "mealReplaced": "{name}(으)로 바꿨어요",

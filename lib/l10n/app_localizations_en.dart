@@ -776,6 +776,12 @@ class LEn extends L {
   String get reload => 'Reload';
 
   @override
+  String get updateInStore => 'A new version is out. Update it from the store';
+
+  @override
+  String get updateStoreAction => 'Update';
+
+  @override
   String get pressBackAgainToExit => 'Press back again to exit';
 
   @override

@@ -4,11 +4,19 @@ import 'package:adapt_coach/data/food.dart';
 import 'package:adapt_coach/data/food_db.g.dart';
 import 'package:adapt_coach/data/food_estimator.dart';
 import 'package:adapt_coach/data/repository.dart';
+import 'package:adapt_coach/data/update_check.dart';
 import 'package:adapt_coach/state/app_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   final now = DateTime(2026, 9, 28, 20);
+
+  test('newer version comparison', () {
+    expect(isNewerVersion('1.0.1', '1.0.0'), isTrue);
+    expect(isNewerVersion('1.2.10', '1.2.9'), isTrue);
+    expect(isNewerVersion('1.0.0', '1.0.0+5'), isFalse);
+    expect(isNewerVersion('0.9.9', '1.0.0'), isFalse);
+  });
 
   group('AppState', () {
     Future<AppState> dieter(List<double> weights, {double target = 70}) async {

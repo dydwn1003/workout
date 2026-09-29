@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/update_check.dart';
 import '../../l10n/app_localizations.dart';
@@ -25,6 +27,8 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   var _tab = 0;
   var _updateShown = false;
+  final _today = GlobalKey<TodayScreenState>();
+  DateTime? _lastBack;
 
   @override
   void initState() {
@@ -44,20 +48,38 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) _checkForUpdate();
   }
 
-  /// Web: offers a reload when a newer build has been deployed.
+  /// Offers the newer version: a reload on the web, the store in the apps.
   Future<void> _checkForUpdate() async {
-    if (_updateShown || !await newBuildAvailable() || !mounted) return;
+    if (_updateShown) return;
+    final update = await checkForUpdate();
+    if (update == null || !mounted) return;
+    // Already reloaded for this build and still old (cached files): the
+    // next visit gets it, don't keep asking.
+    if (update.action == UpdateAction.reload &&
+        reloadedFor() == update.latest) {
+      return;
+    }
     _updateShown = true;
     final t = L.of(context);
+    final store = update.action == UpdateAction.store;
     ScaffoldMessenger.of(context)
         .showSnackBar(
           SnackBar(
-            content: Text(t.updateAvailable),
+            content: Text(store ? t.updateInStore : t.updateAvailable),
             duration: const Duration(seconds: 10),
             action: SnackBarAction(
-              label: t.reload,
+              label: store ? t.updateStoreAction : t.reload,
               textColor: AppColors.peachSoft,
-              onPressed: reloadPage,
+              onPressed: () => store
+                  ? launchUrl(
+                      Uri.parse(
+                        defaultTargetPlatform == TargetPlatform.iOS
+                            ? iosStoreUrl
+                            : androidStoreUrl,
+                      ),
+                      mode: LaunchMode.externalApplication,
+                    )
+                  : reloadPage(forBuild: update.latest),
             ),
           ),
         )
@@ -65,9 +87,6 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         // Offered again the next time the app comes back to the front.
         .then((_) => _updateShown = false);
   }
-
-  final _today = GlobalKey<TodayScreenState>();
-  DateTime? _lastBack;
 
   static const _tabNames = ['today', 'trend', 'checkin', 'settings'];
 

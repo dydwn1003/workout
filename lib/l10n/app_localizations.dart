@@ -1442,6 +1442,18 @@ abstract class L {
   /// **'새로고침'**
   String get reload;
 
+  /// No description provided for @updateInStore.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 버전이 나왔어요. 스토어에서 업데이트해 주세요'**
+  String get updateInStore;
+
+  /// No description provided for @updateStoreAction.
+  ///
+  /// In ko, this message translates to:
+  /// **'업데이트'**
+  String get updateStoreAction;
+
   /// No description provided for @pressBackAgainToExit.
   ///
   /// In ko, this message translates to:

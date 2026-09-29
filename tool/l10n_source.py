@@ -261,6 +261,8 @@ S = {
  "searchAgain": ("다시 검색", "Search again"),
  "updateAvailable": ("새 버전이 나왔어요", "A new version is available"),
  "reload": ("새로고침", "Reload"),
+ "updateInStore": ("새 버전이 나왔어요. 스토어에서 업데이트해 주세요", "A new version is out. Update it from the store"),
+ "updateStoreAction": ("업데이트", "Update"),
  "pressBackAgainToExit": ("한 번 더 누르면 앱이 닫혀요", "Press back again to exit"),
  "replaceMeal": ("다른 음식으로 바꾸기", "Replace meal"),
  "mealReplaced": ("{name}(으)로 바꿨어요", "Replaced with {name}"),

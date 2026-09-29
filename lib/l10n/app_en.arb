@@ -223,6 +223,8 @@
   "searchAgain": "Search again",
   "updateAvailable": "A new version is available",
   "reload": "Reload",
+  "updateInStore": "A new version is out. Update it from the store",
+  "updateStoreAction": "Update",
   "pressBackAgainToExit": "Press back again to exit",
   "replaceMeal": "Replace meal",
   "mealReplaced": "Replaced with {name}",

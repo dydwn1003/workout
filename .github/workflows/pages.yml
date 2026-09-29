@@ -47,6 +47,13 @@ jobs:
             --dart-define=BUILD_ID="$GITHUB_SHA"
           # The app compares this with its BUILD_ID to offer a reload.
           echo "$GITHUB_SHA" > build/web/build.txt
+          # Pages caches files for 10 minutes and a reload reuses them, so
+          # each build loads its scripts under a new URL.
+          sed -i "s|flutter_bootstrap.js\"|flutter_bootstrap.js?v=$GITHUB_SHA\"|" build/web/index.html
+          sed -i "s|main\.dart\.js|main.dart.js?v=$GITHUB_SHA|g" build/web/flutter_bootstrap.js
+          # Latest app version, for the Android/iOS apps' update prompt.
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: *//; s/+.*//')
+          echo "{\"version\": \"$VERSION\"}" > build/web/app_version.json
       - uses: actions/upload-pages-artifact@v3
         with:
           path: build/web

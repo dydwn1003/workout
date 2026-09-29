@@ -760,6 +760,12 @@ class LKo extends L {
   String get reload => '새로고침';
 
   @override
+  String get updateInStore => '새 버전이 나왔어요. 스토어에서 업데이트해 주세요';
+
+  @override
+  String get updateStoreAction => '업데이트';
+
+  @override
   String get pressBackAgainToExit => '한 번 더 누르면 앱이 닫혀요';
 
   @override
