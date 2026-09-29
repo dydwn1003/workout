@@ -1399,6 +1399,17 @@ class LKo extends L {
   }
 
   @override
+  String get removeShort => '빼기';
+
+  @override
+  String get pickSlot => '어떤 끼니를 기록할까요?';
+
+  @override
+  String updateInSlot(String slot) {
+    return '$slot 기록 수정하기';
+  }
+
+  @override
   String addedCount(String n) {
     return '$n개 추가됨';
   }

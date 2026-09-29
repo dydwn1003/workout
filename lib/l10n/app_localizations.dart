@@ -2491,6 +2491,24 @@ abstract class L {
   /// **'{slot}에서 빼기'**
   String removeFromSlot(String slot);
 
+  /// No description provided for @removeShort.
+  ///
+  /// In ko, this message translates to:
+  /// **'빼기'**
+  String get removeShort;
+
+  /// No description provided for @pickSlot.
+  ///
+  /// In ko, this message translates to:
+  /// **'어떤 끼니를 기록할까요?'**
+  String get pickSlot;
+
+  /// No description provided for @updateInSlot.
+  ///
+  /// In ko, this message translates to:
+  /// **'{slot} 기록 수정하기'**
+  String updateInSlot(String slot);
+
   /// No description provided for @addedCount.
   ///
   /// In ko, this message translates to:

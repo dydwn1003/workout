@@ -1098,6 +1098,16 @@
       }
     }
   },
+  "removeShort": "빼기",
+  "pickSlot": "어떤 끼니를 기록할까요?",
+  "updateInSlot": "{slot} 기록 수정하기",
+  "@updateInSlot": {
+    "placeholders": {
+      "slot": {
+        "type": "String"
+      }
+    }
+  },
   "addedCount": "{n}개 추가됨",
   "@addedCount": {
     "placeholders": {

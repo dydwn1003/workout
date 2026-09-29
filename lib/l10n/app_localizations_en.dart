@@ -1429,6 +1429,17 @@ class LEn extends L {
   }
 
   @override
+  String get removeShort => 'Remove';
+
+  @override
+  String get pickSlot => 'Which meal?';
+
+  @override
+  String updateInSlot(String slot) {
+    return 'Update in $slot';
+  }
+
+  @override
   String addedCount(String n) {
     return '$n added';
   }

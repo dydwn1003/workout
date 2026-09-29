@@ -35,6 +35,82 @@ IconData slotIcon(MealSlot s) => switch (s) {
 };
 
 /// [replacing]: the first food added replaces this meal and closes the sheet.
+/// 식사 기록 on the today screen: pick 아침/점심/저녁/간식 first (the one
+/// for the time of day is highlighted), then log into it.
+Future<void> showSlotThenAddMeal(BuildContext context, {DateTime? date}) async {
+  final t = L.of(context);
+  final now = MealSlot.forTime(DateTime.now());
+  final slot = await showModalBottomSheet<MealSlot>(
+    context: context,
+    sheetAnimationStyle: Motion.sheet,
+    builder: (ctx) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 14),
+              child: Text(
+                t.pickSlot,
+                style: Theme.of(ctx).textTheme.titleLarge,
+              ),
+            ),
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 2.1,
+              children: [
+                for (final s in MealSlot.values)
+                  Squish(
+                    child: Material(
+                      color: slotColors(s).$2,
+                      borderRadius: BorderRadius.circular(20),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () => Navigator.pop(ctx, s),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            border: s == now
+                                ? Border.all(color: slotColors(s).$1, width: 2)
+                                : null,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(slotIcon(s), color: slotColors(s).$1),
+                              const SizedBox(width: 8),
+                              Text(
+                                slotLabel(t, s),
+                                style: TextStyle(
+                                  fontFamily: headingFont,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 17,
+                                  color: slotColors(s).$1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+  if (slot == null || !context.mounted) return;
+  await showAddMealSheet(context, date: date, slot: slot);
+}
+
 Future<void> showAddMealSheet(
   BuildContext context, {
   DateTime? date,
@@ -404,7 +480,21 @@ class _SearchTabState extends State<_SearchTab>
   /// Foods added while the sheet is open: food id -> meal id. Their + turns
   /// into a check, and tapping it again takes the meal back out.
   final _picked = <String, String>{};
+
+  /// The unit and amount each picked food was added with.
+  final _pickedAmount = <String, (FoodUnit, double)>{};
   final _busy = <String>{};
+
+  /// Changes the amount of a food added in this sheet: takes that serving
+  /// back out and adds the new amount.
+  Future<void> _change(Food f, FoodUnit unit, double qty) async {
+    final id = _picked.remove(f.id);
+    if (id != null) {
+      await AppScope.read(context).removeServing(id);
+      widget.onRemoved(f.name); // the new amount is counted again below
+    }
+    await _log(f, unit, qty);
+  }
 
   Future<void> _toggle(Food f) async {
     if (!_busy.add(f.id)) return; // ignore taps while saving
@@ -447,7 +537,12 @@ class _SearchTabState extends State<_SearchTab>
       sugarG: n.sugarG,
       satFatG: n.satFatG,
     );
-    if (mounted) setState(() => _picked[f.id] = id);
+    if (mounted) {
+      setState(() {
+        _picked[f.id] = id;
+        _pickedAmount[f.id] = (unit, qty);
+      });
+    }
     widget.onAdded(f.name);
   }
 
@@ -462,8 +557,15 @@ class _SearchTabState extends State<_SearchTab>
         slot: widget.slot,
         onBack: () => _go(_View.list),
         picked: _picked.containsKey(_food!.id),
+        initialAmount: _picked.containsKey(_food!.id)
+            ? _pickedAmount[_food!.id]
+            : null,
         onAdd: (u, q) async {
           await _log(_food!, u, q);
+          if (mounted) _go(_View.list);
+        },
+        onChange: (u, q) async {
+          await _change(_food!, u, q);
           if (mounted) _go(_View.list);
         },
         onRemove: () async {
@@ -834,8 +936,11 @@ class _FoodDetail extends StatefulWidget {
   final VoidCallback onBack;
   final Future<void> Function(FoodUnit unit, double qty) onAdd;
 
-  /// Already added while this sheet is open: the button takes it back out.
+  /// Already added while this sheet is open: the amount can be changed
+  /// (starting from [initialAmount]) or the food taken back out.
   final bool picked;
+  final (FoodUnit, double)? initialAmount;
+  final Future<void> Function(FoodUnit unit, double qty) onChange;
   final Future<void> Function() onRemove;
   const _FoodDetail({
     super.key,
@@ -844,6 +949,8 @@ class _FoodDetail extends StatefulWidget {
     required this.onBack,
     required this.onAdd,
     required this.picked,
+    this.initialAmount,
+    required this.onChange,
     required this.onRemove,
   });
 
@@ -852,9 +959,9 @@ class _FoodDetail extends StatefulWidget {
 }
 
 class _FoodDetailState extends State<_FoodDetail> {
-  late FoodUnit _unit = widget.food.units.first;
-  var _qty = 1.0;
-  final _qtyCtrl = TextEditingController(text: '1');
+  late FoodUnit _unit = widget.initialAmount?.$1 ?? widget.food.units.first;
+  late var _qty = widget.initialAmount?.$2 ?? 1.0;
+  late final _qtyCtrl = TextEditingController(text: _fmtQty(_qty));
   var _busy = false;
 
   @override
@@ -1107,18 +1214,37 @@ class _FoodDetailState extends State<_FoodDetail> {
         ),
         const SizedBox(height: 14),
         if (widget.picked)
-          OutlinedButton.icon(
-            onPressed: _busy
-                ? null
-                : () async {
-                    setState(() => _busy = true);
-                    await widget.onRemove();
-                  },
-            style: OutlinedButton.styleFrom(
-              foregroundColor: slotColors(widget.slot).$1,
-            ),
-            icon: const Icon(Icons.remove_circle_outline_rounded),
-            label: Text(t.removeFromSlot(slotLabel(t, widget.slot))),
+          Row(
+            children: [
+              OutlinedButton(
+                onPressed: _busy
+                    ? null
+                    : () async {
+                        setState(() => _busy = true);
+                        await widget.onRemove();
+                      },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.inkSoft,
+                ),
+                child: Text(t.removeShort),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: _qty > 0 && !_busy
+                      ? () async {
+                          setState(() => _busy = true);
+                          await widget.onChange(_unit, _qty);
+                        }
+                      : null,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: slotColors(widget.slot).$1,
+                  ),
+                  icon: const Icon(Icons.check_rounded),
+                  label: Text(t.updateInSlot(slotLabel(t, widget.slot))),
+                ),
+              ),
+            ],
           )
         else
           FilledButton.icon(
