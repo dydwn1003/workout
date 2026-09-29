@@ -55,8 +55,12 @@ jobs:
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PW: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
+          trim() { printf '%s' "$1" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | head -n1; }
+          STORE_PW=$(trim "$STORE_PW")
+          KEY_ALIAS=$(trim "$KEY_ALIAS")
+          KEY_PW=$(trim "$KEY_PW")
           if [ -n "$KEYSTORE_B64" ]; then
-            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            printf '%s' "$KEYSTORE_B64" | tr -d ' \r\n' | base64 -d > "$RUNNER_TEMP/release.keystore"
             {
               echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore"
               echo "ANDROID_KEYSTORE_PASSWORD=$STORE_PW"
