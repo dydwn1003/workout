@@ -934,7 +934,7 @@ class LEn extends L {
 
   @override
   String get remindersOffer =>
-      'Want a gentle nudge when you skip logging? Rarer the longer you\'re away, and it stops after 30 days.';
+      'Want a gentle nudge when you skip logging? Weekly for the first month, then every two weeks. Turn it off anytime in Settings.';
 
   @override
   String get remindersYes => 'Yes, remind me';
@@ -947,18 +947,22 @@ class LEn extends L {
 
   @override
   String get remindersDesc =>
-      'After 1, 3, 7, 14 and 30 days without logs, and on check-in day, at 8 pm (needs sign-in)';
+      'At 8 pm after 1 and 3 days without logs, weekly for the first month, then every two weeks, and on check-in day (needs sign-in)';
 
   @override
   String get remindersOnMsg => 'Reminders on';
 
   @override
   String get remindersDenied =>
-      'Notifications are blocked. Allow them in the site settings';
+      'Notifications are blocked for this site. Allow them via the lock icon left of the address → Notifications, then try again';
+
+  @override
+  String get remindersDismissed =>
+      'The permission prompt closed. Turn it on again and choose Allow; if no prompt shows, tap the bell icon in the address bar';
 
   @override
   String get remindersUnsupported =>
-      'This browser can\'t receive notifications. On iPhone, add the app to the home screen first';
+      'This browser can\'t receive notifications. In an in-app browser, open it in Chrome or Safari; on iPhone, add it to the home screen first';
 
   @override
   String get remindersSignedOut => 'Sign in to get reminders';

@@ -518,7 +518,11 @@ class AppState extends ChangeNotifier {
         remindersAsked: true,
       ),
     );
-    analytics.log('reminders', {'result': result.name});
+    analytics.log('reminders', {
+      'result': result.name,
+      if (r.lastError case final e?)
+        'error': e.length > 120 ? e.substring(0, 120) : e,
+    });
     return result;
   }
 

@@ -915,7 +915,8 @@ class LKo extends L {
   }
 
   @override
-  String get remindersOffer => '기록을 며칠 쉬면 살짝 알려 드릴까요? 오래 쉴수록 드물게, 30일 뒤엔 멈춰요.';
+  String get remindersOffer =>
+      '기록을 쉬면 살짝 알려 드릴까요? 첫 한 달은 일주일에 한 번, 그 뒤로는 2주에 한 번이에요. 설정에서 언제든 끌 수 있어요.';
 
   @override
   String get remindersYes => '알려 주세요';
@@ -928,17 +929,22 @@ class LKo extends L {
 
   @override
   String get remindersDesc =>
-      '기록을 쉬면 1·3·7·14·30일째에, 체크인 날 저녁 8시에 알려 드려요 (로그인 필요)';
+      '기록을 쉬면 1·3일째, 첫 한 달은 매주, 그 뒤로는 2주마다, 체크인 날에도 저녁 8시에 알려 드려요 (로그인 필요)';
 
   @override
   String get remindersOnMsg => '알림을 켰어요';
 
   @override
-  String get remindersDenied => '브라우저에서 알림이 막혀 있어요. 사이트 설정에서 알림을 허용해 주세요';
+  String get remindersDenied =>
+      '이 사이트의 알림이 차단돼 있어요. 주소창 왼쪽 자물쇠(사이트 설정) → 알림 → 허용으로 바꾼 뒤 다시 켜 주세요';
+
+  @override
+  String get remindersDismissed =>
+      '알림 허용 창이 닫혔어요. 다시 켜고 \'허용\'을 눌러 주세요. 창이 안 보이면 주소창의 종 모양 아이콘을 눌러 주세요';
 
   @override
   String get remindersUnsupported =>
-      '이 브라우저에서는 알림을 받을 수 없어요. 아이폰은 홈 화면에 추가한 뒤 켜 주세요';
+      '이 브라우저에서는 알림을 받을 수 없어요. 카카오톡 등 앱 안 브라우저라면 크롬·사파리로 열어 주세요. 아이폰은 홈 화면에 추가한 뒤 켜 주세요';
 
   @override
   String get remindersSignedOut => '알림은 로그인하면 받을 수 있어요';

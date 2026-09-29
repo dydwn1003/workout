@@ -18,18 +18,44 @@ const KO: Record<string, Msg> = {
   inactive_3: { title: "3일 쉬셨네요", body: "오늘 한 끼만 기록해도 추세가 다시 이어져요." },
   inactive_7: { title: "일주일 만이에요", body: "체중만 재도 코칭이 다시 시작돼요." },
   inactive_14: { title: "다시 시작해 볼까요?", body: "목표 칼로리를 지금 몸에 맞게 다시 맞춰 드릴게요." },
-  inactive_30: { title: "알아서핏이 기다리고 있어요", body: "언제든 돌아오시면 거기서부터 다시 맞춰 드려요. 이 알림은 마지막이에요." },
+  inactive_21: { title: "3주째 쉬고 계시네요", body: "완벽하지 않아도 돼요. 오늘 한 끼부터 다시 시작해 봐요." },
+  inactive_28: { title: "한 달이 됐어요", body: "지금 체중 한 번만 재 주시면, 거기서부터 다시 맞춰 드릴게요." },
   checkin: { title: "오늘은 체크인 날이에요", body: "지난주 기록으로 이번 주 목표를 맞춰 드릴게요." },
 };
+
+// Every two weeks after the first month, taking turns.
+const KO_LONG: Msg[] = [
+  { title: "알아서핏이 기다리고 있어요", body: "언제든 돌아오시면 거기서부터 다시 맞춰 드려요." },
+  { title: "체중만 재 볼까요?", body: "기록 없이 체중만 넣어도 추세를 다시 이어 갈 수 있어요." },
+  { title: "새로 시작하기 좋은 날이에요", body: "목표를 지금 모습에 맞게 다시 세워 드릴게요." },
+];
 
 const EN: Record<string, Msg> = {
   inactive_1: { title: "Log today?", body: "Even a rough entry keeps your estimate accurate." },
   inactive_3: { title: "3 days off", body: "Log one meal today and your trend picks up again." },
   inactive_7: { title: "It's been a week", body: "Just a weigh-in restarts your coaching." },
   inactive_14: { title: "Start again?", body: "We'll fit your calorie target to where you are now." },
-  inactive_30: { title: "We're here when you're ready", body: "Come back anytime and we'll pick up from there. This is the last reminder." },
+  inactive_21: { title: "3 weeks off", body: "It doesn't have to be perfect. Start with one meal today." },
+  inactive_28: { title: "It's been a month", body: "Weigh in once and we'll pick up from there." },
   checkin: { title: "Check-in day", body: "Last week's logs will tune this week's target." },
 };
+
+const EN_LONG: Msg[] = [
+  { title: "We're here when you're ready", body: "Come back anytime and we'll pick up from there." },
+  { title: "Just a weigh-in?", body: "A weigh-in alone gets your trend going again." },
+  { title: "A good day to restart", body: "We'll set a target that fits where you are now." },
+];
+
+// The message for a push_due() kind: fixed ones, or for inactive_42,
+// inactive_56, ... the long-break messages in turn.
+function messageFor(kind: string, en: boolean): Msg | undefined {
+  const fixed = (en ? EN : KO)[kind];
+  if (fixed) return fixed;
+  const days = Number(kind.replace("inactive_", ""));
+  if (!kind.startsWith("inactive_") || !(days >= 42)) return undefined;
+  const long = en ? EN_LONG : KO_LONG;
+  return long[Math.floor(days / 14) % long.length];
+}
 
 Deno.serve(async (req) => {
   if (req.headers.get("x-cron-secret") !== Deno.env.get("CRON_SECRET")) {
@@ -50,7 +76,7 @@ Deno.serve(async (req) => {
 
   let sent = 0, gone = 0;
   for (const row of due ?? []) {
-    const msg = (row.language === "en" ? EN : KO)[row.kind];
+    const msg = messageFor(row.kind, row.language === "en");
     if (!msg) continue;
     const { data: subs } = await db
       .from("push_subscriptions")

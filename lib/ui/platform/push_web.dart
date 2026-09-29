@@ -30,7 +30,7 @@ String pushPermission() {
   }
 }
 
-/// Subscription JSON, or '' when refused or unsupported.
+/// Result JSON (see web/push.js subscribe()).
 Future<String> pushSubscribe(String vapidPublicKey) async =>
     (await _subscribe(vapidPublicKey.toJS).toDart).toDart;
 

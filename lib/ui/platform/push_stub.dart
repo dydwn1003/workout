@@ -4,8 +4,9 @@ bool pushSupported() => false;
 /// 'default', 'granted' or 'denied'.
 String pushPermission() => 'denied';
 
-/// Subscription JSON, or '' when refused or unsupported.
-Future<String> pushSubscribe(String vapidPublicKey) async => '';
+/// Result JSON (see web/push.js subscribe()).
+Future<String> pushSubscribe(String vapidPublicKey) async =>
+    '{"result":"unsupported"}';
 
 /// The endpoint that was unsubscribed, or ''.
 Future<String> pushUnsubscribe() async => '';

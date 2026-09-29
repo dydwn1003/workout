@@ -4,8 +4,9 @@
 --
 -- Once a day (20:00 KST, the cron job at the bottom) the daily-push Edge
 -- Function asks push_due() who should get a reminder and sends it:
---   * 1, 3, 7, 14 and 30 days after the last meal or weigh-in, once each;
---     nothing after 30 days
+--   * after the last meal or weigh-in: days 1 and 3, then weekly for the
+--     first month (7, 14, 21, 28), then every two weeks (42, 56, ...) for
+--     as long as reminders stay on
 --   * on the check-in weekday when no check-in was done in the last 4 days
 -- Only to users who turned reminders on (Settings -> 알림) and at most one
 -- message per user per day.
@@ -81,10 +82,11 @@ as $$
     group by r.user_id
   ),
   candidates as (
-    -- Inactivity: exactly 1, 3, 7, 14 or 30 days since the last log.
+    -- Inactivity: days 1 and 3, weekly to day 28, then every 14 days.
     select l.user_id, 'inactive_' || (t.d - l.d) as kind, 1 as priority
     from last_log l, today t
-    where (t.d - l.d) in (1, 3, 7, 14, 30)
+    where (t.d - l.d) in (1, 3, 7, 14, 21, 28)
+       or ((t.d - l.d) >= 42 and (t.d - l.d) % 14 = 0)
     union all
     -- Check-in day, no check-in in the last 4 days, still logging.
     select p.user_id, 'checkin', 0

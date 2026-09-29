@@ -12,7 +12,20 @@ const vapidPublicKey = String.fromEnvironment(
   defaultValue: 'BD1438Acaz9xDqYVd6OzqU5t4_HNwTxVi241E8Ct0em6KyaynvL07bNgrTzaHHWZQtohe9VBViSNjyp7o8ApaBY',
 );
 
-enum ReminderResult { on, denied, unsupported, signedOut, failed }
+enum ReminderResult {
+  on,
+
+  /// Notifications are blocked for this site.
+  denied,
+
+  /// The permission prompt was closed or quietly not shown.
+  dismissed,
+
+  /// No Web Push here (in-app browsers, iPhone outside the home screen).
+  unsupported,
+  signedOut,
+  failed,
+}
 
 /// Reminder pushes (supabase/push.sql): this device's Web Push
 /// subscription, stored for the signed-in user so the server's daily job
@@ -20,6 +33,9 @@ enum ReminderResult { on, denied, unsupported, signedOut, failed }
 class Reminders {
   final SupabaseClient client;
   Reminders(this.client);
+
+  /// Why the last enable() failed, for the usage log (no personal data).
+  String? lastError;
 
   bool get supported => pushSupported();
 
@@ -31,9 +47,19 @@ class Reminders {
     if (user == null) return ReminderResult.signedOut;
     if (!supported) return ReminderResult.unsupported;
     try {
-      final raw = await pushSubscribe(vapidPublicKey);
-      if (raw.isEmpty) return ReminderResult.denied;
-      final sub = jsonDecode(raw) as Map<String, Object?>;
+      final res = jsonDecode(await pushSubscribe(vapidPublicKey)) as Map;
+      switch (res['result']) {
+        case 'denied':
+          return ReminderResult.denied;
+        case 'dismissed':
+          return ReminderResult.dismissed;
+        case 'unsupported':
+          return ReminderResult.unsupported;
+        case 'error':
+          lastError = res['error'] as String?;
+          return ReminderResult.failed;
+      }
+      final sub = (res['subscription'] as Map).cast<String, Object?>();
       final keys = (sub['keys'] as Map).cast<String, Object?>();
       await client.from('push_subscriptions').upsert({
         'endpoint': sub['endpoint'],
@@ -43,7 +69,8 @@ class Reminders {
         'auth': keys['auth'],
       });
       return ReminderResult.on;
-    } catch (_) {
+    } catch (e) {
+      lastError = '$e';
       return ReminderResult.failed;
     }
   }
