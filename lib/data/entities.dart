@@ -362,7 +362,15 @@ class SavedMeal {
   );
 }
 
-enum PlanStatus { initial, accepted, kept, manual }
+enum PlanStatus {
+  initial,
+  accepted,
+  kept,
+  manual,
+
+  /// A diet break: maintenance calories until [Plan.breakUntil].
+  dietBreak,
+}
 
 class Plan {
   final String weekStart; // date the plan took effect
@@ -375,6 +383,9 @@ class Plan {
   final CheckinReason? reason;
   final PlanStatus status;
 
+  /// Diet break end (yyyy-mm-dd): the next check-in waits until then.
+  final String? breakUntil;
+
   const Plan({
     required this.weekStart,
     required this.targetKcal,
@@ -385,6 +396,7 @@ class Plan {
     this.confidence,
     this.reason,
     required this.status,
+    this.breakUntil,
   });
 
   Map<String, Object?> toJson() => {
@@ -397,6 +409,7 @@ class Plan {
     'confidence': confidence?.name,
     'reason': reason?.name,
     'status': status.name,
+    if (breakUntil != null) 'breakUntil': breakUntil,
   };
 
   factory Plan.fromJson(Map<String, Object?> j) => Plan(
@@ -413,6 +426,7 @@ class Plan {
         ? null
         : _enumByName(CheckinReason.values, j['reason'], CheckinReason.onTrack),
     status: _enumByName(PlanStatus.values, j['status'], PlanStatus.initial),
+    breakUntil: j['breakUntil'] as String?,
   );
 }
 

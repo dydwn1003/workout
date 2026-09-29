@@ -273,11 +273,31 @@ class _DayBody extends StatelessWidget {
         FadeSlideIn(delay: stagger(i++), child: child);
 
     final tip = isToday ? s.dailyTip() : null;
+    final locale = Localizations.localeOf(context).toString();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (tip != null) ...[
           enter(_DailyTipCard(tip: tip)),
+          const SizedBox(height: 12),
+        ],
+        if (isToday && s.dietBreakUntil != null) ...[
+          enter(
+            Row(
+              children: [
+                Flexible(
+                  child: Pill(
+                    text: t.breakActive(
+                      DateFormat.MMMEd(locale).format(s.dietBreakUntil!),
+                    ),
+                    color: AppColors.mint,
+                    soft: AppColors.mintSoft,
+                    icon: Icons.spa_rounded,
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 12),
         ],
         if (isToday && s.checkinDue) ...[

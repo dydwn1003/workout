@@ -548,6 +548,65 @@
   "workoutSuggestApply": "기록에 맞추기",
   "workoutSuggestApplied": "운동 횟수를 업데이트했어요",
   "workoutTrendTitle": "운동 추이",
+  "statusDietBreak": "쉬어가기",
+  "stallTitle": "체중이 3주째 거의 그대로예요",
+  "stallBody": "정체기는 누구에게나 와요. 세 가지 중 하나를 골라 보세요.",
+  "stallCheckLogs": "① 기록 점검하기",
+  "stallCheckLogsBody": "소스·음료·간식이 빠지면 실제보다 적게 먹은 걸로 계산돼요. 목표의 60%도 안 되는 날:",
+  "stallNoSuspicious": "최근 2주에 의심되는 날은 없어요. 기록은 잘 되고 있어요.",
+  "stallLower": "② 목표를 {kcal} kcal로 낮추기",
+  "@stallLower": {
+    "placeholders": {
+      "kcal": {
+        "type": "String"
+      }
+    }
+  },
+  "stallBreak": "③ 1~2주 쉬어가기 (유지 칼로리 {kcal} kcal)",
+  "@stallBreak": {
+    "placeholders": {
+      "kcal": {
+        "type": "String"
+      }
+    }
+  },
+  "stallBreakBody": "잠깐 유지 칼로리로 먹으면 몸과 마음이 회복돼서, 다시 시작할 때 더 잘 빠지는 경우가 많아요. 끝나면 원래 계획으로 돌아가요.",
+  "breakWeeks": "{n}주 쉬기",
+  "@breakWeeks": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "breakActive": "쉬어가는 중 · {date}까지 유지 칼로리로 드세요",
+  "@breakActive": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "breakStarted": "{date}까지 쉬어가요. 체크인은 그다음에 해요.",
+  "@breakStarted": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "goalReachedTitle": "목표 체중에 도달했어요! 🎉",
+  "goalReachedBody": "정말 수고 많으셨어요. 이제 이 체중을 지키는 유지 모드로 바꿔 볼까요? 목표 칼로리를 소비량에 맞춰 드릴게요.",
+  "goalReachedMaintain": "유지 모드로 바꾸기",
+  "goalReachedLater": "나중에",
+  "maintainStarted": "유지 모드로 바꿨어요. 목표는 {kcal} kcal예요.",
+  "@maintainStarted": {
+    "placeholders": {
+      "kcal": {
+        "type": "String"
+      }
+    }
+  },
   "reportTitle": "이번 주 코칭 리포트",
   "reportAte": "먹은 양",
   "reportAteValue": "최근 {days}일 평균 {kcal} kcal",

@@ -40,6 +40,7 @@ String statusLabel(L t, PlanStatus s) => switch (s) {
   PlanStatus.accepted => t.statusAccepted,
   PlanStatus.kept => t.statusKept,
   PlanStatus.manual => t.statusManual,
+  PlanStatus.dietBreak => t.statusDietBreak,
 };
 
 String etaText(L t, EtaRange? e) {

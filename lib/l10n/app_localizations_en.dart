@@ -860,6 +860,73 @@ class LEn extends L {
   String get workoutTrendTitle => 'Training';
 
   @override
+  String get statusDietBreak => 'Diet break';
+
+  @override
+  String get stallTitle => 'Your weight has stalled for 3 weeks';
+
+  @override
+  String get stallBody => 'Stalls happen to everyone. Pick one of these.';
+
+  @override
+  String get stallCheckLogs => '① Check your logs';
+
+  @override
+  String get stallCheckLogsBody =>
+      'Missing sauces, drinks or snacks make intake look lower than it was. Days under 60% of target:';
+
+  @override
+  String get stallNoSuspicious =>
+      'No suspicious days in the last 2 weeks. Your logs look complete.';
+
+  @override
+  String stallLower(String kcal) {
+    return '② Lower the target to $kcal kcal';
+  }
+
+  @override
+  String stallBreak(String kcal) {
+    return '③ Take a 1-2 week break ($kcal kcal maintenance)';
+  }
+
+  @override
+  String get stallBreakBody =>
+      'Eating at maintenance for a bit helps body and mind recover, and progress often resumes better after. The plan picks up again when it ends.';
+
+  @override
+  String breakWeeks(String n) {
+    return '$n week(s)';
+  }
+
+  @override
+  String breakActive(String date) {
+    return 'Diet break · eat at maintenance until $date';
+  }
+
+  @override
+  String breakStarted(String date) {
+    return 'Break until $date. Next check-in after that.';
+  }
+
+  @override
+  String get goalReachedTitle => 'You reached your goal weight! 🎉';
+
+  @override
+  String get goalReachedBody =>
+      'Amazing work. Switch to maintenance to keep it? Your target moves to your burn.';
+
+  @override
+  String get goalReachedMaintain => 'Switch to maintenance';
+
+  @override
+  String get goalReachedLater => 'Later';
+
+  @override
+  String maintainStarted(String kcal) {
+    return 'Maintenance on: $kcal kcal a day.';
+  }
+
+  @override
   String get reportTitle => 'This week\'s report';
 
   @override

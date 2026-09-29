@@ -1586,6 +1586,108 @@ abstract class L {
   /// **'운동 추이'**
   String get workoutTrendTitle;
 
+  /// No description provided for @statusDietBreak.
+  ///
+  /// In ko, this message translates to:
+  /// **'쉬어가기'**
+  String get statusDietBreak;
+
+  /// No description provided for @stallTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중이 3주째 거의 그대로예요'**
+  String get stallTitle;
+
+  /// No description provided for @stallBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'정체기는 누구에게나 와요. 세 가지 중 하나를 골라 보세요.'**
+  String get stallBody;
+
+  /// No description provided for @stallCheckLogs.
+  ///
+  /// In ko, this message translates to:
+  /// **'① 기록 점검하기'**
+  String get stallCheckLogs;
+
+  /// No description provided for @stallCheckLogsBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'소스·음료·간식이 빠지면 실제보다 적게 먹은 걸로 계산돼요. 목표의 60%도 안 되는 날:'**
+  String get stallCheckLogsBody;
+
+  /// No description provided for @stallNoSuspicious.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 2주에 의심되는 날은 없어요. 기록은 잘 되고 있어요.'**
+  String get stallNoSuspicious;
+
+  /// No description provided for @stallLower.
+  ///
+  /// In ko, this message translates to:
+  /// **'② 목표를 {kcal} kcal로 낮추기'**
+  String stallLower(String kcal);
+
+  /// No description provided for @stallBreak.
+  ///
+  /// In ko, this message translates to:
+  /// **'③ 1~2주 쉬어가기 (유지 칼로리 {kcal} kcal)'**
+  String stallBreak(String kcal);
+
+  /// No description provided for @stallBreakBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'잠깐 유지 칼로리로 먹으면 몸과 마음이 회복돼서, 다시 시작할 때 더 잘 빠지는 경우가 많아요. 끝나면 원래 계획으로 돌아가요.'**
+  String get stallBreakBody;
+
+  /// No description provided for @breakWeeks.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}주 쉬기'**
+  String breakWeeks(String n);
+
+  /// No description provided for @breakActive.
+  ///
+  /// In ko, this message translates to:
+  /// **'쉬어가는 중 · {date}까지 유지 칼로리로 드세요'**
+  String breakActive(String date);
+
+  /// No description provided for @breakStarted.
+  ///
+  /// In ko, this message translates to:
+  /// **'{date}까지 쉬어가요. 체크인은 그다음에 해요.'**
+  String breakStarted(String date);
+
+  /// No description provided for @goalReachedTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표 체중에 도달했어요! 🎉'**
+  String get goalReachedTitle;
+
+  /// No description provided for @goalReachedBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'정말 수고 많으셨어요. 이제 이 체중을 지키는 유지 모드로 바꿔 볼까요? 목표 칼로리를 소비량에 맞춰 드릴게요.'**
+  String get goalReachedBody;
+
+  /// No description provided for @goalReachedMaintain.
+  ///
+  /// In ko, this message translates to:
+  /// **'유지 모드로 바꾸기'**
+  String get goalReachedMaintain;
+
+  /// No description provided for @goalReachedLater.
+  ///
+  /// In ko, this message translates to:
+  /// **'나중에'**
+  String get goalReachedLater;
+
+  /// No description provided for @maintainStarted.
+  ///
+  /// In ko, this message translates to:
+  /// **'유지 모드로 바꿨어요. 목표는 {kcal} kcal예요.'**
+  String maintainStarted(String kcal);
+
   /// No description provided for @reportTitle.
   ///
   /// In ko, this message translates to:

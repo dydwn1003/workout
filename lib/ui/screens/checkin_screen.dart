@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -20,6 +22,8 @@ class CheckinScreen extends StatefulWidget {
 
 class _CheckinScreenState extends State<CheckinScreen> {
   var _forcePreview = false;
+  var _goalLater = false;
+  var _logsOpen = false;
 
   String _reasonText(L t, CheckinResult r) => switch (r.reason) {
     CheckinReason.lowConfidence => t.reasonLowConfidence(
@@ -140,6 +144,29 @@ class _CheckinScreenState extends State<CheckinScreen> {
                     ],
                   ),
                 ),
+              if (s.goalReached && !_goalLater) ...[
+                FadeSlideIn(child: _goalReachedCard(t)),
+                const SizedBox(height: 14),
+              ],
+              if (s.dietBreakUntil case final until?) ...[
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12, left: 4),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Pill(
+                          text: t.breakActive(
+                            DateFormat.MMMEd(locale).format(until),
+                          ),
+                          color: AppColors.mint,
+                          soft: AppColors.mintSoft,
+                          icon: Icons.spa_rounded,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               if (s.workoutSuggestion case final sug?) ...[
                 FadeSlideIn(child: _WorkoutSuggestion(sug: sug)),
                 const SizedBox(height: 14),
@@ -186,6 +213,10 @@ class _CheckinScreenState extends State<CheckinScreen> {
                   ),
                 MascotSays(text: _reasonText(t, r), mood: _mood(r.reason)),
                 const SizedBox(height: 16),
+                if (s.stalled && !s.goalReached) ...[
+                  _stallCard(t, plan, r),
+                  const SizedBox(height: 16),
+                ],
                 _statsGrid(t, r),
                 const SizedBox(height: 14),
                 _proposalCard(t, plan, r),
@@ -481,6 +512,173 @@ class _CheckinScreenState extends State<CheckinScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _goalReachedCard(L t) => SoftCard(
+    color: AppColors.mintSoft,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Mascot(size: 72, mood: MascotMood.cheer),
+        const SizedBox(height: 8),
+        Text(
+          t.goalReachedTitle,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          t.goalReachedBody,
+          textAlign: TextAlign.center,
+          style: const TextStyle(height: 1.5),
+        ),
+        const SizedBox(height: 14),
+        FilledButton(
+          onPressed: () async {
+            final s = AppScope.read(context);
+            await s.startMaintenance();
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  t.maintainStarted(fmt0(s.currentPlan!.targetKcal)),
+                ),
+              ),
+            );
+          },
+          child: Text(t.goalReachedMaintain),
+        ),
+        TextButton(
+          onPressed: () => setState(() => _goalLater = true),
+          child: Text(t.goalReachedLater),
+        ),
+      ],
+    ),
+  );
+
+  /// A 3-week stall: check the logs, lower the target, or take a break.
+  Widget _stallCard(L t, Plan current, CheckinResult r) {
+    final s = AppScope.read(context);
+    final locale = Localizations.localeOf(context).toString();
+    final floor = kcalFloor(s.profile!.sex);
+    final lower = math.max(
+      floor,
+      math.min(r.proposal.kcal, current.targetKcal) - 120,
+    );
+    final days = s.suspiciousDays();
+    Widget option(String title, {Widget? body, VoidCallback? onTap}) => Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: headingFont,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                ?body,
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    return SoftCard(
+      color: AppColors.butterSoft,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            t.stallTitle,
+            style: const TextStyle(
+              fontFamily: headingFont,
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(t.stallBody, style: const TextStyle(fontSize: 13.5)),
+          option(
+            t.stallCheckLogs,
+            onTap: () => setState(() => _logsOpen = !_logsOpen),
+            body: AnimatedSize(
+              duration: Motion.medium,
+              curve: Motion.ease,
+              alignment: Alignment.topCenter,
+              child: !_logsOpen
+                  ? const SizedBox(width: double.infinity)
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        days.isEmpty
+                            ? t.stallNoSuspicious
+                            : '${t.stallCheckLogsBody}\n${[for (final (d, k) in days) '· ${DateFormat.MMMEd(locale).format(d)} ${fmt0(k)} kcal'].join('\n')}',
+                        style: const TextStyle(fontSize: 13, height: 1.6),
+                      ),
+                    ),
+            ),
+          ),
+          option(
+            t.stallLower(fmt0(lower)),
+            onTap: () => _apply(r, PlanStatus.manual, kcal: lower),
+          ),
+          option(
+            t.stallBreak(fmt0(r.tdeeEstimate)),
+            body: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 4),
+                Text(
+                  t.stallBreakBody,
+                  style: const TextStyle(fontSize: 12.5, height: 1.5),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    for (final w in [1, 2]) ...[
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _startBreak(r, w),
+                          child: Text(t.breakWeeks('$w')),
+                        ),
+                      ),
+                      if (w == 1) const SizedBox(width: 8),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _startBreak(CheckinResult r, int weeks) async {
+    final s = AppScope.read(context);
+    final t = L.of(context);
+    final locale = Localizations.localeOf(context).toString();
+    await s.startDietBreak(r, weeks: weeks);
+    if (!mounted) return;
+    setState(() => _forcePreview = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          t.breakStarted(DateFormat.MMMEd(locale).format(s.dietBreakUntil!)),
+        ),
       ),
     );
   }

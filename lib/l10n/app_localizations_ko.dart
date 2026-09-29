@@ -843,6 +843,72 @@ class LKo extends L {
   String get workoutTrendTitle => '운동 추이';
 
   @override
+  String get statusDietBreak => '쉬어가기';
+
+  @override
+  String get stallTitle => '체중이 3주째 거의 그대로예요';
+
+  @override
+  String get stallBody => '정체기는 누구에게나 와요. 세 가지 중 하나를 골라 보세요.';
+
+  @override
+  String get stallCheckLogs => '① 기록 점검하기';
+
+  @override
+  String get stallCheckLogsBody =>
+      '소스·음료·간식이 빠지면 실제보다 적게 먹은 걸로 계산돼요. 목표의 60%도 안 되는 날:';
+
+  @override
+  String get stallNoSuspicious => '최근 2주에 의심되는 날은 없어요. 기록은 잘 되고 있어요.';
+
+  @override
+  String stallLower(String kcal) {
+    return '② 목표를 $kcal kcal로 낮추기';
+  }
+
+  @override
+  String stallBreak(String kcal) {
+    return '③ 1~2주 쉬어가기 (유지 칼로리 $kcal kcal)';
+  }
+
+  @override
+  String get stallBreakBody =>
+      '잠깐 유지 칼로리로 먹으면 몸과 마음이 회복돼서, 다시 시작할 때 더 잘 빠지는 경우가 많아요. 끝나면 원래 계획으로 돌아가요.';
+
+  @override
+  String breakWeeks(String n) {
+    return '$n주 쉬기';
+  }
+
+  @override
+  String breakActive(String date) {
+    return '쉬어가는 중 · $date까지 유지 칼로리로 드세요';
+  }
+
+  @override
+  String breakStarted(String date) {
+    return '$date까지 쉬어가요. 체크인은 그다음에 해요.';
+  }
+
+  @override
+  String get goalReachedTitle => '목표 체중에 도달했어요! 🎉';
+
+  @override
+  String get goalReachedBody =>
+      '정말 수고 많으셨어요. 이제 이 체중을 지키는 유지 모드로 바꿔 볼까요? 목표 칼로리를 소비량에 맞춰 드릴게요.';
+
+  @override
+  String get goalReachedMaintain => '유지 모드로 바꾸기';
+
+  @override
+  String get goalReachedLater => '나중에';
+
+  @override
+  String maintainStarted(String kcal) {
+    return '유지 모드로 바꿨어요. 목표는 $kcal kcal예요.';
+  }
+
+  @override
   String get reportTitle => '이번 주 코칭 리포트';
 
   @override

@@ -788,7 +788,10 @@ class AppState extends ChangeNotifier {
   DateTime? get nextCheckinDate {
     final plan = currentPlan;
     if (plan == null) return null;
-    var d = _addDays(parseDateKey(plan.weekStart), 4);
+    // During a diet break the next check-in is on its last day or after.
+    var d = plan.breakUntil != null
+        ? parseDateKey(plan.breakUntil!)
+        : _addDays(parseDateKey(plan.weekStart), 4);
     while (d.weekday != settings.checkinWeekday) {
       d = _addDays(d, 1);
     }
@@ -798,6 +801,118 @@ class AppState extends ChangeNotifier {
   bool get checkinDue {
     final next = nextCheckinDate;
     return next != null && !today.isBefore(next);
+  }
+
+  /// The current diet break's last day, while one is running.
+  DateTime? get dietBreakUntil {
+    final until = currentPlan?.breakUntil;
+    if (until == null) return null;
+    final d = parseDateKey(until);
+    return today.isAfter(d) ? null : d;
+  }
+
+  /// Weight trend has barely moved for 3 weeks: under a quarter of the
+  /// planned pace, with 8+ weigh-ins and no diet break in that time.
+  bool get stalled {
+    final p = profile;
+    final trend = trendWeight;
+    if (p == null || trend == null) return false;
+    if (p.goalType != GoalType.lose && p.goalType != GoalType.gain) {
+      return false;
+    }
+    const days = 21;
+    final pts = trendPoints();
+    if (pts.length <= days) return false;
+    final then = pts[pts.length - 1 - days].$3;
+    if (then == null) return false;
+    final weighIns = pts
+        .sublist(pts.length - days)
+        .where((p) => p.$2 != null)
+        .length;
+    if (weighIns < 8) return false;
+    final since = dateKey(_addDays(today, -days));
+    if (_data.plans.any(
+      (p) =>
+          p.status == PlanStatus.dietBreak && p.weekStart.compareTo(since) >= 0,
+    )) {
+      return false;
+    }
+    final planned = plannedKgPerWeek(p.goalType, p.pace, trend) * days / 7;
+    final moved = trend - then;
+    // Moving the right way at a quarter of the plan or more isn't a stall.
+    return planned != 0 && moved / planned < 0.25;
+  }
+
+  /// Trend weight within 0.5 kg of the target weight (losing or gaining).
+  bool get goalReached {
+    final p = profile;
+    final target = p?.targetWeightKg;
+    final trend = trendWeight;
+    if (p == null || target == null || trend == null) return false;
+    return switch (p.goalType) {
+      GoalType.lose => trend <= target + 0.5,
+      GoalType.gain => trend >= target - 0.5,
+      _ => false,
+    };
+  }
+
+  /// Days of the last two weeks whose logged kcal look incomplete (under
+  /// 60% of that day's target): the first thing to check in a stall.
+  List<(DateTime, double)> suspiciousDays() => [
+    for (var i = 14; i >= 1; i--)
+      if (planOn(_addDays(today, -i)) case final plan?)
+        if (mealsOn(_addDays(today, -i)).isNotEmpty &&
+            totalsOn(_addDays(today, -i)).kcal < plan.targetKcal * 0.6)
+          (_addDays(today, -i), totalsOn(_addDays(today, -i)).kcal),
+  ];
+
+  /// 1-2 weeks at maintenance (the estimated burn) instead of a deficit;
+  /// the check-in after it goes back to the goal.
+  Future<void> startDietBreak(CheckinResult r, {required int weeks}) async {
+    analytics.log('diet_break', {'weeks': weeks});
+    final m = macrosFor(
+      kcal: r.tdeeEstimate,
+      weightKg: r.trendWeightKg ?? latestWeight!.kg,
+      goalType: GoalType.maintain,
+      bodyFatPct: latestBodyFat,
+    );
+    await _addPlan(
+      Plan(
+        weekStart: dateKey(today),
+        targetKcal: m.kcal,
+        proteinG: m.proteinG,
+        carbsG: m.carbsG,
+        fatG: m.fatG,
+        tdeeEst: r.tdeeEstimate,
+        confidence: r.confidence,
+        reason: r.reason,
+        status: PlanStatus.dietBreak,
+        breakUntil: dateKey(_addDays(today, weeks * 7)),
+      ),
+    );
+    notifyListeners();
+  }
+
+  /// Goal reached: switch to maintaining and set the target to the burn.
+  Future<void> startMaintenance() async {
+    final p = profile!;
+    analytics.log('goal_reached_maintain');
+    await updateProfile(
+      UserProfile(
+        sex: p.sex,
+        birthYear: p.birthYear,
+        heightCm: p.heightCm,
+        goalType: GoalType.maintain,
+        pace: p.pace,
+        strengthPerWeek: p.strengthPerWeek,
+        cardioPerWeek: p.cardioPerWeek,
+        targetWeightKg: p.targetWeightKg,
+        targetBodyFatPct: p.targetBodyFatPct,
+        createdAt: p.createdAt,
+      ),
+    );
+    final r = runCheckin();
+    if (r != null) await applyCheckin(r, PlanStatus.accepted);
   }
 
   CheckinResult? runCheckin() {

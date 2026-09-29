@@ -11,6 +11,67 @@ void main() {
   final now = DateTime(2026, 9, 28, 20);
 
   group('AppState', () {
+    Future<AppState> dieter(List<double> weights, {double target = 70}) async {
+      final s = AppState(MemoryCoachRepository(), clock: () => now);
+      await s.load();
+      await s.completeOnboarding(
+        profile: UserProfile(
+          sex: Sex.male,
+          birthYear: 1990,
+          heightCm: 176,
+          goalType: GoalType.lose,
+          pace: Pace.normal,
+          strengthPerWeek: 3,
+          cardioPerWeek: 1,
+          targetWeightKg: target,
+          createdAt: now.subtract(const Duration(days: 40)),
+        ),
+        weightKg: weights.first,
+      );
+      final start = DateTime(now.year, now.month, now.day - weights.length + 1);
+      for (final (i, kg) in weights.indexed) {
+        await s.upsertWeight(
+          WeightEntry(
+            date: dateKey(DateTime(start.year, start.month, start.day + i)),
+            kg: kg,
+          ),
+          notify: false,
+        );
+      }
+      return s;
+    }
+
+    test(
+      'a flat trend for 3 weeks is a stall; losing on pace is not',
+      () async {
+        final flat = await dieter(List.filled(30, 80.0));
+        expect(flat.stalled, isTrue);
+        final losing = await dieter([
+          for (var i = 0; i < 30; i++) 80 - i * 0.08,
+        ]);
+        expect(losing.stalled, isFalse);
+      },
+    );
+
+    test('goal reached within 0.5 kg; maintenance switches the goal', () async {
+      final s = await dieter(List.filled(30, 70.3), target: 70);
+      expect(s.goalReached, isTrue);
+      await s.startMaintenance();
+      expect(s.profile!.goalType, GoalType.maintain);
+      expect(s.goalReached, isFalse);
+    });
+
+    test('a diet break holds the next check-in until it ends', () async {
+      final s = await dieter(List.filled(30, 80.0));
+      final r = s.runCheckin()!;
+      await s.startDietBreak(r, weeks: 2);
+      expect(s.currentPlan!.status, PlanStatus.dietBreak);
+      expect(s.currentPlan!.targetKcal, closeTo(r.tdeeEstimate, 1));
+      expect(s.dietBreakUntil, DateTime(2026, 10, 12));
+      expect(s.nextCheckinDate!.isBefore(DateTime(2026, 10, 12)), isFalse);
+      expect(s.stalled, isFalse); // the break doesn't count as a stall
+    });
+
     test('the same food again in a slot adds a serving, not a row', () async {
       final s = AppState(MemoryCoachRepository(), clock: () => now);
       await s.load();
