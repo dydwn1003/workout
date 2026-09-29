@@ -292,7 +292,7 @@ class AppState extends ChangeNotifier {
   }
 
   /// Distinct foods logged from search recently (newest first).
-  List<Food> recentFoods({int limit = 8}) {
+  List<Food> recentFoods({int limit = 30}) {
     final seen = <String>{};
     final out = <Food>[];
     for (final m in _data.meals.reversed) {
@@ -306,6 +306,37 @@ class AppState extends ChangeNotifier {
   }
 
   List<Food> searchAllFoods(String q) => searchFoods(allFoods, q);
+
+  static const _recentSearchesKept = 30;
+
+  /// Food search queries, newest first.
+  List<String> get recentSearches => List.unmodifiable(_data.recentSearches);
+
+  Future<void> rememberSearch(String query) async {
+    final q = query.trim();
+    if (q.isEmpty) return;
+    _data.recentSearches
+      ..remove(q)
+      ..insert(0, q);
+    if (_data.recentSearches.length > _recentSearchesKept) {
+      _data.recentSearches.removeRange(
+        _recentSearchesKept,
+        _data.recentSearches.length,
+      );
+    }
+    notifyListeners();
+    await repo.saveRecentSearches(_data.recentSearches);
+  }
+
+  Future<void> forgetSearch(String? query) async {
+    if (query == null) {
+      _data.recentSearches.clear();
+    } else {
+      _data.recentSearches.remove(query);
+    }
+    notifyListeners();
+    await repo.saveRecentSearches(_data.recentSearches);
+  }
 
   Future<Food> addCustomFood({
     required String name,
@@ -500,7 +531,7 @@ class AppState extends ChangeNotifier {
   }
 
   /// Distinct recently eaten meals (newest first), excluding saved ones.
-  List<Meal> recentMeals({int limit = 6, int days = 14}) {
+  List<Meal> recentMeals({int limit = 30, int days = 60}) {
     final since = dateKey(_addDays(today, -days));
     final saved = {for (final s in _data.savedMeals) s.name};
     final seen = <String>{};
@@ -818,7 +849,8 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addMeal({
+  /// Returns the new meal's id.
+  Future<String> addMeal({
     required String name,
     required double kcal,
     required double proteinG,
@@ -840,9 +872,11 @@ class AppState extends ChangeNotifier {
       'slot': (slot ?? MealSlot.forTime(now)).name,
       'past': dateKey(d) != dateKey(today),
     });
+    final id =
+        '${now.microsecondsSinceEpoch}-${math.Random().nextInt(1 << 20)}';
     _data.meals.add(
       Meal(
-        id: '${now.microsecondsSinceEpoch}-${math.Random().nextInt(1 << 20)}',
+        id: id,
         date: dateKey(d),
         time: DateTime(
           d.year,
@@ -869,6 +903,7 @@ class AppState extends ChangeNotifier {
     _sort();
     await repo.saveMeals(_data.meals);
     notifyListeners();
+    return id;
   }
 
   Future<void> updateMeal(Meal meal) async {
@@ -990,18 +1025,21 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Shows the change right away (switches animate without waiting for
+  /// storage), then saves it.
   Future<void> updateSettings(AppSettings s) async {
-    if (s.usageAnalytics != _data.settings.usageAnalytics) {
+    final analyticsChanged = s.usageAnalytics != _data.settings.usageAnalytics;
+    if (analyticsChanged && !s.usageAnalytics) {
       // Log the opt-out itself before turning sending off.
-      if (!s.usageAnalytics) {
-        analytics.log('usage_analytics_off');
-        await analytics.flush();
-      }
-      analytics.setEnabled(s.usageAnalytics);
+      analytics.log('usage_analytics_off');
     }
     _data.settings = s;
-    await repo.saveSettings(s);
     notifyListeners();
+    if (analyticsChanged) {
+      if (!s.usageAnalytics) await analytics.flush();
+      analytics.setEnabled(s.usageAnalytics);
+    }
+    await repo.saveSettings(s);
   }
 
   Future<void> deleteAll() async {

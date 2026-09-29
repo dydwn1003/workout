@@ -20,6 +20,9 @@ class AppData {
   List<Food> remoteFoods;
   List<Plan> plans;
 
+  /// Food search queries, newest first (this device only, not synced).
+  List<String> recentSearches;
+
   AppData({
     this.profile,
     this.settings = const AppSettings(),
@@ -30,7 +33,9 @@ class AppData {
     List<CustomFood>? customFoods,
     List<Food>? remoteFoods,
     List<Plan>? plans,
-  }) : weights = weights ?? [],
+    List<String>? recentSearches,
+  }) : recentSearches = recentSearches ?? [],
+       weights = weights ?? [],
        meals = meals ?? [],
        savedMeals = savedMeals ?? [],
        workouts = workouts ?? [],
@@ -52,6 +57,7 @@ abstract class CoachRepository {
   Future<void> saveCustomFoods(List<CustomFood> foods);
   Future<void> saveRemoteFoods(List<Food> foods);
   Future<void> savePlans(List<Plan> plans);
+  Future<void> saveRecentSearches(List<String> queries);
   Future<void> deleteAll();
 }
 
@@ -106,6 +112,10 @@ class LocalCoachRepository implements CoachRepository {
       customFoods: _list(await _read('customFoods'), CustomFood.fromJson),
       remoteFoods: _list(await _read('remoteFoods'), Food.fromJson),
       plans: _list(await _read('plans'), Plan.fromJson),
+      recentSearches: [
+        for (final q in (await _read('recentSearches') as List? ?? const []))
+          q as String,
+      ],
     );
   }
 
@@ -140,6 +150,10 @@ class LocalCoachRepository implements CoachRepository {
   @override
   Future<void> saveRemoteFoods(List<Food> foods) =>
       _write('remoteFoods', foods.map((e) => e.toJson()).toList());
+
+  @override
+  Future<void> saveRecentSearches(List<String> queries) =>
+      _write('recentSearches', queries);
 
   @override
   Future<void> savePlans(List<Plan> plans) =>
@@ -187,6 +201,9 @@ class MemoryCoachRepository implements CoachRepository {
       data.remoteFoods = [...foods];
   @override
   Future<void> savePlans(List<Plan> plans) async => data.plans = [...plans];
+  @override
+  Future<void> saveRecentSearches(List<String> queries) async =>
+      data.recentSearches = [...queries];
   @override
   Future<void> deleteAll() async => data = AppData();
 }

@@ -174,8 +174,6 @@
   "bodyFatField": "체지방률 (%)",
   "smmField": "골격근량 (kg)",
   "moreBodyComp": "체성분도 입력하기",
-  "healthSync": "건강앱 자동 연동",
-  "healthSyncSoon": "준비 중 · 모바일 앱에서 지원 예정",
   "weightSaved": "체중을 기록했어요",
   "trendTitle": "트렌드",
   "range4w": "4주",
@@ -480,6 +478,8 @@
   "editMeal": "식사 수정",
   "mealUpdated": "수정했어요",
   "searchAgain": "다시 검색",
+  "updateAvailable": "새 버전이 나왔어요",
+  "reload": "새로고침",
   "pressBackAgainToExit": "한 번 더 누르면 앱이 닫혀요",
   "replaceMeal": "다른 음식으로 바꾸기",
   "mealReplaced": "{name}(으)로 바꿨어요",
@@ -653,6 +653,30 @@
   "tabSearch": "검색",
   "searchHint": "음식 검색 (예: 닭가슴살, 신라면)",
   "recentFoodsChip": "최근",
+  "addMealToSlot": "{slot} 기록",
+  "@addMealToSlot": {
+    "placeholders": {
+      "slot": {
+        "type": "String"
+      }
+    }
+  },
+  "recentSearches": "최근 검색",
+  "clearAll": "전체 삭제",
+  "macroSummary": "단백질 {p}g · 탄수화물 {c}g · 지방 {f}g",
+  "@macroSummary": {
+    "placeholders": {
+      "p": {
+        "type": "String"
+      },
+      "c": {
+        "type": "String"
+      },
+      "f": {
+        "type": "String"
+      }
+    }
+  },
   "noRecentFoods": "검색해서 기록한 음식이 여기에 모여요",
   "noResults": "'{query}' 검색 결과가 없어요",
   "@noResults": {

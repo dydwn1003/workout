@@ -369,12 +369,6 @@ class LEn extends L {
   String get moreBodyComp => 'Add body composition';
 
   @override
-  String get healthSync => 'Health app sync';
-
-  @override
-  String get healthSyncSoon => 'Coming soon on mobile';
-
-  @override
   String get weightSaved => 'Weight saved';
 
   @override
@@ -776,6 +770,12 @@ class LEn extends L {
   String get searchAgain => 'Search again';
 
   @override
+  String get updateAvailable => 'A new version is available';
+
+  @override
+  String get reload => 'Reload';
+
+  @override
   String get pressBackAgainToExit => 'Press back again to exit';
 
   @override
@@ -947,6 +947,22 @@ class LEn extends L {
 
   @override
   String get recentFoodsChip => 'Recent';
+
+  @override
+  String addMealToSlot(String slot) {
+    return 'Log $slot';
+  }
+
+  @override
+  String get recentSearches => 'Recent searches';
+
+  @override
+  String get clearAll => 'Clear all';
+
+  @override
+  String macroSummary(String p, String c, String f) {
+    return 'Protein ${p}g · Carbs ${c}g · Fat ${f}g';
+  }
 
   @override
   String get noRecentFoods => 'Foods you log from search show up here';

@@ -11,6 +11,24 @@ void main() {
   final now = DateTime(2026, 9, 28, 20);
 
   group('AppState', () {
+    test('recent searches: newest first, no duplicates, at most 30', () async {
+      final repo = MemoryCoachRepository();
+      final s = AppState(repo, clock: () => now);
+      await s.load();
+      for (var i = 0; i < 35; i++) {
+        await s.rememberSearch('q$i');
+      }
+      await s.rememberSearch(' q20 ');
+      expect(s.recentSearches.length, 30);
+      expect(s.recentSearches.first, 'q20');
+      expect(s.recentSearches.where((q) => q == 'q20').length, 1);
+      await s.forgetSearch('q20');
+      expect(s.recentSearches.contains('q20'), isFalse);
+      final reloaded = AppState(repo, clock: () => now);
+      await reloaded.load();
+      expect(reloaded.recentSearches, s.recentSearches);
+    });
+
     test('meals logged before 포화지방 get it from their food', () async {
       final s = AppState(MemoryCoachRepository(), clock: () => now);
       await s.load();

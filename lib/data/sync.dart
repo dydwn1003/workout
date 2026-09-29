@@ -349,6 +349,13 @@ class SyncingRepository implements CoachRepository {
     _changed();
   }
 
+  /// Device-only: not part of the synced records.
+  @override
+  Future<void> saveRecentSearches(List<String> queries) async {
+    _mirror.recentSearches = [...queries];
+    await local.saveRecentSearches(queries);
+  }
+
   @override
   Future<void> saveRemoteFoods(List<Food> foods) async {
     _mirror.remoteFoods = [...foods];

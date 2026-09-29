@@ -159,6 +159,10 @@ ThemeData buildTheme() {
         borderSide: const BorderSide(color: AppColors.peach, width: 2),
       ),
       labelStyle: const TextStyle(color: AppColors.inkSoft),
+      hintStyle: TextStyle(
+        color: AppColors.inkSoft.withValues(alpha: 0.55),
+        fontWeight: FontWeight.w500,
+      ),
     ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: Colors.white,

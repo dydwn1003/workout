@@ -751,18 +751,6 @@ abstract class L {
   /// **'체성분도 입력하기'**
   String get moreBodyComp;
 
-  /// No description provided for @healthSync.
-  ///
-  /// In ko, this message translates to:
-  /// **'건강앱 자동 연동'**
-  String get healthSync;
-
-  /// No description provided for @healthSyncSoon.
-  ///
-  /// In ko, this message translates to:
-  /// **'준비 중 · 모바일 앱에서 지원 예정'**
-  String get healthSyncSoon;
-
   /// No description provided for @weightSaved.
   ///
   /// In ko, this message translates to:
@@ -1442,6 +1430,18 @@ abstract class L {
   /// **'다시 검색'**
   String get searchAgain;
 
+  /// No description provided for @updateAvailable.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 버전이 나왔어요'**
+  String get updateAvailable;
+
+  /// No description provided for @reload.
+  ///
+  /// In ko, this message translates to:
+  /// **'새로고침'**
+  String get reload;
+
   /// No description provided for @pressBackAgainToExit.
   ///
   /// In ko, this message translates to:
@@ -1723,6 +1723,30 @@ abstract class L {
   /// In ko, this message translates to:
   /// **'최근'**
   String get recentFoodsChip;
+
+  /// No description provided for @addMealToSlot.
+  ///
+  /// In ko, this message translates to:
+  /// **'{slot} 기록'**
+  String addMealToSlot(String slot);
+
+  /// No description provided for @recentSearches.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 검색'**
+  String get recentSearches;
+
+  /// No description provided for @clearAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 삭제'**
+  String get clearAll;
+
+  /// No description provided for @macroSummary.
+  ///
+  /// In ko, this message translates to:
+  /// **'단백질 {p}g · 탄수화물 {c}g · 지방 {f}g'**
+  String macroSummary(String p, String c, String f);
 
   /// No description provided for @noRecentFoods.
   ///

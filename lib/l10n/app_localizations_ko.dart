@@ -357,12 +357,6 @@ class LKo extends L {
   String get moreBodyComp => '체성분도 입력하기';
 
   @override
-  String get healthSync => '건강앱 자동 연동';
-
-  @override
-  String get healthSyncSoon => '준비 중 · 모바일 앱에서 지원 예정';
-
-  @override
   String get weightSaved => '체중을 기록했어요';
 
   @override
@@ -760,6 +754,12 @@ class LKo extends L {
   String get searchAgain => '다시 검색';
 
   @override
+  String get updateAvailable => '새 버전이 나왔어요';
+
+  @override
+  String get reload => '새로고침';
+
+  @override
   String get pressBackAgainToExit => '한 번 더 누르면 앱이 닫혀요';
 
   @override
@@ -930,6 +930,22 @@ class LKo extends L {
 
   @override
   String get recentFoodsChip => '최근';
+
+  @override
+  String addMealToSlot(String slot) {
+    return '$slot 기록';
+  }
+
+  @override
+  String get recentSearches => '최근 검색';
+
+  @override
+  String get clearAll => '전체 삭제';
+
+  @override
+  String macroSummary(String p, String c, String f) {
+    return '단백질 ${p}g · 탄수화물 ${c}g · 지방 ${f}g';
+  }
 
   @override
   String get noRecentFoods => '검색해서 기록한 음식이 여기에 모여요';

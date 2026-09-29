@@ -142,48 +142,6 @@ Future<void> showEditMealSheet(BuildContext context, Meal meal) =>
       ),
     );
 
-/// Slot picker chips (아침/점심/저녁/간식).
-class SlotChips extends StatelessWidget {
-  final MealSlot value;
-  final ValueChanged<MealSlot> onChanged;
-  const SlotChips({super.key, required this.value, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    final t = L.of(context);
-    return Row(
-      children: [
-        for (final s in MealSlot.values) ...[
-          Expanded(
-            child: Squish(
-              child: ChoiceChip(
-                label: SizedBox(
-                  width: double.infinity,
-                  child: Text(
-                    slotLabel(t, s),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: value == s ? slotColors(s).$1 : null,
-                    ),
-                  ),
-                ),
-                selected: value == s,
-                selectedColor: slotColors(s).$2,
-                side: value == s
-                    ? BorderSide(color: slotColors(s).$1, width: 1.5)
-                    : null,
-                showCheckmark: false,
-                onSelected: (_) => onChanged(s),
-              ),
-            ),
-          ),
-          if (s != MealSlot.snack) const SizedBox(width: 6),
-        ],
-      ],
-    );
-  }
-}
-
 class AddMealSheet extends StatefulWidget {
   final DateTime? date;
   final MealSlot? slot;
@@ -199,7 +157,9 @@ class AddMealSheet extends StatefulWidget {
 class _AddMealSheetState extends State<AddMealSheet>
     with SingleTickerProviderStateMixin {
   late final TabController _tabs = TabController(length: 4, vsync: this);
-  late MealSlot _slot = widget.slot ?? MealSlot.forTime(DateTime.now());
+  // Fixed: meals are logged from a slot's + on the today screen.
+  late final MealSlot _slot =
+      widget.replacing?.slot ?? widget.slot ?? MealSlot.forTime(DateTime.now());
   final _added = <String>[];
 
   @override
@@ -233,6 +193,12 @@ class _AddMealSheetState extends State<AddMealSheet>
     );
   }
 
+  /// A quick-added meal was tapped again and taken back out.
+  void _onRemoved(String name) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    setState(() => _added.remove(name));
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = L.of(context);
@@ -245,7 +211,9 @@ class _AddMealSheetState extends State<AddMealSheet>
             children: [
               Expanded(
                 child: Text(
-                  widget.replacing == null ? t.addMeal : t.replaceMeal,
+                  widget.replacing == null
+                      ? t.addMealToSlot(slotLabel(t, _slot))
+                      : t.replaceMeal,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
               ),
@@ -273,14 +241,6 @@ class _AddMealSheetState extends State<AddMealSheet>
                       ),
               ),
             ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: SlotChips(
-            value: _slot,
-            onChanged: (s) => setState(() => _slot = s),
           ),
         ),
         const SizedBox(height: 4),
@@ -311,6 +271,7 @@ class _AddMealSheetState extends State<AddMealSheet>
                 date: widget.date,
                 slot: _slot,
                 onAdded: (n) => _onAdded(n),
+                onRemoved: _onRemoved,
               ),
               _MealForm(
                 withText: true,
@@ -322,6 +283,7 @@ class _AddMealSheetState extends State<AddMealSheet>
                 date: widget.date,
                 slot: _slot,
                 onAdded: (n) => _onAdded(n),
+                onRemoved: _onRemoved,
               ),
               _MealForm(
                 withText: false,
@@ -345,10 +307,12 @@ class _SearchTab extends StatefulWidget {
   final DateTime? date;
   final MealSlot slot;
   final ValueChanged<String> onAdded;
+  final ValueChanged<String> onRemoved;
   const _SearchTab({
     required this.date,
     required this.slot,
     required this.onAdded,
+    required this.onRemoved,
   });
 
   @override
@@ -363,6 +327,7 @@ class _SearchTabState extends State<_SearchTab>
     with AutomaticKeepAliveClientMixin {
   final _query = TextEditingController();
   String? _category; // null = recent
+  var _categoryPicked = false;
   Food? _food;
   var _view = _View.list;
   var _forward = true;
@@ -441,11 +406,34 @@ class _SearchTabState extends State<_SearchTab>
 
   void _go(_View v, {Food? food}) {
     FocusScope.of(context).unfocus();
+    // Opening a result counts the query as a search worth remembering.
+    if (v == _View.detail) AppScope.read(context).rememberSearch(_query.text);
     setState(() {
       _forward = v != _View.list;
       _view = v;
       if (food != null) _food = food;
     });
+  }
+
+  /// Foods added while the sheet is open: food id -> meal id. Their + turns
+  /// into a check, and tapping it again takes the meal back out.
+  final _picked = <String, String>{};
+  final _busy = <String>{};
+
+  Future<void> _toggle(Food f) async {
+    if (!_busy.add(f.id)) return; // ignore taps while saving
+    try {
+      final id = _picked[f.id];
+      if (id == null) {
+        await _log(f, f.units.first, 1);
+        return;
+      }
+      setState(() => _picked.remove(f.id));
+      await AppScope.read(context).deleteMeal(id);
+      widget.onRemoved(f.name);
+    } finally {
+      _busy.remove(f.id);
+    }
   }
 
   Future<void> _log(Food f, FoodUnit unit, double qty) async {
@@ -459,7 +447,7 @@ class _SearchTabState extends State<_SearchTab>
         : '${unit.label} × $q (${grams.round()}g)';
     final s = AppScope.read(context);
     await s.rememberFood(f);
-    await s.addMeal(
+    final id = await s.addMeal(
       name: f.name,
       kcal: n.kcal,
       proteinG: n.proteinG,
@@ -473,6 +461,7 @@ class _SearchTabState extends State<_SearchTab>
       sugarG: n.sugarG,
       satFatG: n.satFatG,
     );
+    if (mounted) setState(() => _picked[f.id] = id);
     widget.onAdded(f.name);
   }
 
@@ -523,8 +512,13 @@ class _SearchTabState extends State<_SearchTab>
     final q = _query.text.trim();
     final cats = categoriesOf(s.allFoods);
     final recent = s.recentFoods();
-    // With no history yet, open on the first category instead of an empty list.
+    // With no history yet, open on the first category instead of an empty
+    // list, and stay there when the first food added creates a history.
     final showRecent = recent.isNotEmpty;
+    if (!_categoryPicked) {
+      _categoryPicked = true;
+      if (!showRecent) _category = cats.first;
+    }
     final category = _category ?? (showRecent ? null : cats.first);
     final List<Food> found = q.isNotEmpty
         ? s.searchAllFoods(q)
@@ -549,6 +543,7 @@ class _SearchTabState extends State<_SearchTab>
         TextField(
           controller: _query,
           textInputAction: TextInputAction.search,
+          onSubmitted: s.rememberSearch,
           decoration: InputDecoration(
             hintText: t.searchHint,
             prefixIcon: const Icon(Icons.search_rounded),
@@ -561,6 +556,48 @@ class _SearchTabState extends State<_SearchTab>
           ),
         ),
         const SizedBox(height: 12),
+        if (q.isEmpty && s.recentSearches.isNotEmpty) ...[
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  t.recentSearches,
+                  style: const TextStyle(
+                    fontFamily: headingFont,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () => s.forgetSearch(null),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.inkSoft,
+                  visualDensity: VisualDensity.compact,
+                ),
+                child: Text(t.clearAll),
+              ),
+            ],
+          ),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final r in s.recentSearches)
+                InputChip(
+                  label: Text(r),
+                  onPressed: () => _query.value = TextEditingValue(
+                    text: r,
+                    selection: TextSelection.collapsed(offset: r.length),
+                  ),
+                  onDeleted: () => s.forgetSearch(r),
+                  deleteIcon: const Icon(Icons.close_rounded, size: 16),
+                  visualDensity: VisualDensity.compact,
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+        ],
         if (q.isEmpty)
           SizedBox(
             height: 40,
@@ -598,7 +635,8 @@ class _SearchTabState extends State<_SearchTab>
             child: _FoodRow(
               food: f,
               onTap: () => _go(_View.detail, food: f),
-              onQuickAdd: () => _log(f, f.units.first, 1),
+              picked: _picked.containsKey(f.id),
+              onQuickAdd: () => _toggle(f),
             ),
           ),
         if (found.length > foods.length)
@@ -706,7 +744,8 @@ class _SearchTabState extends State<_SearchTab>
           child: _FoodRow(
             food: f,
             onTap: () => _go(_View.detail, food: f),
-            onQuickAdd: () => _log(f, f.units.first, 1),
+            picked: _picked.containsKey(f.id),
+            onQuickAdd: () => _toggle(f),
           ),
         ),
     ];
@@ -717,10 +756,14 @@ class _FoodRow extends StatelessWidget {
   final Food food;
   final VoidCallback onTap;
   final VoidCallback onQuickAdd;
+
+  /// Added while this sheet is open: shows a check that takes it back out.
+  final bool picked;
   const _FoodRow({
     required this.food,
     required this.onTap,
     required this.onQuickAdd,
+    this.picked = false,
   });
 
   @override
@@ -730,6 +773,7 @@ class _FoodRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: SoftCard(
+        color: picked ? AppColors.peachSoft : AppColors.card,
         padding: const EdgeInsets.fromLTRB(16, 10, 6, 10),
         onTap: onTap,
         child: Row(
@@ -771,10 +815,19 @@ class _FoodRow extends StatelessWidget {
             ),
             IconButton(
               onPressed: onQuickAdd,
-              icon: const Icon(
-                Icons.add_circle_rounded,
-                color: AppColors.peach,
-                size: 28,
+              icon: AnimatedSwitcher(
+                duration: Motion.medium,
+                switchInCurve: Curves.easeOutBack,
+                transitionBuilder: (c, a) =>
+                    ScaleTransition(scale: a, child: c),
+                child: Icon(
+                  picked
+                      ? Icons.check_circle_rounded
+                      : Icons.add_circle_rounded,
+                  key: ValueKey(picked),
+                  color: AppColors.peach,
+                  size: 28,
+                ),
               ),
             ),
           ],
@@ -1243,7 +1296,6 @@ class _MealFormState extends State<_MealForm>
   var _saveTemplate = false;
   Estimate? _estimate;
   var _edited = false;
-  late MealSlot _editSlot = widget.slot;
 
   @override
   bool get wantKeepAlive => true;
@@ -1313,7 +1365,6 @@ class _MealFormState extends State<_MealForm>
           proteinG: _v(_p),
           carbsG: _v(_c),
           fatG: _v(_f),
-          slot: _editSlot,
           edited: editing.edited || changed,
           // A hand-edited amount no longer matches the stored portion.
           portion: changed ? () => null : null,
@@ -1374,15 +1425,6 @@ class _MealFormState extends State<_MealForm>
       ),
       children: [
         if (widget.editing != null) ...[
-          Text(
-            t.mealSlotLabel,
-            style: const TextStyle(fontSize: 13, color: AppColors.inkSoft),
-          ),
-          const SizedBox(height: 6),
-          SlotChips(
-            value: _editSlot,
-            onChanged: (s) => setState(() => _editSlot = s),
-          ),
           if (widget.editing!.portion != null) ...[
             const SizedBox(height: 10),
             Text(
@@ -1532,35 +1574,70 @@ class _MealFormState extends State<_MealForm>
 // Saved + recent meals (one tap)
 // ---------------------------------------------------------------------------
 
-class _SavedList extends StatelessWidget {
+/// Tap a meal to add it, tap it again to take it back out.
+class _SavedList extends StatefulWidget {
   final DateTime? date;
   final MealSlot slot;
   final ValueChanged<String> onAdded;
-  const _SavedList({this.date, required this.slot, required this.onAdded});
+  final ValueChanged<String> onRemoved;
+  const _SavedList({
+    this.date,
+    required this.slot,
+    required this.onAdded,
+    required this.onRemoved,
+  });
 
-  Future<void> _quickAdd(
-    BuildContext context,
+  @override
+  State<_SavedList> createState() => _SavedListState();
+}
+
+class _SavedListState extends State<_SavedList>
+    with AutomaticKeepAliveClientMixin {
+  /// Meals added from this list while the sheet is open: name -> meal id.
+  final _picked = <String, String>{};
+  final _busy = <String>{};
+
+  @override
+  bool get wantKeepAlive => true;
+
+  Future<void> _toggle(
     String name,
     double kcal,
     double p,
     double c,
     double f,
   ) async {
-    await AppScope.read(context).addMeal(
-      date: date,
-      slot: slot,
-      name: name,
-      kcal: kcal,
-      proteinG: p,
-      carbsG: c,
-      fatG: f,
-      source: MealSource.saved,
-    );
-    onAdded(name);
+    if (!_busy.add(name)) return; // ignore taps while saving
+    final s = AppScope.read(context);
+    try {
+      final id = _picked[name];
+      if (id != null) {
+        setState(() => _picked.remove(name));
+        await s.deleteMeal(id);
+        widget.onRemoved(name);
+        return;
+      }
+      final newId = await s.addMeal(
+        date: widget.date,
+        slot: widget.slot,
+        name: name,
+        kcal: kcal,
+        proteinG: p,
+        carbsG: c,
+        fatG: f,
+        source: MealSource.saved,
+      );
+      if (!mounted) return;
+      setState(() => _picked[name] = newId);
+      widget.onAdded(name);
+    } finally {
+      _busy.remove(name);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final t = L.of(context);
     final s = AppScope.of(context);
     final saved = s.savedMeals;
@@ -1594,62 +1671,79 @@ class _SavedList extends StatelessWidget {
       required double c,
       required double f,
       VoidCallback? onRemove,
-    }) => FadeSlideIn(
-      delay: stagger(i++),
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: SoftCard(
-          padding: EdgeInsets.fromLTRB(16, 10, onRemove == null ? 16 : 8, 10),
-          onTap: () => _quickAdd(context, name, kcal, p, c, f),
-          child: Row(
-            children: [
-              Icon(icon, color: color),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: headingFont,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
-                      ),
-                    ),
-                    Text(
-                      'P ${fmt0(p)} · C ${fmt0(c)} · F ${fmt0(f)}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.inkSoft,
-                      ),
-                    ),
-                  ],
+    }) {
+      final picked = _picked.containsKey(name);
+      return FadeSlideIn(
+        delay: stagger(i++),
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: SoftCard(
+            color: picked ? AppColors.peachSoft : AppColors.card,
+            padding: EdgeInsets.fromLTRB(16, 10, onRemove == null ? 16 : 8, 10),
+            onTap: () => _toggle(name, kcal, p, c, f),
+            child: Row(
+              children: [
+                AnimatedSwitcher(
+                  duration: Motion.medium,
+                  switchInCurve: Curves.easeOutBack,
+                  transitionBuilder: (c, a) =>
+                      ScaleTransition(scale: a, child: c),
+                  child: picked
+                      ? const Icon(
+                          Icons.check_circle_rounded,
+                          key: ValueKey('picked'),
+                          color: AppColors.peach,
+                        )
+                      : Icon(icon, key: const ValueKey('icon'), color: color),
                 ),
-              ),
-              Text(
-                '${fmt0(kcal)} kcal',
-                style: const TextStyle(
-                  fontFamily: headingFont,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              if (onRemove != null)
-                IconButton(
-                  icon: const Icon(
-                    Icons.close_rounded,
-                    size: 18,
-                    color: AppColors.inkSoft,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: headingFont,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                        ),
+                      ),
+                      Text(
+                        L.of(context).macroSummary(fmt0(p), fmt0(c), fmt0(f)),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.inkSoft,
+                        ),
+                      ),
+                    ],
                   ),
-                  onPressed: onRemove,
                 ),
-            ],
+                Text(
+                  '${fmt0(kcal)} kcal',
+                  style: const TextStyle(
+                    fontFamily: headingFont,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                if (onRemove != null)
+                  IconButton(
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      size: 18,
+                      color: AppColors.inkSoft,
+                    ),
+                    onPressed: onRemove,
+                  ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
+    }
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       children: [

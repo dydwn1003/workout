@@ -86,21 +86,6 @@ class TodayScreenState extends State<TodayScreen> {
     final locale = Localizations.localeOf(context).toString();
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => showAddMealSheet(context, date: date),
-        backgroundColor: AppColors.peach,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        icon: const Icon(Icons.add_rounded),
-        label: Text(
-          t.addMeal,
-          style: const TextStyle(
-            fontFamily: headingFont,
-            fontWeight: FontWeight.w800,
-            fontSize: 16,
-          ),
-        ),
-      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(

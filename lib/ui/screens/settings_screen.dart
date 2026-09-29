@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/coach_engine/coach_engine.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
+import '../motion.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'labels.dart';
@@ -16,6 +17,152 @@ const privacyPolicyUrl = String.fromEnvironment(
   'PRIVACY_URL',
   defaultValue: 'https://dydwn1003.github.io/workout/privacy.html',
 );
+
+/// Picks one of [options] (value, label) in a bottom sheet; null when
+/// dismissed. The sheet closes with a short pause so the check lands first.
+Future<T?> pickOption<T>(
+  BuildContext context, {
+  required String title,
+  required T current,
+  required List<(T, String)> options,
+}) => showModalBottomSheet<T>(
+  context: context,
+  sheetAnimationStyle: Motion.sheet,
+  builder: (ctx) =>
+      _OptionSheet<T>(title: title, current: current, options: options),
+);
+
+class _OptionSheet<T> extends StatefulWidget {
+  final String title;
+  final T current;
+  final List<(T, String)> options;
+  const _OptionSheet({
+    required this.title,
+    required this.current,
+    required this.options,
+  });
+
+  @override
+  State<_OptionSheet<T>> createState() => _OptionSheetState<T>();
+}
+
+class _OptionSheetState<T> extends State<_OptionSheet<T>> {
+  late T _selected = widget.current;
+
+  Future<void> _pick(T v) async {
+    setState(() => _selected = v);
+    await Future<void>.delayed(const Duration(milliseconds: 180));
+    if (mounted) Navigator.pop(context, v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 10),
+              child: Text(
+                widget.title,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            for (final (value, label) in widget.options)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Squish(
+                  child: AnimatedContainer(
+                    duration: Motion.medium,
+                    curve: Motion.ease,
+                    decoration: BoxDecoration(
+                      color: value == _selected
+                          ? AppColors.peachSoft
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: value == _selected
+                            ? AppColors.peach
+                            : AppColors.line,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      title: Text(
+                        label,
+                        style: const TextStyle(
+                          fontFamily: headingFont,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      trailing: AnimatedScale(
+                        scale: value == _selected ? 1 : 0,
+                        duration: Motion.medium,
+                        curve: Curves.easeOutBack,
+                        child: const Icon(
+                          Icons.check_rounded,
+                          color: AppColors.peach,
+                        ),
+                      ),
+                      onTap: () => _pick(value),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Current value of a setting with a chevron; the value cross-fades.
+class _SettingValue extends StatelessWidget {
+  final String text;
+  const _SettingValue(this.text);
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      AnimatedSwitcher(
+        duration: Motion.medium,
+        switchInCurve: Motion.ease,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (c, a) => FadeTransition(
+          opacity: a,
+          child: SlideTransition(
+            position: Tween(
+              begin: const Offset(0, 0.3),
+              end: Offset.zero,
+            ).animate(a),
+            child: c,
+          ),
+        ),
+        child: Text(
+          text,
+          key: ValueKey(text),
+          style: const TextStyle(
+            fontFamily: headingFont,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+      const SizedBox(width: 4),
+      const Icon(
+        Icons.chevron_right_rounded,
+        color: AppColors.inkSoft,
+        size: 20,
+      ),
+    ],
+  );
+}
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -239,22 +386,28 @@ class SettingsScreen extends StatelessWidget {
                     AppColors.skySoft,
                   ),
                   title: Text(t.language),
-                  trailing: DropdownButton<String?>(
-                    value: lang,
-                    underline: const SizedBox(),
-                    borderRadius: BorderRadius.circular(16),
-                    items: [
-                      DropdownMenuItem(value: null, child: Text(t.langSystem)),
-                      const DropdownMenuItem(value: 'ko', child: Text('한국어')),
-                      const DropdownMenuItem(
-                        value: 'en',
-                        child: Text('English'),
-                      ),
-                    ],
-                    onChanged: (v) => s.updateSettings(
-                      s.settings.copyWith(language: () => v),
-                    ),
+                  trailing: _SettingValue(
+                    {null: t.langSystem, 'ko': '한국어', 'en': 'English'}[lang] ??
+                        t.langSystem,
                   ),
+                  onTap: () async {
+                    // '' = follow the system; null = sheet dismissed.
+                    final v = await pickOption<String>(
+                      context,
+                      title: t.language,
+                      current: lang ?? '',
+                      options: [
+                        ('', t.langSystem),
+                        ('ko', '한국어'),
+                        ('en', 'English'),
+                      ],
+                    );
+                    // The app switches language after the sheet has closed.
+                    if (v == null || v == (lang ?? '')) return;
+                    s.updateSettings(
+                      s.settings.copyWith(language: () => v.isEmpty ? null : v),
+                    );
+                  },
                 ),
                 ListTile(
                   leading: icon(
@@ -263,25 +416,29 @@ class SettingsScreen extends StatelessWidget {
                     AppColors.peachSoft,
                   ),
                   title: Text(t.checkinDay),
-                  trailing: DropdownButton<int>(
-                    value: s.settings.checkinWeekday,
-                    underline: const SizedBox(),
-                    borderRadius: BorderRadius.circular(16),
-                    items: [
-                      for (var d = 1; d <= 7; d++)
-                        DropdownMenuItem(
-                          value: d,
-                          // 2024-01-01 is a Monday.
-                          child: Text(
+                  // 2024-01-01 is a Monday.
+                  trailing: _SettingValue(
+                    DateFormat.EEEE(locale)
+                        .format(DateTime(2024, 1, s.settings.checkinWeekday)),
+                  ),
+                  onTap: () async {
+                    final v = await pickOption<int>(
+                      context,
+                      title: t.checkinDay,
+                      current: s.settings.checkinWeekday,
+                      options: [
+                        for (var d = 1; d <= 7; d++)
+                          (
+                            d,
                             DateFormat.EEEE(locale)
                                 .format(DateTime(2024, 1, d)),
                           ),
-                        ),
-                    ],
-                    onChanged: (v) => s.updateSettings(
-                      s.settings.copyWith(checkinWeekday: v),
-                    ),
-                  ),
+                      ],
+                    );
+                    if (v != null && v != s.settings.checkinWeekday) {
+                      s.updateSettings(s.settings.copyWith(checkinWeekday: v));
+                    }
+                  },
                 ),
                 SwitchListTile(
                   secondary: icon(

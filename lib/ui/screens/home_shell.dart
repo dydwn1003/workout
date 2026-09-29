@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../data/update_check.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../motion.dart';
+import '../platform/reload.dart';
 import '../theme.dart';
 import 'checkin_screen.dart';
 import 'settings_screen.dart';
@@ -20,8 +22,50 @@ class HomeShell extends StatefulWidget {
   State<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   var _tab = 0;
+  var _updateShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkForUpdate();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _checkForUpdate();
+  }
+
+  /// Web: offers a reload when a newer build has been deployed.
+  Future<void> _checkForUpdate() async {
+    if (_updateShown || !await newBuildAvailable() || !mounted) return;
+    _updateShown = true;
+    final t = L.of(context);
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+          SnackBar(
+            content: Text(t.updateAvailable),
+            duration: const Duration(seconds: 10),
+            action: SnackBarAction(
+              label: t.reload,
+              textColor: AppColors.peachSoft,
+              onPressed: reloadPage,
+            ),
+          ),
+        )
+        .closed
+        // Offered again the next time the app comes back to the front.
+        .then((_) => _updateShown = false);
+  }
+
   final _today = GlobalKey<TodayScreenState>();
   DateTime? _lastBack;
 

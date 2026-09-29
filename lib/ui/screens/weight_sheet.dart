@@ -215,40 +215,6 @@ class _WeightSheetState extends State<WeightSheet> {
                 ),
               ),
             ],
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.skySoft,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.favorite_rounded,
-                    color: AppColors.sky,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      t.healthSync,
-                      style: const TextStyle(
-                        fontFamily: headingFont,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    t.healthSyncSoon,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.inkSoft,
-                    ),
-                  ),
-                ],
-              ),
-            ),
             const SizedBox(height: 18),
             FilledButton(onPressed: _save, child: Text(t.save)),
           ],
