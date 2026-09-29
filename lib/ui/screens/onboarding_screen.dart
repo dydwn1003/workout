@@ -204,6 +204,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (mounted && widget.editing) Navigator.of(context).pop();
       return;
     }
+    // Funnel: which step people finish (and so where they drop off).
+    AppScope.read(context).analytics.log('onboarding_step', {
+      'step': _step.name,
+      'editing': widget.editing,
+    });
     setState(() {
       _forward = true;
       _index++;

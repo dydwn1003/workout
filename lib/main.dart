@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'data/analytics.dart';
 import 'data/auth_service.dart';
 import 'data/remote_food_search.dart';
 import 'data/repository.dart';
@@ -29,9 +30,16 @@ Future<void> main() async {
     SyncingRepository(LocalCoachRepository()),
     remoteSearch: RemoteFoodSearch.fromEnvironment(),
     auth: auth,
+    analytics: Analytics(
+      sink: auth == null ? null : SupabaseEventSink(auth.client),
+    ),
   );
   await state.load();
   state.startSync();
+  state.analytics.log('app_open', {
+    'onboarded': state.onboarded,
+    'signed_in': state.signedIn,
+  });
   runApp(CoachApp(state: state));
 }
 
@@ -59,7 +67,12 @@ class _CoachAppState extends State<CoachApp> with WidgetsBindingObserver {
   // Pick up what other devices changed when the app comes back.
   @override
   void didChangeAppLifecycleState(AppLifecycleState s) {
-    if (s == AppLifecycleState.resumed) widget.state.syncNow();
+    if (s == AppLifecycleState.resumed) {
+      widget.state.analytics.log('app_resume');
+      widget.state.syncNow();
+    } else if (s == AppLifecycleState.paused || s == AppLifecycleState.hidden) {
+      widget.state.analytics.flush();
+    }
   }
 
   @override

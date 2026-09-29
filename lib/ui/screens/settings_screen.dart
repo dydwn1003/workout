@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/coach_engine/coach_engine.dart';
 import '../../l10n/app_localizations.dart';
@@ -9,6 +10,12 @@ import '../widgets.dart';
 import 'labels.dart';
 import 'onboarding_screen.dart';
 import 'sign_in_sheet.dart';
+
+/// Where the privacy policy is published (web/privacy.html on GitHub Pages).
+const privacyPolicyUrl = String.fromEnvironment(
+  'PRIVACY_URL',
+  defaultValue: 'https://dydwn1003.github.io/workout/privacy.html',
+);
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -309,6 +316,35 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ]),
               group(t.sectionData, [
+                SwitchListTile(
+                  secondary: icon(
+                    Icons.insights_rounded,
+                    AppColors.sky,
+                    AppColors.skySoft,
+                  ),
+                  title: Text(t.usageAnalytics),
+                  subtitle: Text(
+                    t.usageAnalyticsDesc,
+                    style: const TextStyle(fontSize: 12.5),
+                  ),
+                  value: s.settings.usageAnalytics,
+                  activeThumbColor: AppColors.peach,
+                  onChanged: (v) =>
+                      s.updateSettings(s.settings.copyWith(usageAnalytics: v)),
+                ),
+                ListTile(
+                  leading: icon(
+                    Icons.privacy_tip_rounded,
+                    AppColors.mint,
+                    AppColors.mintSoft,
+                  ),
+                  title: Text(t.privacyPolicy),
+                  trailing: const Icon(Icons.open_in_new_rounded, size: 18),
+                  onTap: () => launchUrl(
+                    Uri.parse(privacyPolicyUrl),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                ),
                 ListTile(
                   leading: icon(
                     Icons.science_rounded,

@@ -8,6 +8,7 @@ import '../core/coach_engine/coach_engine.dart';
 import '../data/entities.dart';
 import '../data/food.dart';
 import '../data/food_db.g.dart';
+import '../data/analytics.dart';
 import '../data/auth_service.dart';
 import '../data/remote_food_search.dart';
 import '../data/repository.dart';
@@ -40,16 +41,22 @@ class AppState extends ChangeNotifier {
   /// Sign-in; null when Supabase isn't configured (tests, offline builds).
   final AuthService? auth;
 
+  /// Usage events; a no-op without a sink (tests, offline builds).
+  final Analytics analytics;
+
   AppState(
     this.repo, {
     DateTime Function()? clock,
     this.remoteSearch,
     this.auth,
-  }) : clock = clock ?? DateTime.now;
+    Analytics? analytics,
+  }) : clock = clock ?? DateTime.now,
+       analytics = analytics ?? Analytics();
 
   Future<void> load() async {
     _data = await repo.load();
     _sort();
+    analytics.setEnabled(_data.settings.usageAnalytics);
     loaded = true;
     notifyListeners();
   }
@@ -76,11 +83,25 @@ class AppState extends ChangeNotifier {
     final a = auth, sync = _sync;
     if (a == null || sync == null || _authSub != null) return;
     _authSub = a.changes.listen((e) async {
+      // Signed out without signOut() here: the session was revoked, e.g.
+      // the account was deleted on another device. Don't leave its data.
+      if (e.event == AuthChangeEvent.signedOut && sync.attached) {
+        await sync.detach();
+        await sync.clearDevice();
+        _data = AppData();
+        notifyListeners();
+        return;
+      }
       final user = e.session?.user;
       if (user != null &&
           (e.event == AuthChangeEvent.initialSession ||
               e.event == AuthChangeEvent.signedIn)) {
         await sync.attach(user.id, SupabaseRecordStore(a.client, user.id));
+        if (e.event == AuthChangeEvent.signedIn) {
+          analytics.log('sign_in', {
+            'provider': user.appMetadata['provider'] ?? 'unknown',
+          });
+        }
         await syncNow();
       }
       notifyListeners();
@@ -108,11 +129,16 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> signIn(AuthMethod m) async => auth?.signIn(m);
+  Future<void> signIn(AuthMethod m) async {
+    analytics.log('sign_in_start', {'method': m.name});
+    await auth?.signIn(m);
+  }
 
   /// Signs out and clears this device; the account keeps its server copy,
   /// so signing in again (here or elsewhere) brings everything back.
   Future<void> signOut() async {
+    analytics.log('sign_out');
+    await analytics.flush();
     final sync = _sync;
     if (sync != null) {
       await syncNow(); // don't lose the last edits
@@ -126,6 +152,8 @@ class AppState extends ChangeNotifier {
 
   /// Deletes the account, its server copy and this device's data.
   Future<void> deleteAccount() async {
+    analytics.log('account_delete');
+    await analytics.flush();
     final sync = _sync;
     await auth?.deleteAccount();
     if (sync != null) {
@@ -647,6 +675,7 @@ class AppState extends ChangeNotifier {
   }) async {
     _data.profile = profile;
     await repo.saveProfile(profile);
+    analytics.log('onboarding_complete', {'goal': profile.goalType.name});
     await upsertWeight(
       WeightEntry(
         date: dateKey(today),
@@ -687,6 +716,12 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> upsertWeight(WeightEntry e, {bool notify = true}) async {
+    if (notify) {
+      analytics.log('weight_log', {
+        'past': e.date != dateKey(today),
+        'body_comp': e.bodyFatPct != null || e.skeletalMuscleKg != null,
+      });
+    }
     _data.weights.removeWhere((w) => w.date == e.date);
     _data.weights.add(e);
     _sort();
@@ -715,6 +750,11 @@ class AppState extends ChangeNotifier {
   }) async {
     final now = clock();
     final d = date ?? today;
+    analytics.log('meal_log', {
+      'source': source.name,
+      'slot': (slot ?? MealSlot.forTime(now)).name,
+      'past': dateKey(d) != dateKey(today),
+    });
     _data.meals.add(
       Meal(
         id: '${now.microsecondsSinceEpoch}-${math.Random().nextInt(1 << 20)}',
@@ -785,6 +825,10 @@ class AppState extends ChangeNotifier {
     int minutes, {
     DateTime? date,
   }) async {
+    analytics.log('workout_log', {
+      'type': type.name,
+      'past': date != null && dateKey(date) != dateKey(today),
+    });
     _data.workouts.add(
       Workout(
         id: '${clock().microsecondsSinceEpoch}',
@@ -815,6 +859,7 @@ class AppState extends ChangeNotifier {
     PlanStatus status, {
     double? manualKcal,
   }) async {
+    analytics.log('checkin', {'status': status.name});
     final plan = currentPlan!;
     final p = profile!;
     late Macros m;
@@ -859,6 +904,14 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> updateSettings(AppSettings s) async {
+    if (s.usageAnalytics != _data.settings.usageAnalytics) {
+      // Log the opt-out itself before turning sending off.
+      if (!s.usageAnalytics) {
+        analytics.log('usage_analytics_off');
+        await analytics.flush();
+      }
+      analytics.setEnabled(s.usageAnalytics);
+    }
     _data.settings = s;
     await repo.saveSettings(s);
     notifyListeners();
@@ -873,6 +926,7 @@ class AppState extends ChangeNotifier {
   /// Fills ~5 weeks of realistic sample history so the trend chart and
   /// weekly check-in can be tried immediately. The last check-in is left due.
   Future<void> loadDemoData({required bool korean}) async {
+    analytics.log('demo_data');
     final rng = math.Random(7);
     double gauss(double sd) {
       final u1 = 1 - rng.nextDouble();

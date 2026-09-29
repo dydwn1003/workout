@@ -1100,6 +1100,30 @@ abstract class L {
   /// **'오늘로'**
   String get backToToday;
 
+  /// No description provided for @usageAnalytics.
+  ///
+  /// In ko, this message translates to:
+  /// **'사용 데이터 보내기'**
+  String get usageAnalytics;
+
+  /// No description provided for @usageAnalyticsDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'어떤 기능을 쓰는지만 익명으로 보내 앱 개선에 써요. 체중·식사 같은 건강 정보는 보내지 않아요.'**
+  String get usageAnalyticsDesc;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In ko, this message translates to:
+  /// **'개인정보처리방침'**
+  String get privacyPolicy;
+
+  /// No description provided for @signInNotice.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인하면 체중·식사 같은 건강 정보가 기기 간 동기화를 위해 서버에 저장돼요. 계정을 삭제하면 바로 지워져요.'**
+  String get signInNotice;
+
   /// No description provided for @sectionAccount.
   ///
   /// In ko, this message translates to:

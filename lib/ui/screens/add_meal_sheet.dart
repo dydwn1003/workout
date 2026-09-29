@@ -348,6 +348,16 @@ class _SearchTabState extends State<_SearchTab>
       failed = true;
     }
     if (!mounted || _remoteQuery != q) return;
+    final local = s.searchAllFoods(q).length;
+    s.analytics.log('food_search', {
+      'len': q.length,
+      'local': local,
+      'remote': found.length,
+      'results': local + found.length,
+      'failed': failed,
+      // Only queries that found nothing, to see what the database lacks.
+      if (!failed && local + found.length == 0) 'q': q,
+    });
     setState(() {
       _remote = found;
       _remoteLoading = false;

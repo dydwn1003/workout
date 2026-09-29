@@ -570,6 +570,20 @@ class LEn extends L {
   String get backToToday => 'Today';
 
   @override
+  String get usageAnalytics => 'Share usage data';
+
+  @override
+  String get usageAnalyticsDesc =>
+      'Anonymous feature usage to improve the app. Never weights, meals or other health data.';
+
+  @override
+  String get privacyPolicy => 'Privacy policy';
+
+  @override
+  String get signInNotice =>
+      'Signing in stores your health data (weight, meals) on our server to sync your devices. Deleting your account erases it right away.';
+
+  @override
   String get sectionAccount => 'Account';
 
   @override

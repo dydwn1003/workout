@@ -413,11 +413,15 @@ class AppSettings {
   final bool notifications;
   final DateTime? consentedAt;
 
+  /// Send anonymous usage events (lib/data/analytics.dart).
+  final bool usageAnalytics;
+
   const AppSettings({
     this.language,
     this.checkinWeekday = DateTime.monday,
     this.notifications = true,
     this.consentedAt,
+    this.usageAnalytics = true,
   });
 
   AppSettings copyWith({
@@ -425,11 +429,13 @@ class AppSettings {
     int? checkinWeekday,
     bool? notifications,
     DateTime? consentedAt,
+    bool? usageAnalytics,
   }) => AppSettings(
     language: language != null ? language() : this.language,
     checkinWeekday: checkinWeekday ?? this.checkinWeekday,
     notifications: notifications ?? this.notifications,
     consentedAt: consentedAt ?? this.consentedAt,
+    usageAnalytics: usageAnalytics ?? this.usageAnalytics,
   );
 
   Map<String, Object?> toJson() => {
@@ -437,6 +443,7 @@ class AppSettings {
     'checkinWeekday': checkinWeekday,
     'notifications': notifications,
     'consentedAt': consentedAt?.toIso8601String(),
+    'usageAnalytics': usageAnalytics,
   };
 
   factory AppSettings.fromJson(Map<String, Object?> j) => AppSettings(
@@ -446,5 +453,6 @@ class AppSettings {
     consentedAt: j['consentedAt'] == null
         ? null
         : DateTime.parse(j['consentedAt'] as String),
+    usageAnalytics: j['usageAnalytics'] as bool? ?? true,
   );
 }

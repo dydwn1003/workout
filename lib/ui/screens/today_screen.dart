@@ -46,6 +46,7 @@ class _TodayScreenState extends State<TodayScreen> {
   }
 
   Future<void> _pickDate(AppState s) async {
+    s.analytics.log('date_picker');
     final today = s.today;
     final start = s.logStart;
     final cur = _date ?? today;
@@ -60,6 +61,7 @@ class _TodayScreenState extends State<TodayScreen> {
   }
 
   Future<void> _openLogCalendar(AppState s) async {
+    s.analytics.log('log_calendar');
     final picked = await showLogCalendarSheet(context);
     if (picked != null) _goTo(picked, s.today);
   }

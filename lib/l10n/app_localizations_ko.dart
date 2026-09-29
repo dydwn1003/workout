@@ -557,6 +557,20 @@ class LKo extends L {
   String get backToToday => '오늘로';
 
   @override
+  String get usageAnalytics => '사용 데이터 보내기';
+
+  @override
+  String get usageAnalyticsDesc =>
+      '어떤 기능을 쓰는지만 익명으로 보내 앱 개선에 써요. 체중·식사 같은 건강 정보는 보내지 않아요.';
+
+  @override
+  String get privacyPolicy => '개인정보처리방침';
+
+  @override
+  String get signInNotice =>
+      '로그인하면 체중·식사 같은 건강 정보가 기기 간 동기화를 위해 서버에 저장돼요. 계정을 삭제하면 바로 지워져요.';
+
+  @override
   String get sectionAccount => '계정';
 
   @override

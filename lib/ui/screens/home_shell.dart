@@ -22,7 +22,14 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   var _tab = 0;
 
-  void _select(int i) => setState(() => _tab = i);
+  static const _tabNames = ['today', 'trend', 'checkin', 'settings'];
+
+  void _select(int i) {
+    if (i != _tab) {
+      AppScope.read(context).analytics.log('tab', {'tab': _tabNames[i]});
+    }
+    setState(() => _tab = i);
+  }
 
   @override
   Widget build(BuildContext context) {

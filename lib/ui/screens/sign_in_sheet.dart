@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/auth_service.dart';
 import '../../l10n/app_localizations.dart';
@@ -6,6 +7,7 @@ import '../../state/app_state.dart';
 import '../motion.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'settings_screen.dart' show privacyPolicyUrl;
 
 Future<void> showSignInSheet(BuildContext context) => showModalBottomSheet(
   context: context,
@@ -165,6 +167,25 @@ class _SignInSheetState extends State<SignInSheet> {
               style: const TextStyle(color: AppColors.inkSoft),
             ),
           for (final m in methods) button(m),
+          if (methods.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              t.signInNotice,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.inkSoft,
+                height: 1.5,
+              ),
+            ),
+            TextButton(
+              onPressed: () => launchUrl(
+                Uri.parse(privacyPolicyUrl),
+                mode: LaunchMode.externalApplication,
+              ),
+              child: Text(t.privacyPolicy),
+            ),
+          ],
         ],
       ),
     );

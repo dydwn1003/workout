@@ -203,6 +203,10 @@ S = {
  "checkinAnyway": ("그래도 지금 다시 계산해 보기", "Recalculate now anyway"),
 
  "backToToday": ("오늘로", "Today"),
+ "usageAnalytics": ("사용 데이터 보내기", "Share usage data"),
+ "usageAnalyticsDesc": ("어떤 기능을 쓰는지만 익명으로 보내 앱 개선에 써요. 체중·식사 같은 건강 정보는 보내지 않아요.", "Anonymous feature usage to improve the app. Never weights, meals or other health data."),
+ "privacyPolicy": ("개인정보처리방침", "Privacy policy"),
+ "signInNotice": ("로그인하면 체중·식사 같은 건강 정보가 기기 간 동기화를 위해 서버에 저장돼요. 계정을 삭제하면 바로 지워져요.", "Signing in stores your health data (weight, meals) on our server to sync your devices. Deleting your account erases it right away."),
  "sectionAccount": ("계정", "Account"),
  "signInTitle": ("로그인하고 기록 지키기", "Sign in to keep your log"),
  "signInBody": ("로그인하면 기록이 계정에 저장돼서 폰을 바꾸거나 여러 기기에서 써도 그대로 이어져요.", "Your log is saved to your account, so it carries over to new phones and other devices."),
