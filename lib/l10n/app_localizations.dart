@@ -1586,6 +1586,54 @@ abstract class L {
   /// **'운동 추이'**
   String get workoutTrendTitle;
 
+  /// No description provided for @intakeTrendTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'섭취 칼로리'**
+  String get intakeTrendTitle;
+
+  /// No description provided for @intakeAvg.
+  ///
+  /// In ko, this message translates to:
+  /// **'평균 섭취'**
+  String get intakeAvg;
+
+  /// No description provided for @intakeAvgTarget.
+  ///
+  /// In ko, this message translates to:
+  /// **'평균 목표'**
+  String get intakeAvgTarget;
+
+  /// No description provided for @intakeLoggedDays.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록한 날'**
+  String get intakeLoggedDays;
+
+  /// No description provided for @intakeLegend.
+  ///
+  /// In ko, this message translates to:
+  /// **'섭취'**
+  String get intakeLegend;
+
+  /// No description provided for @intakeTarget.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표'**
+  String get intakeTarget;
+
+  /// No description provided for @intakeNotLogged.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록 없음'**
+  String get intakeNotLogged;
+
+  /// No description provided for @intakeTapHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'막대를 누르면 그날 섭취량을 볼 수 있어요 (평균은 기록한 날만)'**
+  String get intakeTapHint;
+
   /// No description provided for @workoutThisWeek.
   ///
   /// In ko, this message translates to:

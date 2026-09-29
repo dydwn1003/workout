@@ -11,6 +11,39 @@ void main() {
   final now = DateTime(2026, 9, 28, 20);
 
   group('AppState', () {
+    test('the same food again in a slot adds a serving, not a row', () async {
+      final s = AppState(MemoryCoachRepository(), clock: () => now);
+      await s.load();
+      Future<String> add(MealSlot slot) => s.addMeal(
+        name: '흰쌀밥',
+        kcal: 300,
+        proteinG: 5,
+        carbsG: 66,
+        fatG: 1,
+        source: MealSource.search,
+        slot: slot,
+        portion: '1공기 × 1 (210g)',
+        foodId: 'f961d90fc',
+        sugarG: 0.2,
+        satFatG: 0.1,
+      );
+      final a = await add(MealSlot.lunch);
+      final b = await add(MealSlot.lunch);
+      await add(MealSlot.dinner);
+      expect(b, a);
+      expect(s.meals.length, 2);
+      final lunch = s.meals.firstWhere((m) => m.slot == MealSlot.lunch);
+      expect(lunch.servings, 2);
+      expect(lunch.kcal, 600);
+      expect(lunch.satFatG, closeTo(0.2, 1e-9));
+      await s.removeServing(a);
+      final one = s.meals.firstWhere((m) => m.slot == MealSlot.lunch);
+      expect(one.servings, 1);
+      expect(one.kcal, closeTo(300, 1e-9));
+      await s.removeServing(a);
+      expect(s.meals.where((m) => m.slot == MealSlot.lunch), isEmpty);
+    });
+
     test('recent searches: newest first, no duplicates, at most 30', () async {
       final repo = MemoryCoachRepository();
       final s = AppState(repo, clock: () => now);

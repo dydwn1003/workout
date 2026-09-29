@@ -843,6 +843,30 @@ class LKo extends L {
   String get workoutTrendTitle => '운동 추이';
 
   @override
+  String get intakeTrendTitle => '섭취 칼로리';
+
+  @override
+  String get intakeAvg => '평균 섭취';
+
+  @override
+  String get intakeAvgTarget => '평균 목표';
+
+  @override
+  String get intakeLoggedDays => '기록한 날';
+
+  @override
+  String get intakeLegend => '섭취';
+
+  @override
+  String get intakeTarget => '목표';
+
+  @override
+  String get intakeNotLogged => '기록 없음';
+
+  @override
+  String get intakeTapHint => '막대를 누르면 그날 섭취량을 볼 수 있어요 (평균은 기록한 날만)';
+
+  @override
   String get workoutThisWeek => '최근 7일';
 
   @override

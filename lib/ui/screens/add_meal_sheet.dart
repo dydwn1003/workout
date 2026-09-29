@@ -62,21 +62,7 @@ void deleteMealWithUndo(BuildContext context, Meal meal) {
       action: SnackBarAction(
         label: t.undo,
         textColor: AppColors.peachSoft,
-        onPressed: () => s.addMeal(
-          name: meal.name,
-          kcal: meal.kcal,
-          proteinG: meal.proteinG,
-          carbsG: meal.carbsG,
-          fatG: meal.fatG,
-          source: meal.source,
-          edited: meal.edited,
-          date: parseDateKey(meal.date),
-          slot: meal.slot,
-          portion: meal.portion,
-          foodId: meal.foodId,
-          sugarG: meal.sugarG,
-          satFatG: meal.satFatG,
-        ),
+        onPressed: () => s.restoreMeal(meal),
       ),
     ),
   );
@@ -429,7 +415,7 @@ class _SearchTabState extends State<_SearchTab>
         return;
       }
       setState(() => _picked.remove(f.id));
-      await AppScope.read(context).deleteMeal(id);
+      await AppScope.read(context).removeServing(id);
       widget.onRemoved(f.name);
     } finally {
       _busy.remove(f.id);
@@ -1613,7 +1599,7 @@ class _SavedListState extends State<_SavedList>
       final id = _picked[name];
       if (id != null) {
         setState(() => _picked.remove(name));
-        await s.deleteMeal(id);
+        await s.removeServing(id);
         widget.onRemoved(name);
         return;
       }

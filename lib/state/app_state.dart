@@ -872,6 +872,36 @@ class AppState extends ChangeNotifier {
       'slot': (slot ?? MealSlot.forTime(now)).name,
       'past': dateKey(d) != dateKey(today),
     });
+    final key = dateKey(d);
+    final slotV = slot ?? MealSlot.forTime(now);
+    // Same food again in the same slot: one more serving, not another row.
+    final i = _data.meals.indexWhere(
+      (m) =>
+          m.date == key &&
+          m.slot == slotV &&
+          m.name == name &&
+          m.foodId == foodId &&
+          m.portion == portion &&
+          !m.edited &&
+          !edited,
+    );
+    if (i >= 0) {
+      final m = _data.meals[i];
+      double? plus(double? a, double? b) =>
+          a == null || b == null ? null : a + b;
+      _data.meals[i] = m
+          .copyWith(
+            kcal: m.kcal + kcal,
+            proteinG: m.proteinG + proteinG,
+            carbsG: m.carbsG + carbsG,
+            fatG: m.fatG + fatG,
+            servings: m.servings + 1,
+          )
+          .withNutrients(plus(m.sugarG, sugarG), plus(m.satFatG, satFatG));
+      await repo.saveMeals(_data.meals);
+      notifyListeners();
+      return m.id;
+    }
     final id =
         '${now.microsecondsSinceEpoch}-${math.Random().nextInt(1 << 20)}';
     _data.meals.add(
@@ -910,6 +940,39 @@ class AppState extends ChangeNotifier {
     final i = _data.meals.indexWhere((m) => m.id == meal.id);
     if (i < 0) return;
     _data.meals[i] = meal;
+    await repo.saveMeals(_data.meals);
+    notifyListeners();
+  }
+
+  /// Takes one serving back out of a meal (the whole meal when it's the
+  /// last one): the undo of logging the same food once more.
+  Future<void> removeServing(String id) async {
+    final i = _data.meals.indexWhere((m) => m.id == id);
+    if (i < 0) return;
+    final m = _data.meals[i];
+    if (m.servings <= 1) return deleteMeal(id);
+    final k = (m.servings - 1) / m.servings;
+    _data.meals[i] = m
+        .copyWith(
+          kcal: m.kcal * k,
+          proteinG: m.proteinG * k,
+          carbsG: m.carbsG * k,
+          fatG: m.fatG * k,
+          servings: m.servings - 1,
+        )
+        .withNutrients(
+          m.sugarG == null ? null : m.sugarG! * k,
+          m.satFatG == null ? null : m.satFatG! * k,
+        );
+    await repo.saveMeals(_data.meals);
+    notifyListeners();
+  }
+
+  /// Puts a deleted meal back as it was (undo).
+  Future<void> restoreMeal(Meal meal) async {
+    if (_data.meals.any((m) => m.id == meal.id)) return;
+    _data.meals.add(meal);
+    _sort();
     await repo.saveMeals(_data.meals);
     notifyListeners();
   }

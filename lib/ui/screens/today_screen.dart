@@ -519,7 +519,8 @@ class _DayBody extends StatelessWidget {
   }
 }
 
-class _SlotCard extends StatelessWidget {
+/// A meal slot (아침/점심/저녁/간식): tap its header to fold the list away.
+class _SlotCard extends StatefulWidget {
   final MealSlot slot;
   final DateTime date;
   final List<Meal> meals;
@@ -530,69 +531,121 @@ class _SlotCard extends StatelessWidget {
   });
 
   @override
+  State<_SlotCard> createState() => _SlotCardState();
+}
+
+class _SlotCardState extends State<_SlotCard> {
+  /// Folded slots, kept while the app runs (across days and rebuilds).
+  static final _folded = <MealSlot>{};
+
+  bool get _open => !_folded.contains(widget.slot);
+
+  void _toggle() => setState(() {
+    if (!_folded.remove(widget.slot)) _folded.add(widget.slot);
+  });
+
+  @override
   Widget build(BuildContext context) {
     final t = L.of(context);
+    final slot = widget.slot;
+    final date = widget.date;
+    final meals = widget.meals;
     final kcal = meals.fold(0.0, (a, m) => a + m.kcal);
     final (color, soft) = slotColors(slot);
+    final open = _open || meals.isEmpty;
     return SoftCard(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 6, 6, 6),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: soft,
-                    shape: BoxShape.circle,
+          InkWell(
+            onTap: meals.isEmpty ? null : _toggle,
+            borderRadius: BorderRadius.circular(24),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 6, 6, 6),
+              child: Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: soft,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(slotIcon(slot), size: 18, color: color),
                   ),
-                  child: Icon(slotIcon(slot), size: 18, color: color),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  slotLabel(t, slot),
-                  style: const TextStyle(
-                    fontFamily: headingFont,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                  ),
-                ),
-                const Spacer(),
-                AnimatedSwitcher(
-                  duration: Motion.medium,
-                  child: Text(
-                    meals.isEmpty ? '—' : '${fmt0(kcal)} kcal',
-                    key: ValueKey(kcal.round()),
+                  const SizedBox(width: 8),
+                  Text(
+                    slotLabel(t, slot),
                     style: const TextStyle(
                       fontFamily: headingFont,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.inkSoft,
+                      fontSize: 16,
                     ),
                   ),
-                ),
-                IconButton(
-                  tooltip: t.addMeal,
-                  onPressed: () =>
-                      showAddMealSheet(context, date: date, slot: slot),
-                  icon: Icon(Icons.add_circle_rounded, color: color, size: 28),
-                ),
-              ],
+                  if (meals.isNotEmpty) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      '${meals.length}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.inkSoft,
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: open ? 0 : -0.25,
+                      duration: Motion.medium,
+                      curve: Motion.ease,
+                      child: const Icon(
+                        Icons.expand_more_rounded,
+                        size: 20,
+                        color: AppColors.inkSoft,
+                      ),
+                    ),
+                  ],
+                  const Spacer(),
+                  AnimatedSwitcher(
+                    duration: Motion.medium,
+                    child: Text(
+                      meals.isEmpty ? '—' : '${fmt0(kcal)} kcal',
+                      key: ValueKey(kcal.round()),
+                      style: const TextStyle(
+                        fontFamily: headingFont,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.inkSoft,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: t.addMeal,
+                    onPressed: () =>
+                        showAddMealSheet(context, date: date, slot: slot),
+                    icon: Icon(
+                      Icons.add_circle_rounded,
+                      color: color,
+                      size: 28,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           AnimatedSize(
             duration: Motion.medium,
             curve: Motion.ease,
             alignment: Alignment.topCenter,
-            child: Column(
-              children: [
-                for (final m in meals) ...[
-                  const Divider(height: 1, indent: 20, endIndent: 20),
-                  _MealRow(meal: m),
-                ],
-              ],
+            child: AnimatedOpacity(
+              opacity: open ? 1 : 0,
+              duration: Motion.fast,
+              child: open
+                  ? Column(
+                      children: [
+                        for (final m in meals) ...[
+                          const Divider(height: 1, indent: 20, endIndent: 20),
+                          _MealRow(meal: m),
+                        ],
+                      ],
+                    )
+                  : const SizedBox(width: double.infinity),
             ),
           ),
         ],
@@ -974,7 +1027,11 @@ class _MealRow extends StatelessWidget {
           backgroundColor: slotColors(meal.slot).$2,
           child: Icon(_icon, color: slotColors(meal.slot).$1, size: 20),
         ),
-        title: Text(meal.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+        title: Text(
+          meal.servings > 1 ? '${meal.name} ×${meal.servings}' : meal.name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         subtitle: Text(
           '${meal.portion ?? DateFormat.Hm().format(meal.time)} · ${t.protein} ${fmt0(meal.proteinG)}g · ${t.carbs} ${fmt0(meal.carbsG)}g · ${t.fat} ${fmt0(meal.fatG)}g',
           style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),

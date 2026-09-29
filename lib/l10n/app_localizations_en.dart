@@ -860,6 +860,31 @@ class LEn extends L {
   String get workoutTrendTitle => 'Training';
 
   @override
+  String get intakeTrendTitle => 'Calories eaten';
+
+  @override
+  String get intakeAvg => 'Avg eaten';
+
+  @override
+  String get intakeAvgTarget => 'Avg target';
+
+  @override
+  String get intakeLoggedDays => 'Days logged';
+
+  @override
+  String get intakeLegend => 'Eaten';
+
+  @override
+  String get intakeTarget => 'Target';
+
+  @override
+  String get intakeNotLogged => 'Not logged';
+
+  @override
+  String get intakeTapHint =>
+      'Tap a bar to see that day (averages count logged days only)';
+
+  @override
   String get workoutThisWeek => 'Last 7 days';
 
   @override

@@ -9,6 +9,7 @@ import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'intake_trend.dart';
 import 'labels.dart';
 import 'weight_sheet.dart';
 import 'workout_trend.dart';
@@ -31,6 +32,10 @@ class _TrendScreenState extends State<TrendScreen> {
     final pts = _range == 0 || all.length <= _range
         ? all
         : all.sublist(all.length - _range);
+    final allLogs = s.dayLogs();
+    final logs = _range == 0 || allLogs.length <= _range
+        ? allLogs
+        : allLogs.sublist(allLogs.length - _range);
     final weighIns = pts.where((p) => p.$2 != null).length;
     final goal = s.profile?.targetWeightKg;
     final trend = s.trendWeight;
@@ -191,6 +196,9 @@ class _TrendScreenState extends State<TrendScreen> {
                   ),
                 ),
               ],
+              const SizedBox(height: 8),
+              SectionTitle(t.intakeTrendTitle),
+              IntakeTrendCard(key: ValueKey(_range), days: logs),
               const SizedBox(height: 8),
               SectionTitle(t.workoutTrendTitle),
               const WorkoutTrendCard(),

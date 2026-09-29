@@ -155,6 +155,10 @@ class Meal {
   /// 포화지방 (g); null when unknown.
   final double? satFatG;
 
+  /// The same food logged again into the same slot adds a serving (×2)
+  /// instead of a row; the amounts above are the total.
+  final int servings;
+
   const Meal({
     required this.id,
     required this.date,
@@ -171,6 +175,7 @@ class Meal {
     this.foodId,
     this.sugarG,
     this.satFatG,
+    this.servings = 1,
   });
 
   Meal copyWith({
@@ -184,6 +189,7 @@ class Meal {
     String? Function()? portion,
     double? sugarG,
     double? satFatG,
+    int? servings,
   }) => Meal(
     id: id,
     date: date,
@@ -200,6 +206,27 @@ class Meal {
     foodId: foodId,
     sugarG: sugarG ?? this.sugarG,
     satFatG: satFatG ?? this.satFatG,
+    servings: servings ?? this.servings,
+  );
+
+  /// Copy with 당류/포화지방 set, null included (unknown).
+  Meal withNutrients(double? sugarG, double? satFatG) => Meal(
+    id: id,
+    date: date,
+    time: time,
+    name: name,
+    kcal: kcal,
+    proteinG: proteinG,
+    carbsG: carbsG,
+    fatG: fatG,
+    source: source,
+    edited: edited,
+    slot: slot,
+    portion: portion,
+    foodId: foodId,
+    sugarG: sugarG,
+    satFatG: satFatG,
+    servings: servings,
   );
 
   Map<String, Object?> toJson() => {
@@ -218,6 +245,7 @@ class Meal {
     'slot': slot.name,
     'portion': portion,
     'foodId': foodId,
+    if (servings != 1) 'servings': servings,
   };
 
   factory Meal.fromJson(Map<String, Object?> j) => Meal(
@@ -238,6 +266,7 @@ class Meal {
     foodId: j['foodId'] as String?,
     sugarG: _d(j['sugarG']),
     satFatG: _d(j['satFatG']),
+    servings: (j['servings'] as num?)?.toInt() ?? 1,
   );
 }
 
