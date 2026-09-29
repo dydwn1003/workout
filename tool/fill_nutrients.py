@@ -2,12 +2,14 @@
 data/foods_ko.tsv from the MFDS database.
 
 Needs data/mfds_ntr.csv (tool/fetch_mfds_ntr.py). For each food, the MFDS
-foods with the same name (or one of its aliases) are looked up, preferring
+foods with the same name (or one of its aliases) are looked up, then raw
+ingredients by a part of their name ("버터, 가염" for 버터), preferring
 MFDS's own representative value (데이터분류명 품목대표) over the median of
-all same-named foods. Matches whose energy is far from ours (another dish
-with the same name) are ignored. Foods without a match keep their 당류; their
-포화지방 is estimated from their fat and the median 포화지방/지방 ratio of
-their category's matched foods.
+all matches. Matches whose energy is far from ours (another dish with the
+same name) are ignored. Recipes differ, so 포화지방 is our fat times the
+matches' 포화지방/지방 ratio, and 당류 is capped at our carbs. Foods without
+a match keep their 당류; their 포화지방 uses the median ratio of their
+category's matched foods.
 
 Each row's source is written to data/foods_ko_nutrients.txt for review.
 
@@ -33,9 +35,14 @@ def key(s):
     return re.sub(r"[\s_()]", "", s.lower())
 
 
+GENERIC = {"생것", "삶은것", "구운것", "볶은것", "찐것", "말린것", "데친것", "튀긴것", "가염", "무염",
+           "국산", "수입산", "냉동", "통조림"}
+
+
 def load_mfds():
-    """name key -> [(representative?, kcal, sugar, satfat)] per 100 g."""
-    by_name = {}
+    """(by name, by part of a raw ingredient's name): key -> [(representative?,
+    kcal, sugar, satfat, fat)] per 100 g."""
+    by_name, by_part = {}, {}
     with open(NTR, encoding="utf-8") as f:
         for r in csv.DictReader(f):
             if "가공" in r["데이터구분명"] or r["업체명"].strip():
@@ -45,30 +52,48 @@ def load_mfds():
             kcal = val("에너지(kcal)")
             if not kcal:
                 continue
-            row = (r["데이터분류명"] == "품목대표", kcal, val("당류(g)"), val("포화지방산(g)"))
+            row = (r["데이터분류명"] == "품목대표", kcal, val("당류(g)"), val("포화지방산(g)"), val("지방(g)"))
             names = {r["식품명"], import_mfds.clean_name(r["식품명"])}
             if r["데이터분류명"] == "품목대표" and r["대표식품명"].strip():
                 names.add(r["대표식품명"])
             for n in names:
                 by_name.setdefault(key(n), []).append(row)
-    return by_name
+            if "원재료" in r["데이터구분명"]:
+                for part in r["식품명"].split(",")[:2]:
+                    if part.strip() and part.strip() not in GENERIC:
+                        by_part.setdefault(key(part), []).append(row)
+    return by_name, by_part
 
 
-def lookup(rows, kcal, i):
-    """(value, how) of nutrient index i (2 = 당류, 3 = 포화지방) or None."""
-    near = [r for r in rows if r[i] is not None and 0.5 <= r[1] / kcal <= 2]
-    rep = [r[i] for r in near if r[0]]
+def lookup(rows, kcal, of):
+    """(value, how) of of(row) over the matches near [kcal], or None."""
+    near = [r for r in rows if 0.5 <= r[1] / kcal <= 2 and of(r) is not None]
+    rep = [of(r) for r in near if r[0]]
     if rep:
         return statistics.median(rep), "품목대표"
     if near:
-        return statistics.median(r[i] for r in near), f"median of {len(near)}"
+        return statistics.median(of(r) for r in near), f"median of {len(near)}"
+    return None
+
+
+sugar_of = lambda r: r[2]
+sat_ratio_of = lambda r: (min(r[3] / r[4], 1.0) if r[4] else 0.0) if r[3] is not None and r[4] is not None else None
+
+
+def find(tables, names, kcal, of):
+    """First match: by name, then by part of a raw ingredient's name."""
+    for table in tables:
+        for n in names:
+            hit = lookup(table.get(key(n), []), kcal, of) if kcal > 0 else None
+            if hit:
+                return hit
     return None
 
 
 def main():
     if not os.path.exists(NTR):
         sys.exit(f"missing {NTR}: run tool/fetch_mfds_ntr.py first")
-    mfds = load_mfds()
+    tables = load_mfds()
     lines = open(SRC, encoding="utf-8").read().split("\n")
     foods = []  # (line index, cols, match rows)
     for i, line in enumerate(lines):
@@ -77,21 +102,22 @@ def main():
         cols = line.split("\t")
         cols += [""] * (11 - len(cols))
         names = [cols[0], *[a for a in cols[1].split(",") if a]]
-        rows = next((mfds[key(n)] for n in names if key(n) in mfds), [])
-        foods.append((i, cols, rows))
+        foods.append((i, cols, names))
 
     report, ratios = [], {}
-    for i, cols, rows in foods:
-        kcal, fat = float(cols[3]), float(cols[6])
-        sugar = lookup(rows, kcal, 2) if rows else None
-        sat = lookup(rows, kcal, 3) if rows else None
+    for i, cols, names in foods:
+        kcal, carbs, fat = float(cols[3]), float(cols[5]), float(cols[6])
+        sugar = find(tables, names, kcal, sugar_of)
+        ratio = find(tables, names, kcal, sat_ratio_of)
         if sugar:
             cols[9] = f"{sugar[0]:.1f}"
-        if sat:
-            cols[10] = f"{sat[0]:.1f}"
+        if cols[9] and float(cols[9]) > carbs:
+            cols[9] = f"{carbs:.1f}"
+        if ratio:
+            cols[10] = f"{fat * ratio[0]:.1f}"
             if fat > 0.5:
-                ratios.setdefault(cols[2], []).append(min(sat[0] / fat, 1))
-        report.append([cols[0], sugar[1] if sugar else "kept", sat[1] if sat else None])
+                ratios.setdefault(cols[2], []).append(ratio[0])
+        report.append([cols[0], sugar[1] if sugar else "kept", ratio[1] if ratio else None])
 
     all_ratios = [r for rs in ratios.values() for r in rs]
     for (i, cols, _), rep in zip(foods, report):
