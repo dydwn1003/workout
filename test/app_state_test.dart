@@ -119,6 +119,34 @@ void main() {
       expect(s.loggingStreak, 1); // yesterday counts when today is empty
     });
 
+    test('sugar: daily total, unknown meals and the 10% limit', () async {
+      final s = AppState(MemoryCoachRepository(), clock: () => now);
+      await s.load();
+      await s.loadDemoData(korean: true);
+      final day = DateTime(2026, 9, 28);
+      final before = s.sugarOn(day);
+      final cola = builtInFoods.firstWhere(
+        (f) => f.sugarG != null && f.sugarG! > 5,
+      );
+      final n = cola.forGrams(250);
+      await s.addMeal(
+        name: cola.name,
+        kcal: n.kcal,
+        proteinG: n.proteinG,
+        carbsG: n.carbsG,
+        fatG: n.fatG,
+        sugarG: n.sugarG,
+        source: MealSource.search,
+      );
+      final after = s.sugarOn(day);
+      expect(after.grams, closeTo(before.grams + cola.sugarG! * 2.5, 1e-6));
+      expect(after.unknown, before.unknown); // demo meals have no sugar info
+      expect(
+        s.sugarLimitOn(day),
+        closeTo(s.planOn(day)!.targetKcal * 0.1 / 4, 1e-9),
+      );
+    });
+
     test('log calendar: start, logged days and longest streak', () async {
       final s = AppState(MemoryCoachRepository(), clock: () => now);
       await s.load();

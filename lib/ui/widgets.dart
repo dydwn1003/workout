@@ -141,6 +141,12 @@ class MacroBar extends StatelessWidget {
   final Color color;
   final Color track;
 
+  /// Replaces the "value / target g" text (e.g. for an upper limit).
+  final String? amountText;
+
+  /// [target] is a maximum: past it the bar and text turn red.
+  final bool isLimit;
+
   const MacroBar({
     super.key,
     required this.label,
@@ -148,11 +154,15 @@ class MacroBar extends StatelessWidget {
     required this.target,
     required this.color,
     required this.track,
+    this.amountText,
+    this.isLimit = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final p = target <= 0 ? 0.0 : (value / target).clamp(0.0, 1.0);
+    final over = isLimit && value > target;
+    final barColor = over ? AppColors.over : color;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -174,8 +184,12 @@ class MacroBar extends StatelessWidget {
             ),
             const Spacer(),
             Text(
-              '${fmt0(value)} / ${fmt0(target)}g',
-              style: const TextStyle(fontSize: 12.5, color: AppColors.inkSoft),
+              amountText ?? '${fmt0(value)} / ${fmt0(target)}g',
+              style: TextStyle(
+                fontSize: 12.5,
+                color: over ? AppColors.over : AppColors.inkSoft,
+                fontWeight: over ? FontWeight.w800 : null,
+              ),
             ),
           ],
         ),
@@ -189,7 +203,7 @@ class MacroBar extends StatelessWidget {
             builder: (context, v, _) => LinearProgressIndicator(
               value: v,
               minHeight: 10,
-              color: color,
+              color: barColor,
               backgroundColor: track,
             ),
           ),

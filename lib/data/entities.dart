@@ -149,6 +149,9 @@ class Meal {
   /// Food table id when logged from search.
   final String? foodId;
 
+  /// 당류 (g); null when unknown (manual entries, foods without the value).
+  final double? sugarG;
+
   const Meal({
     required this.id,
     required this.date,
@@ -163,6 +166,7 @@ class Meal {
     required this.slot,
     this.portion,
     this.foodId,
+    this.sugarG,
   });
 
   Meal copyWith({
@@ -188,6 +192,7 @@ class Meal {
     slot: slot ?? this.slot,
     portion: portion != null ? portion() : this.portion,
     foodId: foodId,
+    sugarG: sugarG,
   );
 
   Map<String, Object?> toJson() => {
@@ -199,6 +204,7 @@ class Meal {
     'proteinG': proteinG,
     'carbsG': carbsG,
     'fatG': fatG,
+    if (sugarG != null) 'sugarG': sugarG,
     'source': source.name,
     'edited': edited,
     'slot': slot.name,
@@ -222,6 +228,7 @@ class Meal {
         : _enumByName(MealSlot.values, j['slot'], MealSlot.snack),
     portion: j['portion'] as String?,
     foodId: j['foodId'] as String?,
+    sugarG: _d(j['sugarG']),
   );
 }
 

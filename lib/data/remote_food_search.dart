@@ -38,20 +38,9 @@ class RemoteFoodSearch {
     if (q.isEmpty) return const [];
     final hit = _cache[q];
     if (hit != null) return hit;
-    final res = await _client
-        .post(
-          Uri.parse(
-            '${url.replaceAll(RegExp(r'/+$'), '')}/rest/v1/rpc/search_foods',
-          ),
-          headers: {
-            'apikey': anonKey,
-            // Legacy JWT keys also go in Authorization; sb_ keys must not.
-            if (!anonKey.startsWith('sb_')) 'Authorization': 'Bearer $anonKey',
-            'Content-Type': 'application/json',
-          },
-          body: jsonEncode({'q': query, 'lim': limit}),
-        )
-        .timeout(const Duration(seconds: 15));
+    var res = await _call('search_foods_v2', query, limit);
+    // Before supabase/food_nutrients.sql is run there's only search_foods().
+    if (res.statusCode == 404) res = await _call('search_foods', query, limit);
     if (res.statusCode != 200) {
       throw Exception('search_foods: HTTP ${res.statusCode}');
     }
@@ -62,4 +51,17 @@ class RemoteFoodSearch {
     if (_cache.length > 100) _cache.clear();
     return _cache[q] = foods;
   }
+
+  Future<http.Response> _call(String fn, String query, int limit) => _client
+      .post(
+        Uri.parse('${url.replaceAll(RegExp(r'/+$'), '')}/rest/v1/rpc/$fn'),
+        headers: {
+          'apikey': anonKey,
+          // Legacy JWT keys also go in Authorization; sb_ keys must not.
+          if (!anonKey.startsWith('sb_')) 'Authorization': 'Bearer $anonKey',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'q': query, 'lim': limit}),
+      )
+      .timeout(const Duration(seconds: 15));
 }

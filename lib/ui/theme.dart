@@ -22,6 +22,10 @@ class AppColors {
   static const sky = Color(0xFF6EB7FF); // weight
   static const skySoft = Color(0xFFE0F0FF);
 
+  static const sugar = Color(0xFFC27C3A); // caramel: 당류 (an upper limit)
+  static const sugarSoft = Color(0xFFF7E6D6);
+  static const over = Color(0xFFE5484D);
+
   // Meal slots: time-of-day colors, kept apart from the kcal/macro ones.
   static const breakfast = Color(0xFFE8770E); // sunrise orange
   static const breakfastSoft = Color(0xFFFFEAD4);

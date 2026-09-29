@@ -835,6 +835,36 @@ abstract class L {
   /// **'{n}분'**
   String tipMinutes(String n);
 
+  /// No description provided for @sugar.
+  ///
+  /// In ko, this message translates to:
+  /// **'당류'**
+  String get sugar;
+
+  /// No description provided for @sugarOfLimit.
+  ///
+  /// In ko, this message translates to:
+  /// **'{g} / 최대 {limit}g'**
+  String sugarOfLimit(String g, String limit);
+
+  /// No description provided for @sugarUnknownMeals.
+  ///
+  /// In ko, this message translates to:
+  /// **'당류 정보가 없는 기록 {n}개는 빠져 있어요'**
+  String sugarUnknownMeals(String n);
+
+  /// No description provided for @sugarPer.
+  ///
+  /// In ko, this message translates to:
+  /// **'당류 {g}g'**
+  String sugarPer(String g);
+
+  /// No description provided for @sugarNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'당류 정보 없음'**
+  String get sugarNone;
+
   /// No description provided for @legendRaw.
   ///
   /// In ko, this message translates to:

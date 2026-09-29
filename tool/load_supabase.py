@@ -14,6 +14,7 @@ Usage:
   python3 tool/load_supabase.py --skip 260000   # resume after an interrupted upload
   python3 tool/load_supabase.py --only-estimated  # re-upload just the rows with estimated macros
   python3 tool/load_supabase.py --source estimated  # just the estimated franchise menus
+  python3 tool/load_supabase.py --nutrients      # 당류 into public.food_nutrients
 """
 import argparse
 import csv
@@ -50,6 +51,7 @@ def record(fd, source):
         "units": [{"label": l, "g": g} for l, g in fd["units"]],
         "unknown": fd["unknown"], "source": source,
         "search": "|".join(keys),
+        "_sugar": fd.get("sugar"),  # public.food_nutrients, not a foods column
     }
 
 
@@ -128,12 +130,12 @@ def post(url, key, batch):
     sys.exit(f"giving up: {err}")
 
 
-def upload(recs, batch_size, skip=0):
+def upload(recs, batch_size, skip=0, table="foods"):
     base = os.environ.get("SUPABASE_URL", "").rstrip("/")
     key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
     if not base or not key:
         sys.exit("set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY")
-    url = f"{base}/rest/v1/foods?on_conflict=id"
+    url = f"{base}/rest/v1/{table}?on_conflict=id"
     for i in range(skip, len(recs), batch_size):
         post(url, key, recs[i:i + batch_size])
         done = min(i + batch_size, len(recs))
@@ -146,6 +148,8 @@ def main():
     ap.add_argument("--csv", help="write a CSV for COPY instead of uploading")
     ap.add_argument("--batch", type=int, default=1000)
     ap.add_argument("--skip", type=int, default=0, help="rows already uploaded (resume)")
+    ap.add_argument("--nutrients", action="store_true",
+                    help="load public.food_nutrients (supabase/food_nutrients.sql) instead of foods")
     ap.add_argument("--source", help="only rows from this source (curated, mfds_food, mfds_process, estimated)")
     ap.add_argument("--only-estimated", action="store_true",
                     help="only rows whose macros are estimated (after changing estimate())")
@@ -156,6 +160,12 @@ def main():
     if a.source:
         recs = [r for r in recs if r["source"] == a.source]
     print(f"{len(recs)} foods total")
+    if a.nutrients:
+        rows = [{"id": r["id"], "sugar": r["_sugar"]} for r in recs if r["_sugar"] is not None]
+        print(f"{len(rows)} foods with 당류")
+        upload(rows, 5000, a.skip, table="food_nutrients")
+        return
+    recs = [{k: v for k, v in r.items() if not k.startswith("_")} for r in recs]
     if a.csv:
         write_csv(recs, a.csv)
     else:

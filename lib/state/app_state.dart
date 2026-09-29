@@ -340,6 +340,28 @@ class AppState extends ChangeNotifier {
     );
   }
 
+  /// 당류 eaten on [d] (g) and how many of that day's meals don't know it.
+  ({double grams, int unknown}) sugarOn(DateTime d) {
+    var g = 0.0;
+    var unknown = 0;
+    for (final m in mealsOn(d)) {
+      final s = m.sugarG;
+      if (s == null) {
+        unknown++;
+      } else {
+        g += s;
+      }
+    }
+    return (grams: g, unknown: unknown);
+  }
+
+  /// Daily 당류 limit: 10% of the day's calorie target (WHO recommendation
+  /// for free sugars; 50 g at 2,000 kcal).
+  double? sugarLimitOn(DateTime d) {
+    final kcal = planOn(d)?.targetKcal;
+    return kcal == null ? null : kcal * 0.10 / 4;
+  }
+
   DateTime? get _firstDataDay {
     DateTime? first;
     if (_data.weights.isNotEmpty) {
@@ -747,6 +769,7 @@ class AppState extends ChangeNotifier {
     MealSlot? slot,
     String? portion,
     String? foodId,
+    double? sugarG,
   }) async {
     final now = clock();
     final d = date ?? today;
@@ -777,6 +800,7 @@ class AppState extends ChangeNotifier {
         slot: slot ?? MealSlot.forTime(now),
         portion: portion,
         foodId: foodId,
+        sugarG: sugarG,
       ),
     );
     _sort();

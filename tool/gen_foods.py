@@ -40,10 +40,11 @@ def load(path=SRC, prefix="f"):
         if not line or line.startswith("#"):
             continue
         cols = line.split("\t")
-        if len(cols) not in (8, 9):
-            sys.exit(f"line {n}: expected 8 or 9 columns, got {len(cols)}")
+        if len(cols) not in (8, 9, 10):
+            sys.exit(f"line {n}: expected 8 to 10 columns, got {len(cols)}")
         name, aliases, cat, kcal, p, c, f, units = cols[:8]
-        unknown = cols[8].strip() if len(cols) == 9 else ""  # macros not published: p/c/f
+        unknown = cols[8].strip() if len(cols) >= 9 else ""  # not published: k/p/c/f
+        sugar = cols[9].strip() if len(cols) == 10 else ""  # 당류 g/100 g, "" = unknown
         us = []
         for u in units.split(";"):
             label, grams = u.rsplit(":", 1)
@@ -56,6 +57,7 @@ def load(path=SRC, prefix="f"):
             "kcal": float(kcal), "p": float(p), "c": float(c), "f": float(f),
             "units": us,
             "unknown": unknown,
+            "sugar": float(sugar) if sugar else None,
         })
     return foods
 
@@ -144,7 +146,8 @@ def dart(foods) -> str:
         out.append(
             f"  Food('{fd['id']}', '{esc(fd['name'])}', [{aliases}], '{esc(fd['cat'])}', "
             f"{num(fd['kcal'])}, {num(fd['p'])}, {num(fd['c'])}, {num(fd['f'])}, [{units}]"
-            + (f", unknown: '{fd['unknown']}'" if fd["unknown"] else "") + "),"
+            + (f", unknown: '{fd['unknown']}'" if fd["unknown"] else "")
+            + (f", sugarG: {num(fd['sugar'])}" if fd.get("sugar") is not None else "") + "),"
         )
     out.append("];")
     return "\n".join(out) + "\n"
@@ -164,7 +167,9 @@ def main():
     with open(os.path.join(ROOT, "lib", "data", "food_db.g.dart"), "w", encoding="utf-8") as fh:
         fh.write(dart(foods))
     compact = [[fd["id"], fd["name"], fd["aliases"], fd["cat"], fd["kcal"], fd["p"], fd["c"], fd["f"],
-                [[l, g] for l, g in fd["units"]]] + ([fd["unknown"]] if fd["unknown"] else [])
+                [[l, g] for l, g in fd["units"]]]
+               + ([fd["unknown"], fd["sugar"]] if fd.get("sugar") is not None
+                  else [fd["unknown"]] if fd["unknown"] else [])
                for fd in foods]
     with open(os.path.join(ROOT, "preview", "src", "foods.json"), "w", encoding="utf-8") as fh:
         json.dump(compact, fh, ensure_ascii=False, separators=(",", ":"))

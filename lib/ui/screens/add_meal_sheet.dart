@@ -396,6 +396,7 @@ class _SearchTabState extends State<_SearchTab>
       slot: widget.slot,
       portion: portion,
       foodId: f.id,
+      sugarG: n.sugarG,
     );
     widget.onAdded(f.name);
   }
@@ -878,6 +879,15 @@ class _FoodDetailState extends State<_FoodDetail> {
                     AppColors.lilacSoft,
                   ),
                 ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                n.sugarG == null ? t.sugarNone : t.sugarPer(fmt1(n.sugarG!)),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.sugar,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),

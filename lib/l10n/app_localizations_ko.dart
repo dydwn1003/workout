@@ -401,6 +401,27 @@ class LKo extends L {
   }
 
   @override
+  String get sugar => '당류';
+
+  @override
+  String sugarOfLimit(String g, String limit) {
+    return '$g / 최대 ${limit}g';
+  }
+
+  @override
+  String sugarUnknownMeals(String n) {
+    return '당류 정보가 없는 기록 $n개는 빠져 있어요';
+  }
+
+  @override
+  String sugarPer(String g) {
+    return '당류 ${g}g';
+  }
+
+  @override
+  String get sugarNone => '당류 정보 없음';
+
+  @override
   String get legendRaw => '측정값';
 
   @override

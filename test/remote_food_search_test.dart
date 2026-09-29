@@ -35,7 +35,7 @@ void main() {
       anonKey: 'sb_publishable_test',
       client: MockClient((req) async {
         calls++;
-        expect(req.url.path, '/rest/v1/rpc/search_foods');
+        expect(req.url.path, '/rest/v1/rpc/search_foods_v2');
         expect(req.headers['apikey'], 'sb_publishable_test');
         expect(req.headers.containsKey('Authorization'), isFalse);
         expect(jsonDecode(req.body)['q'], isNotEmpty);
@@ -56,6 +56,32 @@ void main() {
     expect(foods.single.kcal, 417);
     expect(foods.single.units.single.grams, 120);
     expect(await r.search(' 신라면 '), same(foods));
+  });
+
+  test('falls back to search_foods before food_nutrients.sql is run', () async {
+    final paths = <String>[];
+    final r = RemoteFoodSearch(
+      url: 'https://example.supabase.co',
+      anonKey: 'sb_publishable_test',
+      client: MockClient((req) async {
+        paths.add(req.url.path);
+        if (req.url.path.endsWith('_v2')) return http.Response('{}', 404);
+        return http.Response(
+          jsonEncode([
+            {...ramen, 'sugar': 4.2},
+          ]),
+          200,
+          headers: {'content-type': 'application/json; charset=utf-8'},
+        );
+      }),
+    );
+    final f = (await r.search('신라면')).single;
+    expect(paths, [
+      '/rest/v1/rpc/search_foods_v2',
+      '/rest/v1/rpc/search_foods',
+    ]);
+    expect(f.sugarG, 4.2);
+    expect(f.forGrams(120).sugarG, closeTo(5.04, 1e-9));
   });
 
   test('server errors throw so the UI can fall back', () async {

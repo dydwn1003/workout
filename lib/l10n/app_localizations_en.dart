@@ -413,6 +413,27 @@ class LEn extends L {
   }
 
   @override
+  String get sugar => 'Sugars';
+
+  @override
+  String sugarOfLimit(String g, String limit) {
+    return '$g / max ${limit}g';
+  }
+
+  @override
+  String sugarUnknownMeals(String n) {
+    return '$n logged items have no sugar info and aren\'t counted';
+  }
+
+  @override
+  String sugarPer(String g) {
+    return 'Sugars ${g}g';
+  }
+
+  @override
+  String get sugarNone => 'No sugar info';
+
+  @override
   String get legendRaw => 'Weigh-ins';
 
   @override

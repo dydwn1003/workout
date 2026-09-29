@@ -267,6 +267,7 @@ class _DayBody extends StatelessWidget {
     final s = AppScope.of(context);
     final plan = s.planOn(date)!;
     final totals = s.totalsOn(date);
+    final sugar = s.sugarOn(date);
     final meals = s.mealsOn(date).reversed.toList();
     final left = plan.targetKcal - totals.kcal;
     final w = s.weightOn(date);
@@ -366,6 +367,29 @@ class _DayBody extends StatelessWidget {
                   color: AppColors.lilac,
                   track: AppColors.lilacSoft,
                 ),
+                if (s.sugarLimitOn(date) case final limit?) ...[
+                  const SizedBox(height: 12),
+                  MacroBar(
+                    label: t.sugar,
+                    value: sugar.grams,
+                    target: limit,
+                    color: AppColors.sugar,
+                    track: AppColors.sugarSoft,
+                    isLimit: true,
+                    amountText: t.sugarOfLimit(fmt0(sugar.grams), fmt0(limit)),
+                  ),
+                  if (sugar.unknown > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        t.sugarUnknownMeals('${sugar.unknown}'),
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          color: AppColors.inkSoft,
+                        ),
+                      ),
+                    ),
+                ],
               ],
             ),
           ),
@@ -941,6 +965,10 @@ class _MealRow extends StatelessWidget {
                 source: meal.source,
                 edited: meal.edited,
                 date: parseDateKey(meal.date),
+                slot: meal.slot,
+                portion: meal.portion,
+                foodId: meal.foodId,
+                sugarG: meal.sugarG,
               ),
             ),
           ),

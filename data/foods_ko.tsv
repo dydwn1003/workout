@@ -1,225 +1,226 @@
 # Built-in food table (approximate reference values, per 100 g edible portion).
 # Columns: name	aliases(,)	category	kcal	protein	carbs	fat	units(label:grams;...)
+# Optional: unknown(k/p/c/f)	sugar(당류 g per 100 g; median of same-named MFDS foods, else a typical reference value)
 # Values are typical estimates for common Korean servings, not lab data.
 # Regenerate after editing: python3 tool/gen_foods.py
-흰쌀밥	쌀밥,공기밥,밥,rice,white rice	밥·죽	148	2.6	32.6	0.3	1공기:210;반 공기:105
-현미밥	brown rice	밥·죽	143	3.1	30	1.1	1공기:210
-잡곡밥	multigrain rice	밥·죽	145	3.3	31	0.9	1공기:210
-흑미밥	black rice	밥·죽	147	3	31.5	0.8	1공기:210
-즉석밥	instant rice	밥·죽	150	2.6	33	0.4	1개:210
-김밥	gimbap,kimbap	밥·죽	190	5.5	29	5.5	1줄:230;1조각:23
-참치김밥	tuna gimbap	밥·죽	200	7	27	7	1줄:250;1조각:25
-비빔밥	bibimbap	밥·죽	120	4.5	18	3.2	1그릇:450
-볶음밥	fried rice	밥·죽	170	4.5	25	6	1인분:350
-김치볶음밥	kimchi fried rice	밥·죽	165	4.5	24	6	1인분:350
-오므라이스	omurice	밥·죽	160	5	22	6	1인분:400
-카레라이스	카레,curry rice,curry	밥·죽	130	3.5	20	4	1인분:450
-제육덮밥	spicy pork rice bowl	밥·죽	160	7	22	5	1그릇:450
-불고기덮밥	bulgogi rice bowl	밥·죽	150	7	22	4	1그릇:450
-회덮밥	raw fish rice bowl	밥·죽	120	6	20	2	1그릇:450
-규동	소고기덮밥,gyudon,beef bowl	밥·죽	155	6.5	23	4	1그릇:450
-포케	poke bowl,poke	밥·죽	130	8	15	4	1그릇:400
-주먹밥	삼각김밥,rice ball,onigiri	밥·죽	180	4	36	2.5	1개:110
-유부초밥	inari sushi	밥·죽	200	4.5	35	4.5	1개:40
-초밥	스시,sushi	밥·죽	160	8	27	1.5	1개:30
-전복죽	abalone porridge	밥·죽	60	3	10	1	1그릇:400
-호박죽	pumpkin porridge	밥·죽	70	1.2	15	0.4	1그릇:350
-야채죽	vegetable porridge	밥·죽	55	1.5	11	0.4	1그릇:400
-라면	ramen,ramyeon,instant noodles	면·만두	417	8.3	66	13.3	1개:120
-컵라면	cup noodles	면·만두	430	8.5	63	16	1개:65
-짜장면	jajangmyeon	면·만두	110	3.2	17	3.2	1그릇:650
-짬뽕	jjamppong	면·만두	95	4	14	2.6	1그릇:700
-우동	udon	면·만두	75	2.3	14	0.8	1그릇:600
-칼국수	kalguksu	면·만두	90	3	16	1.5	1그릇:600
-물냉면	냉면,cold noodles,naengmyeon	면·만두	90	3	17	1	1그릇:600
-비빔냉면	spicy cold noodles	면·만두	120	3.5	23	1.8	1그릇:500
-잔치국수	국수,noodle soup	면·만두	85	2.8	16	0.8	1그릇:550
-비빔국수	spicy noodles	면·만두	140	3.5	27	2	1그릇:400
-쫄면	jjolmyeon	면·만두	150	4	30	1.5	1그릇:400
-토마토파스타	파스타,스파게티,pasta,spaghetti,tomato pasta	면·만두	150	5	24	4	1인분:350
-크림파스타	까르보나라,cream pasta,carbonara	면·만두	200	6	22	10	1인분:350
-쌀국수	pho	면·만두	75	4	12	1.2	1그릇:600
-만두	찐만두,dumplings,mandu	면·만두	200	9	24	7.5	1개:30;1인분:180
-군만두	fried dumplings	면·만두	240	8	25	12	1개:30;1인분:180
-떡볶이	tteokbokki	분식	160	3.3	33	1.7	1인분:300
-라볶이	rabokki	분식	180	4	33	4	1인분:350
-순대	sundae	분식	190	8	23	6	1인분:150
-어묵	오뎅,fish cake,eomuk	분식	150	10	15	5	1꼬치:50;1인분:100
-튀김	모듬튀김,fried snacks	분식	280	5	30	15	1개:40
-김말이	fried seaweed roll	분식	250	3	32	12	1개:30
-떡꼬치	rice cake skewer	분식	230	3	48	3	1개:80
-핫도그	hot dog,corn dog	분식	280	8	30	14	1개:100
-김치찌개	kimchi stew	국·찌개	62	4	2.5	4	1인분:400
-된장찌개	soybean paste stew	국·찌개	45	3	3	2.2	1인분:400
-순두부찌개	soft tofu stew	국·찌개	60	4	2.7	3.6	1인분:450
-부대찌개	budae jjigae	국·찌개	110	5	8	6	1인분:500
-청국장	cheonggukjang	국·찌개	70	6	4	3	1인분:400
-미역국	seaweed soup	국·찌개	25	2	1	1.5	1그릇:350
-소고기무국	beef radish soup	국·찌개	30	3	1.5	1.3	1그릇:350
-콩나물국	bean sprout soup	국·찌개	15	1.2	1.2	0.5	1그릇:350
-갈비탕	galbitang	국·찌개	75	6	2.5	4.2	1그릇:600
-설렁탕	seolleongtang	국·찌개	55	5	1.5	3	1그릇:600
-곰탕	gomtang	국·찌개	50	5	1	2.8	1그릇:600
-삼계탕	samgyetang	국·찌개	95	9	4	4.5	1그릇:900
-감자탕	gamjatang	국·찌개	85	6	3.5	5	1인분:600
-육개장	yukgaejang	국·찌개	55	4.5	2.5	3	1그릇:500
-해장국	haejangguk	국·찌개	55	4	3	3	1그릇:600
-떡국	rice cake soup	국·찌개	100	4	17	1.8	1그릇:500
-어묵탕	fish cake soup	국·찌개	45	3.5	4	1.8	1그릇:400
-마라탕	malatang	국·찌개	90	4	6	5.5	1인분:600
-배추김치	김치,kimchi	반찬	20	1.5	3	0.5	1접시:50
-깍두기	radish kimchi	반찬	25	1.3	4.5	0.3	1접시:50
-시금치나물	spinach side dish	반찬	60	3	5	3.5	1접시:70
-콩나물무침	bean sprout side dish	반찬	45	3	4	2	1접시:70
-계란말이	rolled omelette	반찬	160	10	3	12	1조각:40;1접시:120
-계란찜	steamed egg	반찬	90	7	2	6	1그릇:150
-멸치볶음	stir-fried anchovies	반찬	300	30	25	9	1접시:30
-잡채	japchae	반찬	160	3.5	25	5	1접시:150
-감자조림	braised potatoes	반찬	110	2	22	1.5	1접시:80
-어묵볶음	stir-fried fish cake	반찬	170	8	18	7	1접시:70
-두부조림	braised tofu	반찬	120	8	5	7.5	1접시:100
-진미채볶음	seasoned dried squid	반찬	300	20	40	6	1접시:30
-조미김	김,seaweed,laver	반찬	520	30	30	38	1봉:4
-샐러드	salad	반찬	40	2	6	1.5	1접시:150
-닭가슴살샐러드	chicken salad	반찬	90	12	5	2.5	1접시:250
-월남쌈	rice paper rolls	반찬	110	5	18	2	1개:60
-닭가슴살	chicken breast	고기·생선	165	31	0	3.6	1개:100;1팩:100
-닭가슴살소시지	chicken sausage	고기·생선	150	18	7	5.5	1개:70
-닭다리살	닭다리,chicken thigh	고기·생선	210	26	0	11	1개:100
-후라이드치킨	치킨,fried chicken	고기·생선	290	18	10	20	1조각:100;1마리:1000
-양념치킨	seasoned fried chicken	고기·생선	310	16	20	18	1조각:100;1마리:1000
-닭강정	sweet crispy chicken	고기·생선	300	14	30	14	1컵:200
-닭꼬치	chicken skewer	고기·생선	180	18	10	7	1개:100
-닭갈비	dakgalbi	고기·생선	160	12	8	8.5	1인분:300
-찜닭	jjimdak	고기·생선	140	11	12	5	1인분:400
-삼겹살	pork belly	고기·생선	360	18	0	31	1인분:200
-목살	pork neck	고기·생선	250	20	0	18	1인분:200
-돼지고기 안심	돼지고기,pork loin,pork	고기·생선	140	22	0	5	1인분:150
-제육볶음	spicy stir-fried pork	고기·생선	180	10	6	13	1인분:250
-돈까스	돈가스,tonkatsu,pork cutlet	고기·생선	280	12	22	16	1인분:250
-족발	jokbal	고기·생선	250	23	1.5	17	1인분:200
-보쌈	bossam	고기·생선	250	17	2.5	19	1인분:200
-곱창	gopchang	고기·생선	300	12	3	27	1인분:200
-불고기	bulgogi	고기·생선	190	14	9	11	1인분:200
-소고기 등심	소고기,beef,sirloin	고기·생선	250	26	0	16	1인분:150
-스테이크	steak	고기·생선	250	26	0	16	1개:200
-갈비찜	braised short ribs	고기·생선	230	15	9	15	1인분:250
-LA갈비	la galbi,beef short ribs	고기·생선	290	17	8	21	1인분:200
-오리고기	duck	고기·생선	300	18	0	25	1인분:150
-훈제오리	smoked duck	고기·생선	280	18	3	22	1인분:100
-햄	ham,spam	고기·생선	300	13	4	26	1조각:30
-소시지	sausage	고기·생선	290	12	4	25	1개:50
-베이컨	bacon	고기·생선	450	13	1	43	1줄:15
-연어	salmon	고기·생선	208	20	0	13	1인분:100
-고등어구이	고등어,mackerel	고기·생선	260	20	0	20	1토막:100
-참치캔	참치,tuna	고기·생선	150	25	0	5.5	1캔:100
-새우	shrimp	고기·생선	100	21	0	1.5	1인분:100
-오징어볶음	stir-fried squid	고기·생선	110	12	8	3.5	1인분:250
-생선회	회,sashimi	고기·생선	120	21	0	3.5	1인분:150
-계란	달걀,삶은계란,egg,eggs,boiled egg	계란·두부	144	12.6	0.8	9.6	1개:50
-계란후라이	달걀후라이,fried egg	계란·두부	195	13	0.9	15	1개:50
-스크램블에그	scrambled eggs	계란·두부	170	11	2	13	1인분:100
-두부	tofu	계란·두부	80	8.7	2	4.7	1모:300;반 모:150
-연두부	soft tofu	계란·두부	50	5	1.5	2.8	1개:250
-두유	soy milk	계란·두부	55	3.7	3.7	2.6	1팩:190
-에다마메	풋콩,edamame	계란·두부	120	11	9	5	1접시:100
-낫또	natto	계란·두부	200	16.5	12	10	1팩:50
-병아리콩	chickpeas	계란·두부	165	9	27	2.6	1컵:160
-식빵	bread,white bread	빵·시리얼	265	9	49	3.2	1장:40
-통밀빵	whole wheat bread	빵·시리얼	250	12	43	3.5	1장:40
-토스트	toast	빵·시리얼	290	9.5	53	3.5	1장:37
-베이글	bagel	빵·시리얼	270	10	53	1.5	1개:100
-크루아상	croissant	빵·시리얼	406	8	46	21	1개:60
-소금빵	salt bread	빵·시리얼	380	8	45	19	1개:70
-단팥빵	red bean bun	빵·시리얼	280	7.5	52	5	1개:100
-크림빵	cream bun	빵·시리얼	300	7	45	10	1개:90
-샌드위치	sandwich	빵·시리얼	220	10	22	10	1개:200
-시리얼	cereal,cornflakes	빵·시리얼	380	7	84	1	1그릇:30
-그래놀라	granola	빵·시리얼	470	10	64	20	1그릇:45
-오트밀	oatmeal,oats	빵·시리얼	380	13	67	7	1회:40
-햄버거	버거,burger,hamburger	패스트푸드	236	12	20	12	1개:220
-치즈버거	cheeseburger	패스트푸드	265	14	21	13.5	1개:200
-피자	pizza	패스트푸드	255	11	30	10	1조각:110
-감자튀김	french fries,fries	패스트푸드	312	3.4	41	15	미디엄:120;라지:160
-치킨너겟	nuggets	패스트푸드	300	15	17	19	1개:18
-타코	taco	패스트푸드	220	9	20	11	1개:100
-부리또	burrito	패스트푸드	200	8	25	7.5	1개:300
-탕수육	sweet and sour pork	중식·기타	240	10	25	11	1인분:300
-마파두부	mapo tofu	중식·기타	120	7	5	8	1인분:250
-깐풍기	kkanpunggi	중식·기타	280	15	20	16	1인분:250
-바나나	banana	과일	89	1.1	23	0.3	1개:120
-사과	apple	과일	52	0.3	14	0.2	1개:200;반 개:100
-귤	mandarin,tangerine	과일	44	0.7	11	0.2	1개:90
-오렌지	orange	과일	47	0.9	12	0.1	1개:180
-딸기	strawberry,strawberries	과일	32	0.7	7.7	0.3	1컵:150;1개:15
-블루베리	blueberry,blueberries	과일	57	0.7	14	0.3	1컵:100
-포도	grapes	과일	69	0.7	18	0.2	1송이:300;1컵:150
-샤인머스캣	shine muscat	과일	70	0.6	18	0.2	1송이:400;1알:12
-수박	watermelon	과일	30	0.6	7.6	0.2	1조각:300
-참외	korean melon	과일	30	0.9	7	0.1	1개:400
-복숭아	peach	과일	39	0.9	10	0.3	1개:250
-배	pear	과일	42	0.3	11	0.1	1개:500;1/4개:125
-키위	kiwi	과일	61	1.1	15	0.5	1개:80
-파인애플	pineapple	과일	50	0.5	13	0.1	1컵:160
-망고	mango	과일	60	0.8	15	0.4	1개:300
-아보카도	avocado	과일	160	2	9	15	1개:150;반 개:75
-토마토	tomato	채소	18	0.9	3.9	0.2	1개:150
-방울토마토	cherry tomato,cherry tomatoes	채소	18	0.9	3.9	0.2	10개:150
-고구마	sweet potato	채소	86	1.6	20	0.1	1개:150
-군고구마	baked sweet potato	채소	120	2	28	0.2	1개:150
-감자	potato	채소	77	2	17	0.1	1개:150
-단호박	kabocha,pumpkin	채소	60	1.6	13	0.2	1/4개:200
-옥수수	corn	채소	96	3.4	21	1.5	1개:150
-브로콜리	broccoli	채소	34	2.8	7	0.4	1컵:90
-양배추	cabbage	채소	25	1.3	6	0.1	1접시:100
-오이	cucumber	채소	15	0.7	3.6	0.1	1개:200
-당근	carrot	채소	41	0.9	10	0.2	1개:100
-시금치	spinach	채소	23	2.9	3.6	0.4	1접시:80
-버섯	mushroom	채소	25	3	4	0.3	1접시:100
-양상추	lettuce	채소	15	1.4	2.9	0.2	1접시:80
-우유	milk	유제품	65	3.2	4.8	3.8	1컵:200;1팩:200
-저지방우유	low fat milk	유제품	45	3.4	5	1	1컵:200
-그릭요거트	그릭 요거트,greek yogurt	유제품	80	10	4	2.7	1개:150
-요거트	떠먹는요거트,yogurt	유제품	80	3.5	12	2.5	1개:100
-슬라이스치즈	치즈,cheese,slice cheese	유제품	350	22.5	2.5	27.5	1장:20
-모짜렐라치즈	mozzarella	유제품	280	22	2	20	1회:30
-크림치즈	cream cheese	유제품	350	6	5	35	1회:20
-버터	butter	유제품	717	0.9	0.1	81	1조각:10
-아메리카노	americano,black coffee	음료	3	0.1	0.4	0	1잔:350
-카페라떼	라떼,latte	음료	54	2.9	4.3	2.9	1잔:350
-바닐라라떼	vanilla latte	음료	70	2.5	10	2.3	1잔:350
-카푸치노	cappuccino	음료	40	2.2	3.3	2	1잔:300
-콜드브루	cold brew	음료	2	0.1	0.2	0	1잔:350
-녹차라떼	green tea latte	음료	80	2.5	13	2	1잔:350
-초코라떼	hot chocolate	음료	85	3	13	2.5	1잔:350
-콜라	cola,coke	음료	42	0	10.6	0	1캔:355;500ml:500
-제로콜라	zero cola,diet coke	음료	0	0	0	0	1캔:355
-사이다	sprite,lemon lime soda	음료	40	0	10	0	1캔:355
-오렌지주스	orange juice	음료	44	0.7	10.4	0.2	1잔:250
-스무디	smoothie	음료	70	1	16	0.3	1잔:400
-버블티	bubble tea	음료	85	0.7	17	1.6	1잔:500
-이온음료	sports drink	음료	25	0	6.2	0	1병:500
-프로틴쉐이크	프로틴,단백질쉐이크,protein shake,whey	운동식품	400	80	10	5	1스쿱:30
-단백질바	프로틴바,protein bar	운동식품	400	40	40	14	1개:50
-단백질음료	protein drink	운동식품	60	8.5	3	1.5	1병:250
-견과류	mixed nuts,nuts	간식·디저트	600	20	20	50	1봉:25
-아몬드	almond,almonds	간식·디저트	580	21	22	50	1줌:30
-땅콩버터	peanut butter	간식·디저트	590	25	20	50	1스푼:16
-감자칩	과자,chips,potato chips	간식·디저트	540	6.5	53	34	1봉:60
-초콜릿	chocolate	간식·디저트	530	6.5	57	30	1개:30
-젤리	gummy,jelly	간식·디저트	330	6	77	0	1봉:50
-떡	가래떡,rice cake,tteok	간식·디저트	230	4	50	0.5	1개:100
-붕어빵	fish-shaped bun	간식·디저트	230	5	45	3	1개:60
-호떡	hotteok	간식·디저트	280	5	48	8	1개:100
-도넛	donut	간식·디저트	420	5	50	22	1개:60
-머핀	muffin	간식·디저트	380	6	50	18	1개:110
-케이크	cake	간식·디저트	350	5	45	17	1조각:100
-쿠키	cookie	간식·디저트	480	6	65	22	1개:20
-마카롱	macaron	간식·디저트	400	7	55	17	1개:15
-아이스크림	ice cream	간식·디저트	210	3.5	25	11	1컵:100
-맥주	beer	주류	43	0.5	3.6	0	1캔:355;500ml:500
-소주	soju	주류	111	0	0	0	1병:360;1잔:50
-막걸리	makgeolli	주류	50	1	4	0	1병:750;1잔:200
-와인	wine	주류	83	0.1	2.6	0	1잔:150
-하이볼	highball	주류	50	0	3	0	1잔:350
-위스키	whisky,whiskey	주류	250	0	0	0	1잔:30
+흰쌀밥	쌀밥,공기밥,밥,rice,white rice	밥·죽	148	2.6	32.6	0.3	1공기:210;반 공기:105		0.1
+현미밥	brown rice	밥·죽	143	3.1	30	1.1	1공기:210		0.2
+잡곡밥	multigrain rice	밥·죽	145	3.3	31	0.9	1공기:210		0.3
+흑미밥	black rice	밥·죽	147	3	31.5	0.8	1공기:210		0.1
+즉석밥	instant rice	밥·죽	150	2.6	33	0.4	1개:210		0.1
+김밥	gimbap,kimbap	밥·죽	190	5.5	29	5.5	1줄:230;1조각:23		0.7
+참치김밥	tuna gimbap	밥·죽	200	7	27	7	1줄:250;1조각:25		1.5
+비빔밥	bibimbap	밥·죽	120	4.5	18	3.2	1그릇:450		2.1
+볶음밥	fried rice	밥·죽	170	4.5	25	6	1인분:350		0.9
+김치볶음밥	kimchi fried rice	밥·죽	165	4.5	24	6	1인분:350		1.5
+오므라이스	omurice	밥·죽	160	5	22	6	1인분:400		1.3
+카레라이스	카레,curry rice,curry	밥·죽	130	3.5	20	4	1인분:450		0.2
+제육덮밥	spicy pork rice bowl	밥·죽	160	7	22	5	1그릇:450		3.5
+불고기덮밥	bulgogi rice bowl	밥·죽	150	7	22	4	1그릇:450		4.0
+회덮밥	raw fish rice bowl	밥·죽	120	6	20	2	1그릇:450		2.2
+규동	소고기덮밥,gyudon,beef bowl	밥·죽	155	6.5	23	4	1그릇:450		3.5
+포케	poke bowl,poke	밥·죽	130	8	15	4	1그릇:400		3.0
+주먹밥	삼각김밥,rice ball,onigiri	밥·죽	180	4	36	2.5	1개:110		0.9
+유부초밥	inari sushi	밥·죽	200	4.5	35	4.5	1개:40		2.0
+초밥	스시,sushi	밥·죽	160	8	27	1.5	1개:30		3.6
+전복죽	abalone porridge	밥·죽	60	3	10	1	1그릇:400		0.1
+호박죽	pumpkin porridge	밥·죽	70	1.2	15	0.4	1그릇:350		3.6
+야채죽	vegetable porridge	밥·죽	55	1.5	11	0.4	1그릇:400		0.8
+라면	ramen,ramyeon,instant noodles	면·만두	417	8.3	66	13.3	1개:120		0.0
+컵라면	cup noodles	면·만두	430	8.5	63	16	1개:65		4.0
+짜장면	jajangmyeon	면·만두	110	3.2	17	3.2	1그릇:650		1.7
+짬뽕	jjamppong	면·만두	95	4	14	2.6	1그릇:700		0.5
+우동	udon	면·만두	75	2.3	14	0.8	1그릇:600		0.2
+칼국수	kalguksu	면·만두	90	3	16	1.5	1그릇:600		0.2
+물냉면	냉면,cold noodles,naengmyeon	면·만두	90	3	17	1	1그릇:600		1.1
+비빔냉면	spicy cold noodles	면·만두	120	3.5	23	1.8	1그릇:500		2.7
+잔치국수	국수,noodle soup	면·만두	85	2.8	16	0.8	1그릇:550		0.6
+비빔국수	spicy noodles	면·만두	140	3.5	27	2	1그릇:400		3.1
+쫄면	jjolmyeon	면·만두	150	4	30	1.5	1그릇:400		3.9
+토마토파스타	파스타,스파게티,pasta,spaghetti,tomato pasta	면·만두	150	5	24	4	1인분:350		2.3
+크림파스타	까르보나라,cream pasta,carbonara	면·만두	200	6	22	10	1인분:350		2.5
+쌀국수	pho	면·만두	75	4	12	1.2	1그릇:600		0.4
+만두	찐만두,dumplings,mandu	면·만두	200	9	24	7.5	1개:30;1인분:180		0.6
+군만두	fried dumplings	면·만두	240	8	25	12	1개:30;1인분:180		0.4
+떡볶이	tteokbokki	분식	160	3.3	33	1.7	1인분:300		6.5
+라볶이	rabokki	분식	180	4	33	4	1인분:350		1.0
+순대	sundae	분식	190	8	23	6	1인분:150		1.1
+어묵	오뎅,fish cake,eomuk	분식	150	10	15	5	1꼬치:50;1인분:100		3.5
+튀김	모듬튀김,fried snacks	분식	280	5	30	15	1개:40		2.1
+김말이	fried seaweed roll	분식	250	3	32	12	1개:30		1.5
+떡꼬치	rice cake skewer	분식	230	3	48	3	1개:80		12.0
+핫도그	hot dog,corn dog	분식	280	8	30	14	1개:100		4.0
+김치찌개	kimchi stew	국·찌개	62	4	2.5	4	1인분:400		0.9
+된장찌개	soybean paste stew	국·찌개	45	3	3	2.2	1인분:400		0.5
+순두부찌개	soft tofu stew	국·찌개	60	4	2.7	3.6	1인분:450		0.6
+부대찌개	budae jjigae	국·찌개	110	5	8	6	1인분:500		0.9
+청국장	cheonggukjang	국·찌개	70	6	4	3	1인분:400		0.1
+미역국	seaweed soup	국·찌개	25	2	1	1.5	1그릇:350		0.0
+소고기무국	beef radish soup	국·찌개	30	3	1.5	1.3	1그릇:350		1.0
+콩나물국	bean sprout soup	국·찌개	15	1.2	1.2	0.5	1그릇:350		0.1
+갈비탕	galbitang	국·찌개	75	6	2.5	4.2	1그릇:600		0.1
+설렁탕	seolleongtang	국·찌개	55	5	1.5	3	1그릇:600		0.1
+곰탕	gomtang	국·찌개	50	5	1	2.8	1그릇:600		0.2
+삼계탕	samgyetang	국·찌개	95	9	4	4.5	1그릇:900		0.5
+감자탕	gamjatang	국·찌개	85	6	3.5	5	1인분:600		0.4
+육개장	yukgaejang	국·찌개	55	4.5	2.5	3	1그릇:500		0.5
+해장국	haejangguk	국·찌개	55	4	3	3	1그릇:600		0.4
+떡국	rice cake soup	국·찌개	100	4	17	1.8	1그릇:500		0.1
+어묵탕	fish cake soup	국·찌개	45	3.5	4	1.8	1그릇:400		0.7
+마라탕	malatang	국·찌개	90	4	6	5.5	1인분:600		0.3
+배추김치	김치,kimchi	반찬	20	1.5	3	0.5	1접시:50		2.4
+깍두기	radish kimchi	반찬	25	1.3	4.5	0.3	1접시:50		2.5
+시금치나물	spinach side dish	반찬	60	3	5	3.5	1접시:70		0.9
+콩나물무침	bean sprout side dish	반찬	45	3	4	2	1접시:70		0.3
+계란말이	rolled omelette	반찬	160	10	3	12	1조각:40;1접시:120		1.5
+계란찜	steamed egg	반찬	90	7	2	6	1그릇:150		0.8
+멸치볶음	stir-fried anchovies	반찬	300	30	25	9	1접시:30		1.7
+잡채	japchae	반찬	160	3.5	25	5	1접시:150		0.7
+감자조림	braised potatoes	반찬	110	2	22	1.5	1접시:80		2.2
+어묵볶음	stir-fried fish cake	반찬	170	8	18	7	1접시:70		3.6
+두부조림	braised tofu	반찬	120	8	5	7.5	1접시:100		2.7
+진미채볶음	seasoned dried squid	반찬	300	20	40	6	1접시:30		20.0
+조미김	김,seaweed,laver	반찬	520	30	30	38	1봉:4		0.0
+샐러드	salad	반찬	40	2	6	1.5	1접시:150		4.1
+닭가슴살샐러드	chicken salad	반찬	90	12	5	2.5	1접시:250		3.0
+월남쌈	rice paper rolls	반찬	110	5	18	2	1개:60		5.5
+닭가슴살	chicken breast	고기·생선	165	31	0	3.6	1개:100;1팩:100		0.0
+닭가슴살소시지	chicken sausage	고기·생선	150	18	7	5.5	1개:70		2.0
+닭다리살	닭다리,chicken thigh	고기·생선	210	26	0	11	1개:100		0.0
+후라이드치킨	치킨,fried chicken	고기·생선	290	18	10	20	1조각:100;1마리:1000		7.4
+양념치킨	seasoned fried chicken	고기·생선	310	16	20	18	1조각:100;1마리:1000		8.0
+닭강정	sweet crispy chicken	고기·생선	300	14	30	14	1컵:200		3.9
+닭꼬치	chicken skewer	고기·생선	180	18	10	7	1개:100		7.0
+닭갈비	dakgalbi	고기·생선	160	12	8	8.5	1인분:300		5.0
+찜닭	jjimdak	고기·생선	140	11	12	5	1인분:400		6.0
+삼겹살	pork belly	고기·생선	360	18	0	31	1인분:200		0.0
+목살	pork neck	고기·생선	250	20	0	18	1인분:200		0.0
+돼지고기 안심	돼지고기,pork loin,pork	고기·생선	140	22	0	5	1인분:150		0.1
+제육볶음	spicy stir-fried pork	고기·생선	180	10	6	13	1인분:250		5.1
+돈까스	돈가스,tonkatsu,pork cutlet	고기·생선	280	12	22	16	1인분:250		0.5
+족발	jokbal	고기·생선	250	23	1.5	17	1인분:200		0.1
+보쌈	bossam	고기·생선	250	17	2.5	19	1인분:200		0.5
+곱창	gopchang	고기·생선	300	12	3	27	1인분:200		0.5
+불고기	bulgogi	고기·생선	190	14	9	11	1인분:200		7.0
+소고기 등심	소고기,beef,sirloin	고기·생선	250	26	0	16	1인분:150		0.0
+스테이크	steak	고기·생선	250	26	0	16	1개:200		0.0
+갈비찜	braised short ribs	고기·생선	230	15	9	15	1인분:250		1.7
+LA갈비	la galbi,beef short ribs	고기·생선	290	17	8	21	1인분:200		6.0
+오리고기	duck	고기·생선	300	18	0	25	1인분:150		0.0
+훈제오리	smoked duck	고기·생선	280	18	3	22	1인분:100		0.3
+햄	ham,spam	고기·생선	300	13	4	26	1조각:30		1.1
+소시지	sausage	고기·생선	290	12	4	25	1개:50		1.7
+베이컨	bacon	고기·생선	450	13	1	43	1줄:15		1.0
+연어	salmon	고기·생선	208	20	0	13	1인분:100		0.0
+고등어구이	고등어,mackerel	고기·생선	260	20	0	20	1토막:100		0.0
+참치캔	참치,tuna	고기·생선	150	25	0	5.5	1캔:100		0.0
+새우	shrimp	고기·생선	100	21	0	1.5	1인분:100		0.0
+오징어볶음	stir-fried squid	고기·생선	110	12	8	3.5	1인분:250		2.9
+생선회	회,sashimi	고기·생선	120	21	0	3.5	1인분:150		0.0
+계란	달걀,삶은계란,egg,eggs,boiled egg	계란·두부	144	12.6	0.8	9.6	1개:50		0.3
+계란후라이	달걀후라이,fried egg	계란·두부	195	13	0.9	15	1개:50		0.2
+스크램블에그	scrambled eggs	계란·두부	170	11	2	13	1인분:100		1.0
+두부	tofu	계란·두부	80	8.7	2	4.7	1모:300;반 모:150		0.3
+연두부	soft tofu	계란·두부	50	5	1.5	2.8	1개:250		0.5
+두유	soy milk	계란·두부	55	3.7	3.7	2.6	1팩:190		2.4
+에다마메	풋콩,edamame	계란·두부	120	11	9	5	1접시:100		2.2
+낫또	natto	계란·두부	200	16.5	12	10	1팩:50		4.9
+병아리콩	chickpeas	계란·두부	165	9	27	2.6	1컵:160		4.8
+식빵	bread,white bread	빵·시리얼	265	9	49	3.2	1장:40		1.6
+통밀빵	whole wheat bread	빵·시리얼	250	12	43	3.5	1장:40		5.0
+토스트	toast	빵·시리얼	290	9.5	53	3.5	1장:37		5.0
+베이글	bagel	빵·시리얼	270	10	53	1.5	1개:100		4.6
+크루아상	croissant	빵·시리얼	406	8	46	21	1개:60		11.0
+소금빵	salt bread	빵·시리얼	380	8	45	19	1개:70		5.0
+단팥빵	red bean bun	빵·시리얼	280	7.5	52	5	1개:100		18.3
+크림빵	cream bun	빵·시리얼	300	7	45	10	1개:90		14.9
+샌드위치	sandwich	빵·시리얼	220	10	22	10	1개:200		3.6
+시리얼	cereal,cornflakes	빵·시리얼	380	7	84	1	1그릇:30		7.0
+그래놀라	granola	빵·시리얼	470	10	64	20	1그릇:45		20.0
+오트밀	oatmeal,oats	빵·시리얼	380	13	67	7	1회:40		1.0
+햄버거	버거,burger,hamburger	패스트푸드	236	12	20	12	1개:220		3.0
+치즈버거	cheeseburger	패스트푸드	265	14	21	13.5	1개:200		5.0
+피자	pizza	패스트푸드	255	11	30	10	1조각:110		2.1
+감자튀김	french fries,fries	패스트푸드	312	3.4	41	15	미디엄:120;라지:160		0.0
+치킨너겟	nuggets	패스트푸드	300	15	17	19	1개:18		0.5
+타코	taco	패스트푸드	220	9	20	11	1개:100		2.0
+부리또	burrito	패스트푸드	200	8	25	7.5	1개:300		1.5
+탕수육	sweet and sour pork	중식·기타	240	10	25	11	1인분:300		4.4
+마파두부	mapo tofu	중식·기타	120	7	5	8	1인분:250		2.0
+깐풍기	kkanpunggi	중식·기타	280	15	20	16	1인분:250		0.2
+바나나	banana	과일	89	1.1	23	0.3	1개:120		12.2
+사과	apple	과일	52	0.3	14	0.2	1개:200;반 개:100		10.4
+귤	mandarin,tangerine	과일	44	0.7	11	0.2	1개:90		9.5
+오렌지	orange	과일	47	0.9	12	0.1	1개:180		9.4
+딸기	strawberry,strawberries	과일	32	0.7	7.7	0.3	1컵:150;1개:15		4.9
+블루베리	blueberry,blueberries	과일	57	0.7	14	0.3	1컵:100		10.0
+포도	grapes	과일	69	0.7	18	0.2	1송이:300;1컵:150		15.5
+샤인머스캣	shine muscat	과일	70	0.6	18	0.2	1송이:400;1알:12		17.0
+수박	watermelon	과일	30	0.6	7.6	0.2	1조각:300		6.2
+참외	korean melon	과일	30	0.9	7	0.1	1개:400		7.5
+복숭아	peach	과일	39	0.9	10	0.3	1개:250		8.4
+배	pear	과일	42	0.3	11	0.1	1개:500;1/4개:125		9.8
+키위	kiwi	과일	61	1.1	15	0.5	1개:80		9.0
+파인애플	pineapple	과일	50	0.5	13	0.1	1컵:160		9.9
+망고	mango	과일	60	0.8	15	0.4	1개:300		13.7
+아보카도	avocado	과일	160	2	9	15	1개:150;반 개:75		0.7
+토마토	tomato	채소	18	0.9	3.9	0.2	1개:150		2.6
+방울토마토	cherry tomato,cherry tomatoes	채소	18	0.9	3.9	0.2	10개:150		3.9
+고구마	sweet potato	채소	86	1.6	20	0.1	1개:150		17.4
+군고구마	baked sweet potato	채소	120	2	28	0.2	1개:150		6.5
+감자	potato	채소	77	2	17	0.1	1개:150		0.9
+단호박	kabocha,pumpkin	채소	60	1.6	13	0.2	1/4개:200		5.0
+옥수수	corn	채소	96	3.4	21	1.5	1개:150		2.4
+브로콜리	broccoli	채소	34	2.8	7	0.4	1컵:90		1.7
+양배추	cabbage	채소	25	1.3	6	0.1	1접시:100		3.2
+오이	cucumber	채소	15	0.7	3.6	0.1	1개:200		1.7
+당근	carrot	채소	41	0.9	10	0.2	1개:100		4.7
+시금치	spinach	채소	23	2.9	3.6	0.4	1접시:80		0.4
+버섯	mushroom	채소	25	3	4	0.3	1접시:100		2.0
+양상추	lettuce	채소	15	1.4	2.9	0.2	1접시:80		0.8
+우유	milk	유제품	65	3.2	4.8	3.8	1컵:200;1팩:200		10.2
+저지방우유	low fat milk	유제품	45	3.4	5	1	1컵:200		5.0
+그릭요거트	그릭 요거트,greek yogurt	유제품	80	10	4	2.7	1개:150		3.5
+요거트	떠먹는요거트,yogurt	유제품	80	3.5	12	2.5	1개:100		10.0
+슬라이스치즈	치즈,cheese,slice cheese	유제품	350	22.5	2.5	27.5	1장:20		0.5
+모짜렐라치즈	mozzarella	유제품	280	22	2	20	1회:30		1.0
+크림치즈	cream cheese	유제품	350	6	5	35	1회:20		3.2
+버터	butter	유제품	717	0.9	0.1	81	1조각:10		0.6
+아메리카노	americano,black coffee	음료	3	0.1	0.4	0	1잔:350		0.0
+카페라떼	라떼,latte	음료	54	2.9	4.3	2.9	1잔:350		2.2
+바닐라라떼	vanilla latte	음료	70	2.5	10	2.3	1잔:350		8.0
+카푸치노	cappuccino	음료	40	2.2	3.3	2	1잔:300		4.0
+콜드브루	cold brew	음료	2	0.1	0.2	0	1잔:350		0.0
+녹차라떼	green tea latte	음료	80	2.5	13	2	1잔:350		9.0
+초코라떼	hot chocolate	음료	85	3	13	2.5	1잔:350		10.0
+콜라	cola,coke	음료	42	0	10.6	0	1캔:355;500ml:500		10.6
+제로콜라	zero cola,diet coke	음료	0	0	0	0	1캔:355		0.0
+사이다	sprite,lemon lime soda	음료	40	0	10	0	1캔:355		10.0
+오렌지주스	orange juice	음료	44	0.7	10.4	0.2	1잔:250		8.4
+스무디	smoothie	음료	70	1	16	0.3	1잔:400		12.0
+버블티	bubble tea	음료	85	0.7	17	1.6	1잔:500		11.0
+이온음료	sports drink	음료	25	0	6.2	0	1병:500		6.0
+프로틴쉐이크	프로틴,단백질쉐이크,protein shake,whey	운동식품	400	80	10	5	1스쿱:30		3.0
+단백질바	프로틴바,protein bar	운동식품	400	40	40	14	1개:50		15.0
+단백질음료	protein drink	운동식품	60	8.5	3	1.5	1병:250		1.5
+견과류	mixed nuts,nuts	간식·디저트	600	20	20	50	1봉:25		8.3
+아몬드	almond,almonds	간식·디저트	580	21	22	50	1줌:30		4.4
+땅콩버터	peanut butter	간식·디저트	590	25	20	50	1스푼:16		5.0
+감자칩	과자,chips,potato chips	간식·디저트	540	6.5	53	34	1봉:60		0.5
+초콜릿	chocolate	간식·디저트	530	6.5	57	30	1개:30		42.0
+젤리	gummy,jelly	간식·디저트	330	6	77	0	1봉:50		46.0
+떡	가래떡,rice cake,tteok	간식·디저트	230	4	50	0.5	1개:100		0.0
+붕어빵	fish-shaped bun	간식·디저트	230	5	45	3	1개:60		20.0
+호떡	hotteok	간식·디저트	280	5	48	8	1개:100		4.8
+도넛	donut	간식·디저트	420	5	50	22	1개:60		11.6
+머핀	muffin	간식·디저트	380	6	50	18	1개:110		39.6
+케이크	cake	간식·디저트	350	5	45	17	1조각:100		19.2
+쿠키	cookie	간식·디저트	480	6	65	22	1개:20		30.0
+마카롱	macaron	간식·디저트	400	7	55	17	1개:15		41.9
+아이스크림	ice cream	간식·디저트	210	3.5	25	11	1컵:100		25.4
+맥주	beer	주류	43	0.5	3.6	0	1캔:355;500ml:500		0.0
+소주	soju	주류	111	0	0	0	1병:360;1잔:50		0.0
+막걸리	makgeolli	주류	50	1	4	0	1병:750;1잔:200		0.1
+와인	wine	주류	83	0.1	2.6	0	1잔:150		0.8
+하이볼	highball	주류	50	0	3	0	1잔:350		4.0
+위스키	whisky,whiskey	주류	250	0	0	0	1잔:30		0.0
