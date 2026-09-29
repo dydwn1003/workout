@@ -601,7 +601,7 @@ class LKo extends L {
 
   @override
   String get logCalendarHint =>
-      '식사나 체중을 하나라도 기록한 날은 체크, 기록이 없던 날은 X로 표시돼요. 날짜를 누르면 그날로 이동해요.';
+      '식사·체중·운동 중 하나라도 기록한 날은 체크, 기록이 없던 날은 X로 표시돼요. 날짜를 누르면 그날로 이동해요.';
 
   @override
   String weekMeals(String n) {

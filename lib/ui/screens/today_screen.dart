@@ -779,6 +779,7 @@ class _StreakCard extends StatelessWidget {
                       label: DateFormat.E(locale).format(log[i].$1),
                       meal: log[i].$2,
                       weight: log[i].$3,
+                      workout: log[i].$4,
                       today: i == log.length - 1,
                     ),
                   ),
@@ -826,18 +827,20 @@ class _DayDot extends StatelessWidget {
   final String label;
   final bool meal;
   final bool weight;
+  final bool workout;
   final bool today;
   const _DayDot({
     required this.label,
     required this.meal,
     required this.weight,
+    required this.workout,
     required this.today,
   });
 
   @override
   Widget build(BuildContext context) {
     final full = meal && weight;
-    final any = meal || weight;
+    final any = meal || weight || workout;
     return Column(
       children: [
         AnimatedContainer(
@@ -869,6 +872,13 @@ class _DayDot extends StatelessWidget {
                   Icons.monitor_weight_rounded,
                   size: 12,
                   color: full ? Colors.white : AppColors.sky,
+                ),
+              // Only room for two icons; workouts show when one is free.
+              if (workout && !(meal && weight))
+                Icon(
+                  Icons.fitness_center_rounded,
+                  size: 12,
+                  color: full ? Colors.white : AppColors.mint,
                 ),
             ],
           ),

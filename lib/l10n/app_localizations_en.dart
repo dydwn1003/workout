@@ -614,7 +614,7 @@ class LEn extends L {
 
   @override
   String get logCalendarHint =>
-      'Days with a meal or weight logged get a check, days without get an X. Tap a day to open it.';
+      'Days with a meal, weight or workout logged get a check, days without get an X. Tap a day to open it.';
 
   @override
   String weekMeals(String n) {

@@ -420,24 +420,31 @@ class AppState extends ChangeNotifier {
     );
   }
 
-  /// Last 7 days ending today: (date, meals logged, weighed in).
-  List<(DateTime, bool, bool)> weekLog() {
+  /// Last 7 days ending today: (date, meals logged, weighed in, worked out).
+  List<(DateTime, bool, bool, bool)> weekLog() {
     final mealDays = {for (final m in _data.meals) m.date};
     final weighDays = {for (final w in _data.weights) w.date};
+    final workoutDays = {for (final w in _data.workouts) w.date};
     return [
       for (var i = 6; i >= 0; i--)
         (() {
           final d = _addDays(today, -i);
           final k = dateKey(d);
-          return (d, mealDays.contains(k), weighDays.contains(k));
+          return (
+            d,
+            mealDays.contains(k),
+            weighDays.contains(k),
+            workoutDays.contains(k),
+          );
         })(),
     ];
   }
 
-  /// Days with any log (meal or weight), as [dateKey]s.
+  /// Days with any log (meal, weight or workout), as [dateKey]s.
   Set<String> get loggedDays => {
     for (final m in _data.meals) m.date,
     for (final w in _data.weights) w.date,
+    for (final w in _data.workouts) w.date,
   };
 
   /// First day of the log calendar: the start of the plan, or an earlier
@@ -452,7 +459,7 @@ class AppState extends ChangeNotifier {
     return start.isAfter(today) ? today : start;
   }
 
-  /// Consecutive days with any log (meal or weight), counting back from
+  /// Consecutive days with any log (meal, weight or workout), counting back from
   /// today (or yesterday, if today has nothing yet).
   int get loggingStreak {
     final days = loggedDays;

@@ -140,6 +140,11 @@ void main() {
       expect(s.loggedDays, isNot(contains('2026-09-23')));
       expect(s.longestLoggingStreak, 3);
       expect(s.loggingStreak, 3); // 25-27, today not logged yet
+      // A workout alone counts too: 23-24 bridge the gap.
+      await s.addWorkout(WorkoutType.cardio, 30, date: DateTime(2026, 9, 23));
+      await s.addWorkout(WorkoutType.strength, 45, date: DateTime(2026, 9, 24));
+      expect(s.longestLoggingStreak, 8);
+      expect(s.weekLog().firstWhere((d) => d.$1.day == 23).$4, isTrue);
     });
   });
 

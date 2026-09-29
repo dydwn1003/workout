@@ -177,7 +177,7 @@
   "logLegendDone": "Logged",
   "logLegendMissed": "Missed",
   "logLegendToday": "Today",
-  "logCalendarHint": "Days with a meal or weight logged get a check, days without get an X. Tap a day to open it.",
+  "logCalendarHint": "Days with a meal, weight or workout logged get a check, days without get an X. Tap a day to open it.",
   "weekMeals": "Meals {n}/7 days",
   "weekWeighs": "{n} weigh-ins",
   "weekLogHint": "Log meals on 5+ days and weight 3+ times so check-in can adjust your target",
