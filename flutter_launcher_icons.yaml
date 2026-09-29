@@ -1,0 +1,15 @@
+# App icon (assets/icon/icon.png, 1024x1024). Regenerate after changing it:
+#   dart run flutter_launcher_icons
+flutter_launcher_icons:
+  image_path: "assets/icon/icon.png"
+  android: "ic_launcher"
+  # Adaptive icon: the art shrunk into Android's safe zone on the same cream.
+  adaptive_icon_background: "#FCF6EB"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  ios: true
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: "assets/icon/icon.png"
+    background_color: "#FFF8F1"
+    theme_color: "#FF8E7F"

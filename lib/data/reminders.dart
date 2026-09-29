@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart' show Color;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
@@ -37,7 +38,9 @@ class LocalReminders implements ReminderScheduler {
     tzdata.initializeTimeZones();
     await _plugin.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        // White peach silhouette (Android draws notification icons as
+        // single-colour shapes; generated from assets/icon/icon.png).
+        android: AndroidInitializationSettings('@drawable/ic_notification'),
         iOS: DarwinInitializationSettings(
           requestAlertPermission: false,
           requestBadgePermission: false,
@@ -54,6 +57,7 @@ class LocalReminders implements ReminderScheduler {
       channelDescription: '기록을 쉬거나 체크인 날일 때 알려 드려요',
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
+      color: Color(0xFFFF8E7F),
     ),
     iOS: DarwinNotificationDetails(),
   );
