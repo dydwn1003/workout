@@ -29,6 +29,8 @@ jobs:
       HAS_SIGNING_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # commit count = versionCode (same as play.yml)
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -81,11 +83,13 @@ jobs:
         env:
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+          GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
         run: |
           flutter build apk --release \
-            --build-number=${{ github.run_number }} \
+            --build-number="$(git rev-list --count HEAD)" \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
-            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID"
           cp build/app/outputs/flutter-apk/app-release.apk alasfit.apk
 
       - name: Publish release

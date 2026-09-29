@@ -34,7 +34,7 @@ class AuthService {
   );
   static const mobileRedirect = String.fromEnvironment(
     'AUTH_REDIRECT',
-    defaultValue: 'com.adapt.adaptcoach://login-callback',
+    defaultValue: 'com.alasfit.app://login-callback',
   );
 
   User? get user => client.auth.currentUser;

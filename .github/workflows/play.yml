@@ -1,0 +1,93 @@
+# Builds the Google Play upload file (Android App Bundle, .aab) and
+# publishes it as the "android-store" GitHub release:
+#   https://github.com/<owner>/<repo>/releases/download/android-store/alasfit.aab
+# Upload that file in Play Console (testing track or production).
+#
+# Run it from the Actions tab ("Build Play Store bundle" → Run workflow), or
+# push a tag like v1.0.0. Needs the upload key secrets
+# (ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS,
+# ANDROID_KEY_PASSWORD): Play only accepts bundles signed with the
+# registered upload key, so there is no test-key fallback here.
+#
+# versionName comes from pubspec.yaml (bump it for each store release);
+# versionCode is the commit count, so it only grows and matches the test
+# APKs from android.yml.
+name: Build Play Store bundle
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: play
+  cancel-in-progress: true
+
+jobs:
+  aab:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # commit count = versionCode
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.5
+          channel: stable
+          cache: true
+      - run: flutter pub get
+
+      - name: Upload key
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PW: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PW: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 secret is missing (see the comment at the top of play.yml)"
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+          {
+            echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore"
+            echo "ANDROID_KEYSTORE_PASSWORD=$STORE_PW"
+            echo "ANDROID_KEY_ALIAS=$KEY_ALIAS"
+            echo "ANDROID_KEY_PASSWORD=$KEY_PW"
+          } >> "$GITHUB_ENV"
+
+      - name: Build
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+          GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
+        run: |
+          CODE=$(git rev-list --count HEAD)
+          flutter build appbundle --release \
+            --build-number="$CODE" \
+            --dart-define=STORE_LISTED=true \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID"
+          cp build/app/outputs/bundle/release/app-release.aab alasfit.aab
+          NAME=$(grep '^version:' pubspec.yaml | sed 's/version: *//; s/+.*//')
+          echo "VERSION_NAME=$NAME" >> "$GITHUB_ENV"
+          echo "VERSION_CODE=$CODE" >> "$GITHUB_ENV"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete android-store --yes --cleanup-tag || true
+          gh release create android-store alasfit.aab \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --title "알아서핏 Play 스토어 업로드용 $VERSION_NAME ($VERSION_CODE)" \
+            --notes "Play Console에 올리는 파일이에요. 버전 $VERSION_NAME, 버전 코드 $VERSION_CODE, commit $GITHUB_SHA."

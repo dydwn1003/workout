@@ -1,4 +1,4 @@
-package com.adapt.adapt_coach
+package com.alasfit.app
 
 import io.flutter.embedding.android.FlutterActivity
 

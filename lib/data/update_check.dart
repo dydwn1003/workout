@@ -21,7 +21,7 @@ const storeListed = bool.fromEnvironment('STORE_LISTED');
 
 /// Store pages the apps send people to for updates.
 const androidStoreUrl =
-    'https://play.google.com/store/apps/details?id=com.adapt.adapt_coach';
+    'https://play.google.com/store/apps/details?id=com.alasfit.app';
 const _iosAppId = String.fromEnvironment('IOS_APP_ID');
 const iosStoreUrl = _iosAppId == ''
     ? ''

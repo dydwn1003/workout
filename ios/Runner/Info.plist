@@ -76,7 +76,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.adapt.adaptcoach</string>
+				<string>com.alasfit.app</string>
 				<string>com.googleusercontent.apps.REPLACE_WITH_IOS_CLIENT_ID</string>
 			</array>
 		</dict>
