@@ -1586,6 +1586,191 @@ abstract class L {
   /// **'운동 추이'**
   String get workoutTrendTitle;
 
+  /// No description provided for @reportTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'이번 주 코칭 리포트'**
+  String get reportTitle;
+
+  /// No description provided for @reportAte.
+  ///
+  /// In ko, this message translates to:
+  /// **'먹은 양'**
+  String get reportAte;
+
+  /// No description provided for @reportAteValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 {days}일 평균 {kcal} kcal'**
+  String reportAteValue(String days, String kcal);
+
+  /// No description provided for @reportTrend.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중 추세'**
+  String get reportTrend;
+
+  /// No description provided for @reportTrendValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'{delta}kg → 하루 {bal} kcal {dir}'**
+  String reportTrendValue(String delta, String bal, String dir);
+
+  /// No description provided for @reportDeficit.
+  ///
+  /// In ko, this message translates to:
+  /// **'부족'**
+  String get reportDeficit;
+
+  /// No description provided for @reportSurplus.
+  ///
+  /// In ko, this message translates to:
+  /// **'남음'**
+  String get reportSurplus;
+
+  /// No description provided for @reportObserved.
+  ///
+  /// In ko, this message translates to:
+  /// **'실제 소비량'**
+  String get reportObserved;
+
+  /// No description provided for @reportObservedValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'{intake} {sign} {bal} ≈ {obs} kcal'**
+  String reportObservedValue(
+    String intake,
+    String sign,
+    String bal,
+    String obs,
+  );
+
+  /// No description provided for @reportEstimate.
+  ///
+  /// In ko, this message translates to:
+  /// **'추정 소비량'**
+  String get reportEstimate;
+
+  /// No description provided for @reportEstimateValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'공식 추정 {formula}와 섞고, 한 주 변화는 ±150 kcal까지만: {prev} → {est} kcal'**
+  String reportEstimateValue(String formula, String prev, String est);
+
+  /// No description provided for @reportTarget.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 목표'**
+  String get reportTarget;
+
+  /// No description provided for @reportTargetValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'소비량 {est} − {gap} = {target} kcal (주 {kg}kg 페이스)'**
+  String reportTargetValue(String est, String gap, String target, String kg);
+
+  /// No description provided for @reportTargetSurplus.
+  ///
+  /// In ko, this message translates to:
+  /// **'소비량 {est} + {gap} = {target} kcal (주 {kg}kg 페이스)'**
+  String reportTargetSurplus(String est, String gap, String target, String kg);
+
+  /// No description provided for @reportNoObserved.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 기록이 2주가 안 돼서 공식으로 소비량을 {formula} kcal로 추정했어요. 기록이 쌓이면 실제 데이터로 바뀌어요.'**
+  String reportNoObserved(String formula);
+
+  /// No description provided for @focusTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음 주 한 가지'**
+  String get focusTitle;
+
+  /// No description provided for @focusLogMore.
+  ///
+  /// In ko, this message translates to:
+  /// **'식사를 5일 이상 기록해 주세요 (이번 주 {n}일). 그래야 소비량을 제대로 계산할 수 있어요.'**
+  String focusLogMore(String n);
+
+  /// No description provided for @focusWeighMore.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중을 주 3회 이상 재 주세요 (이번 주 {n}회). 아침 공복에 재면 가장 정확해요.'**
+  String focusWeighMore(String n);
+
+  /// No description provided for @focusKeepTarget.
+  ///
+  /// In ko, this message translates to:
+  /// **'평균이 목표보다 {kcal} kcal 많았어요. 목표를 더 낮추기보다 지금 목표를 지키는 게 먼저예요.'**
+  String focusKeepTarget(String kcal);
+
+  /// No description provided for @focusMoreProtein.
+  ///
+  /// In ko, this message translates to:
+  /// **'단백질이 하루 평균 {g}g이에요 (목표 {target}g). 끼니마다 단백질 한 가지씩 더해 보세요.'**
+  String focusMoreProtein(String g, String target);
+
+  /// No description provided for @focusKeepGoing.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록도 식사도 잘 지키고 있어요. 이번 주도 지금처럼만 하면 돼요!'**
+  String get focusKeepGoing;
+
+  /// No description provided for @tipMissedYesterday.
+  ///
+  /// In ko, this message translates to:
+  /// **'어제 식사 기록이 비어 있어요. 기억나는 만큼만 넣어도 소비량 추정이 훨씬 정확해져요.'**
+  String get tipMissedYesterday;
+
+  /// No description provided for @tipOverKcal.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘은 목표보다 {kcal} kcal 더 드셨어요. 괜찮아요, 중요한 건 한 주 평균이에요. 내일 평소대로 드시면 충분해요.'**
+  String tipOverKcal(String kcal);
+
+  /// No description provided for @tipOverSugar.
+  ///
+  /// In ko, this message translates to:
+  /// **'당류가 한도보다 {g}g 많아요. 단 음료나 디저트 하나만 바꿔도 금방 줄어요.'**
+  String tipOverSugar(String g);
+
+  /// No description provided for @tipOverSatFat.
+  ///
+  /// In ko, this message translates to:
+  /// **'포화지방이 한도보다 {g}g 많아요. 튀김·가공육·크림 대신 구이나 살코기를 골라 보세요.'**
+  String tipOverSatFat(String g);
+
+  /// No description provided for @tipProteinLeft.
+  ///
+  /// In ko, this message translates to:
+  /// **'단백질이 {g}g 남았어요. {food} {grams}g이면 대부분 채워져요.'**
+  String tipProteinLeft(String g, String food, String grams);
+
+  /// No description provided for @tipProteinLeftPlain.
+  ///
+  /// In ko, this message translates to:
+  /// **'단백질이 {g}g 남았어요. 남은 식사에 고기·생선·두부·계란을 넣어 보세요.'**
+  String tipProteinLeftPlain(String g);
+
+  /// No description provided for @tipLowKcalLeft.
+  ///
+  /// In ko, this message translates to:
+  /// **'남은 칼로리가 {kcal} kcal예요. 저녁은 채소와 단백질 위주로 가볍게 드셔 보세요.'**
+  String tipLowKcalLeft(String kcal);
+
+  /// No description provided for @tipMorningPlan.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘 목표는 {kcal} kcal, 단백질 {g}g이에요. 끼니마다 단백질부터 챙겨 보세요.'**
+  String tipMorningPlan(String kcal, String g);
+
+  /// No description provided for @tipOnTrack.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금까지 목표 안에서 잘 드시고 있어요. 이대로면 충분해요!'**
+  String get tipOnTrack;
+
   /// No description provided for @intakeTrendTitle.
   ///
   /// In ko, this message translates to:
@@ -1873,6 +2058,12 @@ abstract class L {
   /// In ko, this message translates to:
   /// **'{slot}에 추가'**
   String addToSlot(String slot);
+
+  /// No description provided for @removeFromSlot.
+  ///
+  /// In ko, this message translates to:
+  /// **'{slot}에서 빼기'**
+  String removeFromSlot(String slot);
 
   /// No description provided for @addedCount.
   ///

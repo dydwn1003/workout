@@ -860,6 +860,139 @@ class LEn extends L {
   String get workoutTrendTitle => 'Training';
 
   @override
+  String get reportTitle => 'This week\'s report';
+
+  @override
+  String get reportAte => 'Eaten';
+
+  @override
+  String reportAteValue(String days, String kcal) {
+    return '$kcal kcal/day over $days days';
+  }
+
+  @override
+  String get reportTrend => 'Weight trend';
+
+  @override
+  String reportTrendValue(String delta, String bal, String dir) {
+    return '${delta}kg → $bal kcal/day $dir';
+  }
+
+  @override
+  String get reportDeficit => 'deficit';
+
+  @override
+  String get reportSurplus => 'surplus';
+
+  @override
+  String get reportObserved => 'Actual burn';
+
+  @override
+  String reportObservedValue(
+    String intake,
+    String sign,
+    String bal,
+    String obs,
+  ) {
+    return '$intake $sign $bal ≈ $obs kcal';
+  }
+
+  @override
+  String get reportEstimate => 'Estimated burn';
+
+  @override
+  String reportEstimateValue(String formula, String prev, String est) {
+    return 'Blended with the formula\'s $formula, at most ±150 kcal a week: $prev → $est kcal';
+  }
+
+  @override
+  String get reportTarget => 'New target';
+
+  @override
+  String reportTargetValue(String est, String gap, String target, String kg) {
+    return 'Burn $est − $gap = $target kcal (${kg}kg/week pace)';
+  }
+
+  @override
+  String reportTargetSurplus(String est, String gap, String target, String kg) {
+    return 'Burn $est + $gap = $target kcal (${kg}kg/week pace)';
+  }
+
+  @override
+  String reportNoObserved(String formula) {
+    return 'Under 2 weeks of logs, so burn is the formula\'s $formula kcal. Your own data takes over as logs build up.';
+  }
+
+  @override
+  String get focusTitle => 'One thing for next week';
+
+  @override
+  String focusLogMore(String n) {
+    return 'Log meals on 5+ days (this week: $n). That\'s what makes the estimate work.';
+  }
+
+  @override
+  String focusWeighMore(String n) {
+    return 'Weigh in 3+ times (this week: $n). Mornings before eating are most consistent.';
+  }
+
+  @override
+  String focusKeepTarget(String kcal) {
+    return 'You averaged $kcal kcal over target. Hitting the current target matters more than lowering it.';
+  }
+
+  @override
+  String focusMoreProtein(String g, String target) {
+    return 'Protein averaged ${g}g (target ${target}g). Add one protein food to each meal.';
+  }
+
+  @override
+  String get focusKeepGoing =>
+      'Logging and eating are on point. Same again this week!';
+
+  @override
+  String get tipMissedYesterday =>
+      'Yesterday has no meals. Even a rough entry keeps your estimate accurate.';
+
+  @override
+  String tipOverKcal(String kcal) {
+    return '$kcal kcal over today. That\'s fine: the weekly average is what counts. Just eat as usual tomorrow.';
+  }
+
+  @override
+  String tipOverSugar(String g) {
+    return 'Sugars are ${g}g over. Swapping one sweet drink or dessert fixes most of it.';
+  }
+
+  @override
+  String tipOverSatFat(String g) {
+    return 'Saturated fat is ${g}g over. Grilled or lean picks beat fried, processed or creamy ones.';
+  }
+
+  @override
+  String tipProteinLeft(String g, String food, String grams) {
+    return '${g}g protein to go. ${grams}g of $food covers most of it.';
+  }
+
+  @override
+  String tipProteinLeftPlain(String g) {
+    return '${g}g protein to go. Add meat, fish, tofu or eggs to your next meal.';
+  }
+
+  @override
+  String tipLowKcalLeft(String kcal) {
+    return '$kcal kcal left. Keep dinner light: vegetables and protein.';
+  }
+
+  @override
+  String tipMorningPlan(String kcal, String g) {
+    return 'Today: $kcal kcal and ${g}g protein. Start each meal with protein.';
+  }
+
+  @override
+  String get tipOnTrack => 'Right on target so far. Keep it up!';
+
+  @override
   String get intakeTrendTitle => 'Calories eaten';
 
   @override
@@ -1035,6 +1168,11 @@ class LEn extends L {
   @override
   String addToSlot(String slot) {
     return 'Add to $slot';
+  }
+
+  @override
+  String removeFromSlot(String slot) {
+    return 'Remove from $slot';
   }
 
   @override

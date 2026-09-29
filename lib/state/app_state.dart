@@ -11,6 +11,9 @@ import '../data/food_db.g.dart';
 import '../data/analytics.dart';
 import '../data/auth_service.dart';
 import '../data/remote_food_search.dart';
+import 'coach_tips.dart';
+
+export 'coach_tips.dart';
 import '../data/repository.dart';
 import '../data/supabase_sync.dart';
 import '../data/sync.dart';
@@ -445,6 +448,46 @@ class AppState extends ChangeNotifier {
   double? sugarLimitOn(DateTime d) {
     final kcal = planOn(d)?.targetKcal;
     return kcal == null ? null : kcal * 0.10 / 4;
+  }
+
+  /// Average protein (g) over the days with meals in the last 7 days.
+  double? avgProteinLastWeek() {
+    final days = [
+      for (var i = 1; i <= 7; i++)
+        if (mealsOn(_addDays(today, -i)).isNotEmpty)
+          totalsOn(_addDays(today, -i)).proteinG,
+    ];
+    return days.isEmpty ? null : days.reduce((a, b) => a + b) / days.length;
+  }
+
+  /// Today's one-line coaching (today screen), or null for nothing to say.
+  DailyTip? dailyTip() {
+    final now = clock();
+    final d = today;
+    final plan = planOn(d);
+    if (plan == null) return null;
+    final eaten = totalsOn(d);
+    final sugar = sugarOn(d);
+    final sat = satFatOn(d);
+    final chicken = _builtInById.values
+        .where((f) => f.name == '닭가슴살')
+        .firstOrNull;
+    return pickDailyTip(
+      hour: now.hour,
+      targetKcal: plan.targetKcal,
+      targetProteinG: plan.proteinG,
+      eatenKcal: eaten.kcal,
+      eatenProteinG: eaten.proteinG,
+      mealsToday: mealsOn(d).length,
+      missedYesterday: missedDay(_data.meals, _addDays(d, -1)),
+      sugarG: sugar.unknown == 0 || sugar.grams > 0 ? sugar.grams : null,
+      sugarLimitG: sugarLimitOn(d),
+      satFatG: sat.unknown == 0 || sat.grams > 0 ? sat.grams : null,
+      satFatLimitG: satFatLimitOn(d),
+      proteinFood: chicken == null
+          ? null
+          : (name: chicken.name, proteinPer100g: chicken.proteinG),
+    );
   }
 
   /// Daily 포화지방 limit: 7% of the day's calorie target (한국인 영양소

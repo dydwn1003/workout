@@ -231,7 +231,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
                   ],
                 ),
                 const SizedBox(height: 14),
-                _howCalculated(t, r),
+                _report(t, plan, r),
               ],
               const SizedBox(height: 8),
               SectionTitle(t.planHistory),
@@ -485,38 +485,174 @@ class _CheckinScreenState extends State<CheckinScreen> {
     );
   }
 
-  Widget _howCalculated(L t, CheckinResult r) {
+  /// Step by step: what was eaten, what the weight trend says that means,
+  /// the burn it implies, and the new target; then one habit for next week.
+  Widget _report(L t, Plan current, CheckinResult r) {
+    final s = AppScope.read(context);
     final o = r.observed;
-    final body = o == null
-        ? t.noObservedYet(fmt0(r.tdeeFormula))
-        : t.howCalculatedBody(
-            '${o.windowDays}',
-            fmt0(o.avgIntake),
+    final gap = r.tdeeEstimate - r.proposal.kcal;
+    final kgPerWeek = -gap * 7 / C.kcalPerKg;
+    final focus = pickWeeklyFocus(
+      loggedDays: r.loggedDaysLastWeek,
+      weighIns: r.weighInsLastWeek,
+      avgIntake: r.avgIntake,
+      targetKcal: current.targetKcal,
+      avgProteinG: s.avgProteinLastWeek(),
+      targetProteinG: current.proteinG,
+    );
+    final focusText = switch (focus.kind) {
+      WeeklyFocusKind.logMore => t.focusLogMore(fmt0(focus.amount)),
+      WeeklyFocusKind.weighMore => t.focusWeighMore(fmt0(focus.amount)),
+      WeeklyFocusKind.keepTarget => t.focusKeepTarget(fmt0(focus.amount)),
+      WeeklyFocusKind.moreProtein => t.focusMoreProtein(
+        fmt0(focus.amount),
+        fmt0(focus.target),
+      ),
+      WeeklyFocusKind.keepGoing => t.focusKeepGoing,
+    };
+    final steps = <(String, String)>[
+      if (o != null) ...[
+        (t.reportAte, t.reportAteValue('${o.windowDays}', fmt0(o.avgIntake))),
+        (
+          t.reportTrend,
+          t.reportTrendValue(
             signed1(o.trendChangeKg),
-            fmt0(o.tdee),
-            fmt0(r.tdeeFormula),
-            fmt0(r.tdeeEstimate),
-          );
-    return Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: SoftCard(
-        padding: EdgeInsets.zero,
-        child: ExpansionTile(
-          shape: const RoundedRectangleBorder(),
-          leading: const Icon(Icons.calculate_rounded, color: AppColors.lilac),
-          title: Text(
-            t.howCalculated,
-            style: const TextStyle(
-              fontFamily: headingFont,
-              fontWeight: FontWeight.w800,
-              fontSize: 16,
-            ),
+            fmt0(o.dailyImbalance.abs()),
+            o.dailyImbalance < 0 ? t.reportDeficit : t.reportSurplus,
           ),
-          childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-          children: [
-            Text(body, style: const TextStyle(height: 1.6, fontSize: 14)),
-          ],
         ),
+        (
+          t.reportObserved,
+          t.reportObservedValue(
+            fmt0(o.avgIntake),
+            o.dailyImbalance < 0 ? '+' : '−',
+            fmt0(o.dailyImbalance.abs()),
+            fmt0(o.tdee),
+          ),
+        ),
+        (
+          t.reportEstimate,
+          t.reportEstimateValue(
+            fmt0(r.tdeeFormula),
+            fmt0(r.previousTdee),
+            fmt0(r.tdeeEstimate),
+          ),
+        ),
+      ],
+      (
+        t.reportTarget,
+        (gap >= 0 ? t.reportTargetValue : t.reportTargetSurplus)(
+          fmt0(r.tdeeEstimate),
+          fmt0(gap.abs()),
+          fmt0(r.proposal.kcal),
+          signed1(kgPerWeek),
+        ),
+      ),
+    ];
+    return SoftCard(
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.calculate_rounded, color: AppColors.lilac),
+              const SizedBox(width: 8),
+              Text(
+                t.reportTitle,
+                style: const TextStyle(
+                  fontFamily: headingFont,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (o == null) ...[
+            Text(
+              t.reportNoObserved(fmt0(r.tdeeFormula)),
+              style: const TextStyle(fontSize: 13.5, height: 1.5),
+            ),
+            const SizedBox(height: 10),
+          ],
+          for (final (i, (label, value)) in steps.indexed)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 22,
+                    height: 22,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(
+                      color: AppColors.lilacSoft,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '${i + 1}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.lilac,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.inkSoft,
+                          ),
+                        ),
+                        Text(
+                          value,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const Divider(height: 18),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.flag_rounded, color: AppColors.mint, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.focusTitle,
+                      style: const TextStyle(
+                        fontFamily: headingFont,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      focusText,
+                      style: const TextStyle(fontSize: 13.5, height: 1.5),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

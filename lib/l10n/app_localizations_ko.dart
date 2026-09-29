@@ -843,6 +843,138 @@ class LKo extends L {
   String get workoutTrendTitle => '운동 추이';
 
   @override
+  String get reportTitle => '이번 주 코칭 리포트';
+
+  @override
+  String get reportAte => '먹은 양';
+
+  @override
+  String reportAteValue(String days, String kcal) {
+    return '최근 $days일 평균 $kcal kcal';
+  }
+
+  @override
+  String get reportTrend => '체중 추세';
+
+  @override
+  String reportTrendValue(String delta, String bal, String dir) {
+    return '${delta}kg → 하루 $bal kcal $dir';
+  }
+
+  @override
+  String get reportDeficit => '부족';
+
+  @override
+  String get reportSurplus => '남음';
+
+  @override
+  String get reportObserved => '실제 소비량';
+
+  @override
+  String reportObservedValue(
+    String intake,
+    String sign,
+    String bal,
+    String obs,
+  ) {
+    return '$intake $sign $bal ≈ $obs kcal';
+  }
+
+  @override
+  String get reportEstimate => '추정 소비량';
+
+  @override
+  String reportEstimateValue(String formula, String prev, String est) {
+    return '공식 추정 $formula와 섞고, 한 주 변화는 ±150 kcal까지만: $prev → $est kcal';
+  }
+
+  @override
+  String get reportTarget => '새 목표';
+
+  @override
+  String reportTargetValue(String est, String gap, String target, String kg) {
+    return '소비량 $est − $gap = $target kcal (주 ${kg}kg 페이스)';
+  }
+
+  @override
+  String reportTargetSurplus(String est, String gap, String target, String kg) {
+    return '소비량 $est + $gap = $target kcal (주 ${kg}kg 페이스)';
+  }
+
+  @override
+  String reportNoObserved(String formula) {
+    return '아직 기록이 2주가 안 돼서 공식으로 소비량을 $formula kcal로 추정했어요. 기록이 쌓이면 실제 데이터로 바뀌어요.';
+  }
+
+  @override
+  String get focusTitle => '다음 주 한 가지';
+
+  @override
+  String focusLogMore(String n) {
+    return '식사를 5일 이상 기록해 주세요 (이번 주 $n일). 그래야 소비량을 제대로 계산할 수 있어요.';
+  }
+
+  @override
+  String focusWeighMore(String n) {
+    return '체중을 주 3회 이상 재 주세요 (이번 주 $n회). 아침 공복에 재면 가장 정확해요.';
+  }
+
+  @override
+  String focusKeepTarget(String kcal) {
+    return '평균이 목표보다 $kcal kcal 많았어요. 목표를 더 낮추기보다 지금 목표를 지키는 게 먼저예요.';
+  }
+
+  @override
+  String focusMoreProtein(String g, String target) {
+    return '단백질이 하루 평균 ${g}g이에요 (목표 ${target}g). 끼니마다 단백질 한 가지씩 더해 보세요.';
+  }
+
+  @override
+  String get focusKeepGoing => '기록도 식사도 잘 지키고 있어요. 이번 주도 지금처럼만 하면 돼요!';
+
+  @override
+  String get tipMissedYesterday =>
+      '어제 식사 기록이 비어 있어요. 기억나는 만큼만 넣어도 소비량 추정이 훨씬 정확해져요.';
+
+  @override
+  String tipOverKcal(String kcal) {
+    return '오늘은 목표보다 $kcal kcal 더 드셨어요. 괜찮아요, 중요한 건 한 주 평균이에요. 내일 평소대로 드시면 충분해요.';
+  }
+
+  @override
+  String tipOverSugar(String g) {
+    return '당류가 한도보다 ${g}g 많아요. 단 음료나 디저트 하나만 바꿔도 금방 줄어요.';
+  }
+
+  @override
+  String tipOverSatFat(String g) {
+    return '포화지방이 한도보다 ${g}g 많아요. 튀김·가공육·크림 대신 구이나 살코기를 골라 보세요.';
+  }
+
+  @override
+  String tipProteinLeft(String g, String food, String grams) {
+    return '단백질이 ${g}g 남았어요. $food ${grams}g이면 대부분 채워져요.';
+  }
+
+  @override
+  String tipProteinLeftPlain(String g) {
+    return '단백질이 ${g}g 남았어요. 남은 식사에 고기·생선·두부·계란을 넣어 보세요.';
+  }
+
+  @override
+  String tipLowKcalLeft(String kcal) {
+    return '남은 칼로리가 $kcal kcal예요. 저녁은 채소와 단백질 위주로 가볍게 드셔 보세요.';
+  }
+
+  @override
+  String tipMorningPlan(String kcal, String g) {
+    return '오늘 목표는 $kcal kcal, 단백질 ${g}g이에요. 끼니마다 단백질부터 챙겨 보세요.';
+  }
+
+  @override
+  String get tipOnTrack => '지금까지 목표 안에서 잘 드시고 있어요. 이대로면 충분해요!';
+
+  @override
   String get intakeTrendTitle => '섭취 칼로리';
 
   @override
@@ -1015,6 +1147,11 @@ class LKo extends L {
   @override
   String addToSlot(String slot) {
     return '$slot에 추가';
+  }
+
+  @override
+  String removeFromSlot(String slot) {
+    return '$slot에서 빼기';
   }
 
   @override

@@ -439,42 +439,48 @@ class _WeightChartState extends State<_WeightChart> {
         final sel = _sel;
         return Column(
           children: [
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTapUp: (d) {
-                final i = _indexAt(d.localPosition.dx, w);
-                if (i == _sel && !_dragged) {
-                  setState(() => _sel = null);
-                } else {
-                  _select(i);
-                }
-                _dragged = false;
+            // Tapping anywhere outside the chart closes the day's tooltip.
+            TapRegion(
+              onTapOutside: (_) {
+                if (_sel != null) setState(() => _sel = null);
               },
-              onHorizontalDragStart: (d) {
-                _dragged = true;
-                _select(_indexAt(d.localPosition.dx, w));
-              },
-              onHorizontalDragUpdate: (d) =>
-                  _select(_indexAt(d.localPosition.dx, w)),
-              onHorizontalDragEnd: (_) => _dragged = false,
-              child: SizedBox(
-                height: _height,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned.fill(
-                      child: CustomPaint(
-                        painter: WeightChartPainter(
-                          widget.pts,
-                          widget.goal,
-                          DateFormat.Md(widget.locale),
-                          selected: sel,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapUp: (d) {
+                  final i = _indexAt(d.localPosition.dx, w);
+                  if (i == _sel && !_dragged) {
+                    setState(() => _sel = null);
+                  } else {
+                    _select(i);
+                  }
+                  _dragged = false;
+                },
+                onHorizontalDragStart: (d) {
+                  _dragged = true;
+                  _select(_indexAt(d.localPosition.dx, w));
+                },
+                onHorizontalDragUpdate: (d) =>
+                    _select(_indexAt(d.localPosition.dx, w)),
+                onHorizontalDragEnd: (_) => _dragged = false,
+                child: SizedBox(
+                  height: _height,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Positioned.fill(
+                        child: CustomPaint(
+                          painter: WeightChartPainter(
+                            widget.pts,
+                            widget.goal,
+                            DateFormat.Md(widget.locale),
+                            selected: sel,
+                          ),
                         ),
                       ),
-                    ),
-                    if (sel != null && sel < widget.pts.length)
-                      _tooltip(context, t, sel, w),
-                  ],
+                      if (sel != null && sel < widget.pts.length)
+                        _tooltip(context, t, sel, w),
+                    ],
+                  ),
                 ),
               ),
             ),

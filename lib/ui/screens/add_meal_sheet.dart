@@ -461,8 +461,13 @@ class _SearchTabState extends State<_SearchTab>
         food: _food!,
         slot: widget.slot,
         onBack: () => _go(_View.list),
+        picked: _picked.containsKey(_food!.id),
         onAdd: (u, q) async {
           await _log(_food!, u, q);
+          if (mounted) _go(_View.list);
+        },
+        onRemove: () async {
+          await _toggle(_food!);
           if (mounted) _go(_View.list);
         },
       ),
@@ -828,12 +833,18 @@ class _FoodDetail extends StatefulWidget {
   final MealSlot slot;
   final VoidCallback onBack;
   final Future<void> Function(FoodUnit unit, double qty) onAdd;
+
+  /// Already added while this sheet is open: the button takes it back out.
+  final bool picked;
+  final Future<void> Function() onRemove;
   const _FoodDetail({
     super.key,
     required this.food,
     required this.slot,
     required this.onBack,
     required this.onAdd,
+    required this.picked,
+    required this.onRemove,
   });
 
   @override
@@ -1095,19 +1106,34 @@ class _FoodDetailState extends State<_FoodDetail> {
           style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),
         ),
         const SizedBox(height: 14),
-        FilledButton.icon(
-          onPressed: _qty > 0 && !_busy
-              ? () async {
-                  setState(() => _busy = true);
-                  await widget.onAdd(_unit, _qty);
-                }
-              : null,
-          style: FilledButton.styleFrom(
-            backgroundColor: slotColors(widget.slot).$1,
+        if (widget.picked)
+          OutlinedButton.icon(
+            onPressed: _busy
+                ? null
+                : () async {
+                    setState(() => _busy = true);
+                    await widget.onRemove();
+                  },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: slotColors(widget.slot).$1,
+            ),
+            icon: const Icon(Icons.remove_circle_outline_rounded),
+            label: Text(t.removeFromSlot(slotLabel(t, widget.slot))),
+          )
+        else
+          FilledButton.icon(
+            onPressed: _qty > 0 && !_busy
+                ? () async {
+                    setState(() => _busy = true);
+                    await widget.onAdd(_unit, _qty);
+                  }
+                : null,
+            style: FilledButton.styleFrom(
+              backgroundColor: slotColors(widget.slot).$1,
+            ),
+            icon: Icon(slotIcon(widget.slot)),
+            label: Text(t.addToSlot(slotLabel(t, widget.slot))),
           ),
-          icon: Icon(slotIcon(widget.slot)),
-          label: Text(t.addToSlot(slotLabel(t, widget.slot))),
-        ),
       ],
     );
   }

@@ -24,6 +24,14 @@ class IntakeTrendCard extends StatefulWidget {
 class _IntakeTrendCardState extends State<IntakeTrendCard> {
   int? _sel;
 
+  /// Tap: select a day, or clear it when it's already selected.
+  void _tap(Offset p, double width) {
+    final n = widget.days.length;
+    if (n == 0) return;
+    final i = (p.dx / width * n).floor().clamp(0, n - 1);
+    setState(() => _sel = i == _sel ? null : i);
+  }
+
   void _pick(Offset p, double width) {
     final n = widget.days.length;
     if (n == 0) return;
@@ -106,23 +114,29 @@ class _IntakeTrendCardState extends State<IntakeTrendCard> {
           ),
           const SizedBox(height: 8),
           LayoutBuilder(
-            builder: (context, box) => GestureDetector(
-              onTapDown: (e) => _pick(e.localPosition, box.maxWidth),
-              onHorizontalDragUpdate: (e) =>
-                  _pick(e.localPosition, box.maxWidth),
-              child: SizedBox(
-                height: 150,
-                width: box.maxWidth,
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: 1),
-                  duration: Motion.slow,
-                  curve: Motion.ease,
-                  builder: (context, grow, _) => CustomPaint(
-                    painter: _IntakePainter(
-                      eaten: [for (final d in days) d.intakeKcal],
-                      targets: targets,
-                      selected: sel,
-                      grow: grow,
+            builder: (context, box) => TapRegion(
+              // Tapping anywhere outside the chart clears the selection.
+              onTapOutside: (_) {
+                if (_sel != null) setState(() => _sel = null);
+              },
+              child: GestureDetector(
+                onTapUp: (e) => _tap(e.localPosition, box.maxWidth),
+                onHorizontalDragUpdate: (e) =>
+                    _pick(e.localPosition, box.maxWidth),
+                child: SizedBox(
+                  height: 150,
+                  width: box.maxWidth,
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: 1),
+                    duration: Motion.slow,
+                    curve: Motion.ease,
+                    builder: (context, grow, _) => CustomPaint(
+                      painter: _IntakePainter(
+                        eaten: [for (final d in days) d.intakeKcal],
+                        targets: targets,
+                        selected: sel,
+                        grow: grow,
+                      ),
                     ),
                   ),
                 ),

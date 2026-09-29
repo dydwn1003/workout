@@ -272,9 +272,14 @@ class _DayBody extends StatelessWidget {
     Widget enter(Widget child) =>
         FadeSlideIn(delay: stagger(i++), child: child);
 
+    final tip = isToday ? s.dailyTip() : null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (tip != null) ...[
+          enter(_DailyTipCard(tip: tip)),
+          const SizedBox(height: 12),
+        ],
         if (isToday && s.checkinDue) ...[
           enter(
             SoftCard(
@@ -515,6 +520,47 @@ class _DayBody extends StatelessWidget {
           const SizedBox(height: 10),
         ],
       ],
+    );
+  }
+}
+
+/// Today's one-line coaching (AppState.dailyTip); the text cross-fades when
+/// the advice changes after logging.
+class _DailyTipCard extends StatelessWidget {
+  final DailyTip tip;
+  const _DailyTipCard({required this.tip});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L.of(context);
+    final text = switch (tip.kind) {
+      DailyTipKind.missedYesterday => t.tipMissedYesterday,
+      DailyTipKind.overKcal => t.tipOverKcal(fmt0(tip.amount)),
+      DailyTipKind.overSugar => t.tipOverSugar(fmt0(tip.amount)),
+      DailyTipKind.overSatFat => t.tipOverSatFat(fmt0(tip.amount)),
+      DailyTipKind.proteinLeft =>
+        tip.food == null || tip.grams == null
+            ? t.tipProteinLeftPlain(fmt0(tip.amount))
+            : t.tipProteinLeft(fmt0(tip.amount), tip.food!, fmt0(tip.grams!)),
+      DailyTipKind.lowKcalLeft => t.tipLowKcalLeft(fmt0(tip.amount)),
+      DailyTipKind.morningPlan => t.tipMorningPlan(
+        fmt0(tip.amount),
+        fmt0(tip.grams ?? 0),
+      ),
+      DailyTipKind.onTrack => t.tipOnTrack,
+    };
+    final mood = switch (tip.kind) {
+      DailyTipKind.onTrack || DailyTipKind.morningPlan => MascotMood.cheer,
+      DailyTipKind.missedYesterday => MascotMood.sleepy,
+      DailyTipKind.overKcal ||
+      DailyTipKind.overSugar ||
+      DailyTipKind.overSatFat => MascotMood.thinking,
+      _ => MascotMood.happy,
+    };
+    return AnimatedSwitcher(
+      duration: Motion.medium,
+      switchInCurve: Motion.ease,
+      child: MascotSays(key: ValueKey(text), text: text, mood: mood, size: 48),
     );
   }
 }
