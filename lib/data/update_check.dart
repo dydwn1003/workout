@@ -15,6 +15,10 @@ const _latestUrl = String.fromEnvironment(
   defaultValue: 'https://dydwn1003.github.io/workout/app_version.json',
 );
 
+/// The app is published in the stores (--dart-define=STORE_LISTED=true for
+/// store builds). Until then there's no store page to send people to.
+const storeListed = bool.fromEnvironment('STORE_LISTED');
+
 /// Store pages the apps send people to for updates.
 const androidStoreUrl =
     'https://play.google.com/store/apps/details?id=com.adapt.adapt_coach';
@@ -50,7 +54,7 @@ Future<AvailableUpdate?> checkForUpdate() async {
       return (action: UpdateAction.reload, latest: latest);
     }
     final ios = defaultTargetPlatform == TargetPlatform.iOS;
-    if (ios && iosStoreUrl.isEmpty) return null;
+    if (!storeListed || (ios && iosStoreUrl.isEmpty)) return null;
     final res = await http
         .get(Uri.parse('$_latestUrl?t=${_now()}'))
         .timeout(const Duration(seconds: 10));

@@ -44,6 +44,7 @@ class _ReviewSheetState extends State<_ReviewSheet> {
   }
 
   bool get _canRateInStore =>
+      storeListed &&
       !kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.android ||
           (defaultTargetPlatform == TargetPlatform.iOS &&

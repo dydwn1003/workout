@@ -1496,17 +1496,25 @@ class _MealFormState extends State<_MealForm>
           _v(_p).round() != editing.proteinG.round() ||
           _v(_c).round() != editing.carbsG.round() ||
           _v(_f).round() != editing.fatG.round();
+      // 당류/포화지방 follow the new kcal (they can't be edited here), so
+      // halving a meal halves them too.
+      final k = editing.kcal > 0 ? _v(_kcal) / editing.kcal : 1.0;
       await s.updateMeal(
-        editing.copyWith(
-          name: name,
-          kcal: _v(_kcal),
-          proteinG: _v(_p),
-          carbsG: _v(_c),
-          fatG: _v(_f),
-          edited: editing.edited || changed,
-          // A hand-edited amount no longer matches the stored portion.
-          portion: changed ? () => null : null,
-        ),
+        editing
+            .copyWith(
+              name: name,
+              kcal: _v(_kcal),
+              proteinG: _v(_p),
+              carbsG: _v(_c),
+              fatG: _v(_f),
+              edited: editing.edited || changed,
+              // A hand-edited amount no longer matches the stored portion.
+              portion: changed ? () => null : null,
+            )
+            .withNutrients(
+              editing.sugarG == null ? null : editing.sugarG! * k,
+              editing.satFatG == null ? null : editing.satFatG! * k,
+            ),
       );
       if (!mounted) return;
       Navigator.pop(context);

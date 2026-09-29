@@ -975,18 +975,6 @@ class LKo extends L {
   String get notifCheckinBody => '지난주 기록으로 이번 주 목표를 맞춰 드릴게요.';
 
   @override
-  String get reminderTest => '테스트 알림 보내기';
-
-  @override
-  String get reminderTestTitle => '알아서핏 알림이 잘 와요!';
-
-  @override
-  String get reminderTestBody => '기록을 쉬면 저녁 8시에 이렇게 알려 드릴게요.';
-
-  @override
-  String get reminderTestSent => '테스트 알림을 보냈어요. 알림창을 확인해 보세요';
-
-  @override
   String get remindersOffer =>
       '기록을 쉬면 살짝 알려 드릴까요? 첫 한 달은 일주일에 한 번, 그 뒤로는 2주에 한 번이에요. 설정에서 언제든 끌 수 있어요.';
 

@@ -1820,30 +1820,6 @@ abstract class L {
   /// **'지난주 기록으로 이번 주 목표를 맞춰 드릴게요.'**
   String get notifCheckinBody;
 
-  /// No description provided for @reminderTest.
-  ///
-  /// In ko, this message translates to:
-  /// **'테스트 알림 보내기'**
-  String get reminderTest;
-
-  /// No description provided for @reminderTestTitle.
-  ///
-  /// In ko, this message translates to:
-  /// **'알아서핏 알림이 잘 와요!'**
-  String get reminderTestTitle;
-
-  /// No description provided for @reminderTestBody.
-  ///
-  /// In ko, this message translates to:
-  /// **'기록을 쉬면 저녁 8시에 이렇게 알려 드릴게요.'**
-  String get reminderTestBody;
-
-  /// No description provided for @reminderTestSent.
-  ///
-  /// In ko, this message translates to:
-  /// **'테스트 알림을 보냈어요. 알림창을 확인해 보세요'**
-  String get reminderTestSent;
-
   /// No description provided for @remindersOffer.
   ///
   /// In ko, this message translates to:

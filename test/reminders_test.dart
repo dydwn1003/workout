@@ -22,9 +22,6 @@ class FakeScheduler implements ReminderScheduler {
     cancelled++;
     scheduled = null;
   }
-
-  @override
-  Future<void> showNow(String title, String body) async {}
 }
 
 void main() {

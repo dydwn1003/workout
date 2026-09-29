@@ -1000,19 +1000,6 @@ class LEn extends L {
       'Last week\'s logs will tune this week\'s target.';
 
   @override
-  String get reminderTest => 'Send a test notification';
-
-  @override
-  String get reminderTestTitle => 'Notifications work!';
-
-  @override
-  String get reminderTestBody =>
-      'When you skip logging, you\'ll hear from us like this at 8 pm.';
-
-  @override
-  String get reminderTestSent => 'Test sent. Check your notifications';
-
-  @override
   String get remindersOffer =>
       'Want a gentle nudge when you skip logging? Weekly for the first month, then every two weeks. Turn it off anytime in Settings.';
 
