@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' show DateFormat;
 
 import '../../data/entities.dart';
@@ -105,16 +106,11 @@ class _TrendScreenState extends State<TrendScreen> {
                       )
                     : Column(
                         children: [
-                          SizedBox(
-                            height: 240,
-                            child: CustomPaint(
-                              size: Size.infinite,
-                              painter: WeightChartPainter(
-                                pts,
-                                goal,
-                                DateFormat.Md(locale),
-                              ),
-                            ),
+                          _WeightChart(
+                            key: ValueKey(_range),
+                            pts: pts,
+                            goal: goal,
+                            locale: locale,
                           ),
                           const SizedBox(height: 10),
                           Row(
@@ -391,24 +387,240 @@ class _TrendScreenState extends State<TrendScreen> {
 }
 
 /// Raw weigh-in dots + EMA trend line + dashed goal line.
+/// The weight chart plus a scrubber: tap or drag to put a vertical line on
+/// a day and see that day's weight, trend, intake and workouts. The
+/// selection stays after lifting the finger; tapping the same day clears it.
+class _WeightChart extends StatefulWidget {
+  final List<(DateTime, double?, double?)> pts;
+  final double? goal;
+  final String locale;
+  const _WeightChart({
+    super.key,
+    required this.pts,
+    required this.goal,
+    required this.locale,
+  });
+
+  @override
+  State<_WeightChart> createState() => _WeightChartState();
+}
+
+class _WeightChartState extends State<_WeightChart> {
+  static const _height = 240.0;
+  int? _sel;
+  var _dragged = false;
+
+  int _indexAt(double dx, double width) {
+    final r = WeightChartPainter.chartRect(Size(width, _height));
+    final f = ((dx - r.left) / r.width).clamp(0.0, 1.0);
+    return (f * (widget.pts.length - 1)).round();
+  }
+
+  void _select(int i) {
+    if (i == _sel) return;
+    HapticFeedback.selectionClick();
+    setState(() => _sel = i);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L.of(context);
+    return LayoutBuilder(
+      builder: (context, box) {
+        final w = box.maxWidth;
+        final sel = _sel;
+        return Column(
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapUp: (d) {
+                final i = _indexAt(d.localPosition.dx, w);
+                if (i == _sel && !_dragged) {
+                  setState(() => _sel = null);
+                } else {
+                  _select(i);
+                }
+                _dragged = false;
+              },
+              onHorizontalDragStart: (d) {
+                _dragged = true;
+                _select(_indexAt(d.localPosition.dx, w));
+              },
+              onHorizontalDragUpdate: (d) =>
+                  _select(_indexAt(d.localPosition.dx, w)),
+              onHorizontalDragEnd: (_) => _dragged = false,
+              child: SizedBox(
+                height: _height,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: WeightChartPainter(
+                          widget.pts,
+                          widget.goal,
+                          DateFormat.Md(widget.locale),
+                          selected: sel,
+                        ),
+                      ),
+                    ),
+                    if (sel != null && sel < widget.pts.length)
+                      _tooltip(context, t, sel, w),
+                  ],
+                ),
+              ),
+            ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 200),
+              child: sel == null
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        t.chartHint,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.inkSoft,
+                        ),
+                      ),
+                    )
+                  : const SizedBox(width: double.infinity),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _tooltip(BuildContext context, L t, int i, double width) {
+    final s = AppScope.of(context);
+    final (day, raw, trend) = widget.pts[i];
+    final meals = s.mealsOn(day);
+    final eaten = s.totalsOn(day).kcal;
+    final target = s.planOn(day)?.targetKcal;
+    final minutes = s.workoutsOn(day).fold(0, (a, w) => a + w.minutes);
+    final r = WeightChartPainter.chartRect(Size(width, _height));
+    final x = r.left + r.width * i / math.max(1, widget.pts.length - 1);
+    const tipW = 168.0;
+    // Beside the line, on the roomier side, so the day's points stay visible.
+    final left = (x < width / 2 ? x + 10 : x - 10 - tipW)
+        .clamp(0.0, width - tipW)
+        .toDouble();
+
+    Widget row(String label, String value, Color c, {bool muted = false}) =>
+        Padding(
+          padding: const EdgeInsets.only(top: 3),
+          child: Row(
+            children: [
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(color: c, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: const TextStyle(fontSize: 12, color: Colors.white70),
+              ),
+              const Spacer(),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w800,
+                  color: muted ? Colors.white54 : Colors.white,
+                ),
+              ),
+            ],
+          ),
+        );
+
+    return Positioned(
+      left: left,
+      top: 0,
+      width: tipW,
+      child: IgnorePointer(
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(12, 9, 12, 10),
+          decoration: BoxDecoration(
+            color: AppColors.ink.withValues(alpha: 0.92),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x33000000),
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                DateFormat.MMMEd(widget.locale).format(day),
+                style: const TextStyle(
+                  fontFamily: headingFont,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                  color: Colors.white,
+                ),
+              ),
+              row(
+                t.tipWeight,
+                raw == null ? t.tipNone : '${fmt1(raw)}kg',
+                AppColors.sky,
+                muted: raw == null,
+              ),
+              if (trend != null)
+                row(t.tipTrend, '${fmt1(trend)}kg', AppColors.peach),
+              row(
+                t.tipIntake,
+                meals.isEmpty
+                    ? t.tipNone
+                    : target == null
+                    ? '${fmt0(eaten)} kcal'
+                    : '${fmt0(eaten)} / ${fmt0(target)}',
+                AppColors.butter,
+                muted: meals.isEmpty,
+              ),
+              row(
+                t.tipWorkout,
+                minutes == 0 ? t.tipNone : t.tipMinutes('$minutes'),
+                AppColors.mint,
+                muted: minutes == 0,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class WeightChartPainter extends CustomPainter {
   final List<(DateTime, double?, double?)> pts;
   final double? goal;
   final DateFormat dateFmt;
+  final int? selected;
 
-  WeightChartPainter(this.pts, this.goal, this.dateFmt);
+  WeightChartPainter(this.pts, this.goal, this.dateFmt, {this.selected});
+
+  static const _leftPad = 36.0;
+  static const _bottomPad = 22.0;
+
+  /// The plotting area inside [size] (shared with the scrubber's hit test).
+  static Rect chartRect(Size size) => Rect.fromLTWH(
+    _leftPad,
+    6,
+    size.width - _leftPad - 4,
+    size.height - _bottomPad - 6,
+  );
 
   @override
   void paint(Canvas canvas, Size size) {
     if (pts.length < 2) return;
-    const leftPad = 36.0;
-    const bottomPad = 22.0;
-    final chart = Rect.fromLTWH(
-      leftPad,
-      6,
-      size.width - leftPad - 4,
-      size.height - bottomPad - 6,
-    );
+    const leftPad = _leftPad;
+    final chart = chartRect(size);
 
     final values = <double>[
       for (final p in pts) ...[?p.$2, ?p.$3],
@@ -535,8 +747,38 @@ class WeightChartPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round,
     );
+    // Scrubber: vertical line and the selected day's points.
+    final sel = selected;
+    if (sel != null && sel < pts.length) {
+      final sx = x(sel);
+      canvas.drawLine(
+        Offset(sx, chart.top),
+        Offset(sx, chart.bottom),
+        Paint()
+          ..color = AppColors.ink.withValues(alpha: 0.35)
+          ..strokeWidth = 1.5,
+      );
+      final raw = pts[sel].$2;
+      if (raw != null) {
+        canvas.drawCircle(Offset(sx, y(raw)), 6, Paint()..color = Colors.white);
+        canvas.drawCircle(
+          Offset(sx, y(raw)),
+          4.5,
+          Paint()..color = AppColors.sky,
+        );
+      }
+      final tv = pts[sel].$3;
+      if (tv != null) {
+        canvas.drawCircle(Offset(sx, y(tv)), 6, Paint()..color = Colors.white);
+        canvas.drawCircle(
+          Offset(sx, y(tv)),
+          4.5,
+          Paint()..color = AppColors.peach,
+        );
+      }
+    }
     final last = pts.last.$3;
-    if (last != null) {
+    if (sel == null && last != null) {
       canvas.drawCircle(
         Offset(x(pts.length - 1), y(last)),
         6,
@@ -577,5 +819,5 @@ class WeightChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(WeightChartPainter old) =>
-      old.pts != pts || old.goal != goal;
+      old.pts != pts || old.goal != goal || old.selected != selected;
 }

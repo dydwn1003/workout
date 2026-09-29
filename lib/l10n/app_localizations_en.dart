@@ -390,6 +390,29 @@ class LEn extends L {
   String get rangeAll => 'All';
 
   @override
+  String get chartHint => 'Tap or drag the chart to see each day';
+
+  @override
+  String get tipWeight => 'Weight';
+
+  @override
+  String get tipTrend => 'Trend';
+
+  @override
+  String get tipIntake => 'Eaten';
+
+  @override
+  String get tipWorkout => 'Workout';
+
+  @override
+  String get tipNone => 'Not logged';
+
+  @override
+  String tipMinutes(String n) {
+    return '$n min';
+  }
+
+  @override
   String get legendRaw => 'Weigh-ins';
 
   @override

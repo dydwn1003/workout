@@ -793,6 +793,48 @@ abstract class L {
   /// **'전체'**
   String get rangeAll;
 
+  /// No description provided for @chartHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'그래프를 누르거나 좌우로 밀면 날짜별 기록을 볼 수 있어요'**
+  String get chartHint;
+
+  /// No description provided for @tipWeight.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중'**
+  String get tipWeight;
+
+  /// No description provided for @tipTrend.
+  ///
+  /// In ko, this message translates to:
+  /// **'추세'**
+  String get tipTrend;
+
+  /// No description provided for @tipIntake.
+  ///
+  /// In ko, this message translates to:
+  /// **'섭취'**
+  String get tipIntake;
+
+  /// No description provided for @tipWorkout.
+  ///
+  /// In ko, this message translates to:
+  /// **'운동'**
+  String get tipWorkout;
+
+  /// No description provided for @tipNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록 없음'**
+  String get tipNone;
+
+  /// No description provided for @tipMinutes.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}분'**
+  String tipMinutes(String n);
+
   /// No description provided for @legendRaw.
   ///
   /// In ko, this message translates to:

@@ -181,6 +181,20 @@
   "range4w": "4주",
   "range12w": "12주",
   "rangeAll": "전체",
+  "chartHint": "그래프를 누르거나 좌우로 밀면 날짜별 기록을 볼 수 있어요",
+  "tipWeight": "체중",
+  "tipTrend": "추세",
+  "tipIntake": "섭취",
+  "tipWorkout": "운동",
+  "tipNone": "기록 없음",
+  "tipMinutes": "{n}분",
+  "@tipMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
   "legendRaw": "측정값",
   "legendTrend": "추세",
   "legendGoal": "목표",

@@ -378,6 +378,29 @@ class LKo extends L {
   String get rangeAll => '전체';
 
   @override
+  String get chartHint => '그래프를 누르거나 좌우로 밀면 날짜별 기록을 볼 수 있어요';
+
+  @override
+  String get tipWeight => '체중';
+
+  @override
+  String get tipTrend => '추세';
+
+  @override
+  String get tipIntake => '섭취';
+
+  @override
+  String get tipWorkout => '운동';
+
+  @override
+  String get tipNone => '기록 없음';
+
+  @override
+  String tipMinutes(String n) {
+    return '$n분';
+  }
+
+  @override
   String get legendRaw => '측정값';
 
   @override
