@@ -38,6 +38,42 @@ class Food {
   bool get hasEstimatedMacros => unknown.isNotEmpty;
   bool get kcalEstimated => unknown.contains('k');
 
+  /// Same shape as a row of the server's public.foods table
+  /// (supabase/schema.sql), so server results and cached ones share a parser.
+  Map<String, Object?> toJson() => {
+    'id': id,
+    'name': name,
+    'aliases': aliases,
+    'category': category,
+    'kcal': kcal,
+    'protein': proteinG,
+    'carbs': carbsG,
+    'fat': fatG,
+    'units': [
+      for (final u in units) {'label': u.label, 'g': u.grams},
+    ],
+    'unknown': unknown,
+  };
+
+  factory Food.fromJson(Map<String, Object?> j) {
+    double n(Object? v) => (v as num?)?.toDouble() ?? 0;
+    return Food(
+      j['id'] as String,
+      j['name'] as String,
+      [for (final a in (j['aliases'] as List? ?? const [])) a as String],
+      j['category'] as String? ?? '',
+      n(j['kcal']),
+      n(j['protein']),
+      n(j['carbs']),
+      n(j['fat']),
+      [
+        for (final u in (j['units'] as List? ?? const []))
+          FoodUnit((u as Map)['label'] as String, (u['g'] as num).toDouble()),
+      ],
+      unknown: j['unknown'] as String? ?? '',
+    );
+  }
+
   /// Units shown to the user: the food's own units plus grams.
   List<FoodUnit> get allUnits =>
       custom ? units : [...units, const FoodUnit('g', 1)];

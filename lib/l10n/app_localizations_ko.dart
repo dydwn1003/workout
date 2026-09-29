@@ -795,6 +795,17 @@ class LKo extends L {
   }
 
   @override
+  String get remoteSearching => '전체 식품 DB(약 30만 개)에서 더 찾는 중…';
+
+  @override
+  String get remoteSearchFailed => '전체 식품 DB에 연결하지 못했어요. 앱에 있는 음식만 보여요.';
+
+  @override
+  String remoteResults(String n) {
+    return '전체 식품 DB에서 $n개 더';
+  }
+
+  @override
   String get createFood => '내 음식 만들기';
 
   @override

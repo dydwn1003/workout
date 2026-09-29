@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'data/remote_food_search.dart';
 import 'data/repository.dart';
 import 'l10n/app_localizations.dart';
 import 'state/app_state.dart';
@@ -10,7 +11,10 @@ import 'ui/theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final state = AppState(LocalCoachRepository());
+  final state = AppState(
+    LocalCoachRepository(),
+    remoteSearch: RemoteFoodSearch.fromEnvironment(),
+  );
   await state.load();
   runApp(CoachApp(state: state));
 }

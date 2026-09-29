@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'entities.dart';
+import 'food.dart';
 
 /// Snapshot of everything stored for the (single, local) user.
 class AppData {
@@ -13,6 +14,10 @@ class AppData {
   List<SavedMeal> savedMeals;
   List<Workout> workouts;
   List<CustomFood> customFoods;
+
+  /// Server foods (see RemoteFoodSearch) the user logged, so they keep
+  /// showing up in recent foods offline.
+  List<Food> remoteFoods;
   List<Plan> plans;
 
   AppData({
@@ -23,12 +28,14 @@ class AppData {
     List<SavedMeal>? savedMeals,
     List<Workout>? workouts,
     List<CustomFood>? customFoods,
+    List<Food>? remoteFoods,
     List<Plan>? plans,
   }) : weights = weights ?? [],
        meals = meals ?? [],
        savedMeals = savedMeals ?? [],
        workouts = workouts ?? [],
        customFoods = customFoods ?? [],
+       remoteFoods = remoteFoods ?? [],
        plans = plans ?? [];
 }
 
@@ -43,6 +50,7 @@ abstract class CoachRepository {
   Future<void> saveSavedMeals(List<SavedMeal> savedMeals);
   Future<void> saveWorkouts(List<Workout> workouts);
   Future<void> saveCustomFoods(List<CustomFood> foods);
+  Future<void> saveRemoteFoods(List<Food> foods);
   Future<void> savePlans(List<Plan> plans);
   Future<void> deleteAll();
 }
@@ -96,6 +104,7 @@ class LocalCoachRepository implements CoachRepository {
       savedMeals: _list(await _read('savedMeals'), SavedMeal.fromJson),
       workouts: _list(await _read('workouts'), Workout.fromJson),
       customFoods: _list(await _read('customFoods'), CustomFood.fromJson),
+      remoteFoods: _list(await _read('remoteFoods'), Food.fromJson),
       plans: _list(await _read('plans'), Plan.fromJson),
     );
   }
@@ -127,6 +136,10 @@ class LocalCoachRepository implements CoachRepository {
   @override
   Future<void> saveCustomFoods(List<CustomFood> foods) =>
       _write('customFoods', foods.map((e) => e.toJson()).toList());
+
+  @override
+  Future<void> saveRemoteFoods(List<Food> foods) =>
+      _write('remoteFoods', foods.map((e) => e.toJson()).toList());
 
   @override
   Future<void> savePlans(List<Plan> plans) =>
@@ -169,6 +182,9 @@ class MemoryCoachRepository implements CoachRepository {
   @override
   Future<void> saveCustomFoods(List<CustomFood> foods) async =>
       data.customFoods = [...foods];
+  @override
+  Future<void> saveRemoteFoods(List<Food> foods) async =>
+      data.remoteFoods = [...foods];
   @override
   Future<void> savePlans(List<Plan> plans) async => data.plans = [...plans];
   @override

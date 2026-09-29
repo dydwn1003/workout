@@ -6,6 +6,7 @@ import '../core/coach_engine/coach_engine.dart';
 import '../data/entities.dart';
 import '../data/food.dart';
 import '../data/food_db.g.dart';
+import '../data/remote_food_search.dart';
 import '../data/repository.dart';
 
 class WorkoutWeek {
@@ -28,7 +29,10 @@ class AppState extends ChangeNotifier {
   AppData _data = AppData();
   bool loaded = false;
 
-  AppState(this.repo, {DateTime Function()? clock})
+  /// Full server food search; null when not configured (tests, offline builds).
+  final RemoteFoodSearch? remoteSearch;
+
+  AppState(this.repo, {DateTime Function()? clock, this.remoteSearch})
     : clock = clock ?? DateTime.now;
 
   Future<void> load() async {
@@ -70,7 +74,44 @@ class AppState extends ChangeNotifier {
     for (final c in _data.customFoods) {
       if (c.id == id) return c.toFood();
     }
-    return _builtInById[id];
+    final built = _builtInById[id];
+    if (built != null) return built;
+    for (final f in _data.remoteFoods) {
+      if (f.id == id) return f;
+    }
+    return null;
+  }
+
+  static const _remoteFoodsKept = 300;
+
+  /// Keeps a server food the user is logging so recent foods can show it
+  /// without the network. Built-in and custom foods need nothing.
+  Future<void> rememberFood(Food f) async {
+    if (f.custom || _builtInById.containsKey(f.id)) return;
+    _data.remoteFoods
+      ..removeWhere((x) => x.id == f.id)
+      ..add(f);
+    if (_data.remoteFoods.length > _remoteFoodsKept) {
+      _data.remoteFoods.removeRange(
+        0,
+        _data.remoteFoods.length - _remoteFoodsKept,
+      );
+    }
+    await repo.saveRemoteFoods(_data.remoteFoods);
+  }
+
+  /// Server results for [q] that local search didn't already find.
+  Future<List<Food>> searchRemoteFoods(String q, List<Food> local) async {
+    final remote = remoteSearch;
+    if (remote == null) return const [];
+    final seenIds = {for (final f in local) f.id};
+    final seenNames = {for (final f in local) f.name.toLowerCase()};
+    return [
+      for (final f in await remote.search(q))
+        if (!seenIds.contains(f.id) &&
+            !seenNames.contains(f.name.toLowerCase()))
+          f,
+    ];
   }
 
   /// Distinct foods logged from search recently (newest first).

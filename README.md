@@ -129,6 +129,7 @@ test/                  단위 테스트
   - **가공식품**: 전체 약 59만 건은 앱·미리보기에 넣기엔 너무 커서 대표식품명별 10개씩만 넣어요(`--processed-per-group`). 포장 중량이 있는 제품, 최신 데이터를 우선해요. 전체 검색은 서버 단계에서 API로 붙일 예정이에요.
   - 식약처 분류는 앱 분류(밥·죽, 반찬, 음료…)로 합쳤고, 피자·버거·샌드위치·치킨은 패스트푸드, 케이크·도넛 등은 간식·디저트로 옮겨요. 분류 둘러보기는 100개까지 보여주고 나머지는 검색으로 찾아요.
   - **Supabase(서버 검색, 적재 완료)**: `supabase/schema.sql`(foods 테이블, 한글 부분 검색 인덱스, 읽기 전용 RLS, `search_foods(q, lim)` 함수, 약 150MB)을 SQL Editor에서 한 번 실행하고, `SUPABASE_URL`·`SUPABASE_SERVICE_ROLE_KEY` 환경변수를 넣은 뒤 `python3 tool/load_supabase.py`로 전체(직접 만든 221 + 음식 1.7만 + 가공식품 28.9만, 원본 59만 건 중 식품코드가 같은 중복 제외)를 올려요. 로컬 PostgreSQL 16에서 검색 3~170ms 확인. 2026-09-28 전체 306,644건 적재 완료(중간에 끊기면 `--skip N`으로 이어서 올리기). keys/cho_keys/cho 컬럼이 있던 예전 DB는 `supabase/migrate_shrink.sql`로 줄이기.
+  - **앱에서 서버 검색**: 앱은 내장 2만 개로 바로 결과를 보여주고, 입력이 0.35초 멈추면 Supabase `search_foods`(공개 anon 키, 읽기 전용)로 전체 30만 개에서 더 찾아 아래에 붙여요(`lib/data/remote_food_search.dart`). 빌드할 때 `--dart-define=SUPABASE_URL=… --dart-define=SUPABASE_ANON_KEY=…`를 주면 켜지고(`scripts/run_web.sh`는 환경변수가 있으면 자동), 없거나 연결이 안 되면 내장 데이터만 써요. 서버 음식을 기록하면 기기에 저장해서(`remoteFoods`, 최대 300개) 오프라인에서도 최근 음식에 나와요. 2글자 검색어는 trigram 인덱스를 못 써서 서버에서 1.5초쯤 걸려요.
   - 바코드 스캔은 모바일 앱 + Open Food Facts/식약처 바코드 API로 검토.
 
 ## 다음 단계 제안

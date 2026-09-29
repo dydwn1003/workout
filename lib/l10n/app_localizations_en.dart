@@ -810,6 +810,18 @@ class LEn extends L {
   }
 
   @override
+  String get remoteSearching => 'Searching the full food database (~300k)…';
+
+  @override
+  String get remoteSearchFailed =>
+      'Couldn\'t reach the full food database. Showing built-in foods only.';
+
+  @override
+  String remoteResults(String n) {
+    return '$n more from the full food database';
+  }
+
+  @override
   String get createFood => 'Create a food';
 
   @override

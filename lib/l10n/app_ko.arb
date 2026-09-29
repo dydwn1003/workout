@@ -561,6 +561,16 @@
       }
     }
   },
+  "remoteSearching": "전체 식품 DB(약 30만 개)에서 더 찾는 중…",
+  "remoteSearchFailed": "전체 식품 DB에 연결하지 못했어요. 앱에 있는 음식만 보여요.",
+  "remoteResults": "전체 식품 DB에서 {n}개 더",
+  "@remoteResults": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
   "createFood": "내 음식 만들기",
   "createFoodDesc": "찾는 음식이 없으면 직접 만들어 저장해요",
   "foodMacrosEstimatedNote": "'추정'(~)은 업체가 공개하지 않은 값을 비슷한 음식의 영양정보로 계산한 거예요.",

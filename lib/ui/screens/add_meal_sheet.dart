@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -294,16 +296,63 @@ class _SearchTabState extends State<_SearchTab>
   @override
   bool get wantKeepAlive => true;
 
+  // Server results for _remoteQuery (the full DB on Supabase), fetched after
+  // a short pause in typing and shown below the local ones.
+  Timer? _debounce;
+  var _remoteQuery = '';
+  var _remote = const <Food>[];
+  var _remoteLoading = false;
+  var _remoteFailed = false;
+
   @override
   void initState() {
     super.initState();
-    _query.addListener(() => setState(() {}));
+    _query.addListener(_onQuery);
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _query.dispose();
     super.dispose();
+  }
+
+  void _onQuery() {
+    final q = _query.text.trim();
+    _debounce?.cancel();
+    final s = AppScope.read(context);
+    if (q.isNotEmpty && q != _remoteQuery && s.remoteSearch != null) {
+      _debounce = Timer(
+        const Duration(milliseconds: 350),
+        () => _fetchRemote(q),
+      );
+    }
+    setState(() {});
+  }
+
+  Future<void> _fetchRemote(String q) async {
+    final s = AppScope.read(context);
+    setState(() {
+      _remoteQuery = q;
+      _remote = const [];
+      _remoteLoading = true;
+      _remoteFailed = false;
+    });
+    List<Food> found;
+    var failed = false;
+    try {
+      found = await s.searchRemoteFoods(q, s.searchAllFoods(q));
+    } catch (e) {
+      debugPrint('remote food search failed: $e');
+      found = const [];
+      failed = true;
+    }
+    if (!mounted || _remoteQuery != q) return;
+    setState(() {
+      _remote = found;
+      _remoteLoading = false;
+      _remoteFailed = failed;
+    });
   }
 
   void _go(_View v, {Food? food}) {
@@ -324,7 +373,9 @@ class _SearchTabState extends State<_SearchTab>
         : f.custom
         ? '${unit.label} × $q'
         : '${unit.label} × $q (${grams.round()}g)';
-    await AppScope.read(context).addMeal(
+    final s = AppScope.read(context);
+    await s.rememberFood(f);
+    await s.addMeal(
       name: f.name,
       kcal: n.kcal,
       proteinG: n.proteinG,
@@ -397,6 +448,10 @@ class _SearchTabState extends State<_SearchTab>
     // Imported categories can hold thousands of foods; browse shows the
     // first ones and search finds the rest.
     final foods = found.take(_browseLimit).toList();
+    final remotePending =
+        q.isNotEmpty &&
+        s.remoteSearch != null &&
+        (_remoteQuery != q || _remoteLoading);
     return ListView(
       padding: EdgeInsets.fromLTRB(
         20,
@@ -446,7 +501,7 @@ class _SearchTabState extends State<_SearchTab>
             ),
           ),
         const SizedBox(height: 8),
-        if (foods.isEmpty)
+        if (foods.isEmpty && !remotePending && _remoteShown(q).isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Text(
@@ -475,6 +530,7 @@ class _SearchTabState extends State<_SearchTab>
               style: const TextStyle(color: AppColors.inkSoft, fontSize: 13),
             ),
           ),
+        if (q.isNotEmpty && s.remoteSearch != null) ..._remoteSection(t, q),
         const SizedBox(height: 6),
         SoftCard(
           color: AppColors.lilacSoft,
@@ -511,6 +567,69 @@ class _SearchTabState extends State<_SearchTab>
         ),
       ],
     );
+  }
+
+  List<Food> _remoteShown(String q) =>
+      _remoteQuery == q && !_remoteLoading ? _remote : const [];
+
+  List<Widget> _remoteSection(L t, String q) {
+    final current = _remoteQuery == q;
+    Widget note(String text, {Widget? leading}) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ?leading,
+          if (leading != null) const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.inkSoft, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (!current || _remoteLoading) {
+      return [
+        note(
+          t.remoteSearching,
+          leading: const SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      ];
+    }
+    if (_remoteFailed) return [note(t.remoteSearchFailed)];
+    if (_remote.isEmpty) return const [];
+    return [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(4, 12, 4, 6),
+        child: Text(
+          t.remoteResults('${_remote.length}'),
+          style: const TextStyle(
+            fontFamily: headingFont,
+            fontWeight: FontWeight.w800,
+            fontSize: 13,
+            color: AppColors.inkSoft,
+          ),
+        ),
+      ),
+      for (final (i, f) in _remote.indexed)
+        FadeSlideIn(
+          key: ValueKey('remote-${f.id}-$q'),
+          delay: stagger(i),
+          dy: 8,
+          child: _FoodRow(
+            food: f,
+            onTap: () => _go(_View.detail, food: f),
+            onQuickAdd: () => _log(f, f.units.first, 1),
+          ),
+        ),
+    ];
   }
 }
 

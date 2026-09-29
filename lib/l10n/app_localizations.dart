@@ -1484,6 +1484,24 @@ abstract class L {
   /// **'\'{query}\' 검색 결과가 없어요'**
   String noResults(String query);
 
+  /// No description provided for @remoteSearching.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 식품 DB(약 30만 개)에서 더 찾는 중…'**
+  String get remoteSearching;
+
+  /// No description provided for @remoteSearchFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 식품 DB에 연결하지 못했어요. 앱에 있는 음식만 보여요.'**
+  String get remoteSearchFailed;
+
+  /// No description provided for @remoteResults.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 식품 DB에서 {n}개 더'**
+  String remoteResults(String n);
+
   /// No description provided for @createFood.
   ///
   /// In ko, this message translates to:
