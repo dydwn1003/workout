@@ -8,6 +8,7 @@
 2. Actions → **Build Play Store bundle** → Run workflow를 실행합니다. `v1.0.0` 같은 태그를 push해도 됩니다.
 3. 약 6분 뒤 https://github.com/dydwn1003/workout/releases/download/android-store/alasfit.aab 에서 파일을 받습니다.
 4. 다음 출시 때는 `pubspec.yaml`의 `version: 1.0.0+1`에서 앞부분(1.0.1 등)만 올립니다. 버전 코드는 커밋 수로 자동으로 올라갑니다.
+5. 같은 커밋으로 다시 빌드하면 버전 코드도 같아서 Play가 받지 않습니다("이미 사용된 버전 코드"). 새 커밋이 하나라도 있어야 번호가 올라갑니다.
 
 ## 2. Play Console 앱 만들기
 
