@@ -85,6 +85,11 @@ jobs:
           if [ -z "$GOOGLE_WEB_CLIENT_ID" ]; then
             echo "::warning::GOOGLE_WEB_CLIENT_ID variable is empty: Google sign-in won't work in this build"
           fi
+          case "$GOOGLE_WEB_CLIENT_ID" in
+            *,*|*" "*)
+              echo "::error::GOOGLE_WEB_CLIENT_ID must be ONE client id (the Web application one), not a list"
+              exit 1 ;;
+          esac
           CODE=$(git rev-list --count HEAD)
           flutter build appbundle --release \
             --build-number="$CODE" \
