@@ -691,6 +691,22 @@ class LKo extends L {
   String get haveAccount => '이미 계정이 있어요 · 로그인해서 불러오기';
 
   @override
+  String get restoringData => '저장된 기록을 불러오는 중…';
+
+  @override
+  String get noSavedDataTitle => '이 계정에 저장된 기록이 없어요';
+
+  @override
+  String get noSavedDataBody =>
+      '목표와 키·몸무게를 입력하면 이 계정에 저장되고, 다른 기기에서도 불러올 수 있어요.';
+
+  @override
+  String get agreeAndStart => '동의하고 입력하기';
+
+  @override
+  String get restoreFailed => '기록을 불러오지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.';
+
+  @override
   String get syncing => '동기화 중…';
 
   @override

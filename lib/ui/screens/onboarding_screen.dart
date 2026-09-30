@@ -189,6 +189,66 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     today: DateTime.now(),
   );
 
+  /// 이미 계정이 있어요: signs in (unless already), loads the account's
+  /// records, and goes to the app. With nothing saved on the account, says
+  /// so and starts the setup questions instead.
+  Future<void> _signInExisting() async {
+    final state = AppScope.read(context);
+    if (!state.signedIn) {
+      await showSignInSheet(context);
+      if (!mounted || !state.signedIn) return;
+    }
+    setState(() => _busy = true);
+    final loaded = await state.waitForAccountData();
+    // With records, the app replaces this screen by itself.
+    if (!mounted || state.onboarded) return;
+    setState(() => _busy = false);
+    final t = L.of(context);
+    if (!loaded) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(t.restoreFailed)));
+      return;
+    }
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(t.noSavedDataTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(t.noSavedDataBody, style: const TextStyle(height: 1.45)),
+            const SizedBox(height: 12),
+            Text(
+              t.consentLabel,
+              style: const TextStyle(
+                fontSize: 12.5,
+                height: 1.4,
+                color: AppColors.inkSoft,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(t.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(t.agreeAndStart),
+          ),
+        ],
+      ),
+    );
+    if (go != true || !mounted) return;
+    setState(() {
+      _consent = true;
+      _forward = true;
+      _index = _steps.indexOf(_Step.goal);
+    });
+  }
+
   Future<void> _next() async {
     FocusScope.of(context).unfocus();
     if (_step == _Step.result) {
@@ -323,9 +383,40 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       if (_step == _Step.welcome) ...[
                         const SizedBox(height: 8),
                         if (AppScope.of(context).auth != null)
-                          TextButton(
-                            onPressed: () => showSignInSheet(context),
-                            child: Text(t.haveAccount),
+                          AnimatedSwitcher(
+                            duration: Motion.fast,
+                            child: _busy
+                                ? Padding(
+                                    key: const ValueKey('restoring'),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          t.restoringData,
+                                          style: const TextStyle(
+                                            color: AppColors.inkSoft,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : TextButton(
+                                    key: const ValueKey('account'),
+                                    onPressed: _signInExisting,
+                                    child: Text(t.haveAccount),
+                                  ),
                           ),
                       ],
                     ],

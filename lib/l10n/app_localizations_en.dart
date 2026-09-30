@@ -705,6 +705,23 @@ class LEn extends L {
   String get haveAccount => 'I have an account · sign in to restore';
 
   @override
+  String get restoringData => 'Loading your saved records…';
+
+  @override
+  String get noSavedDataTitle => 'No saved records on this account';
+
+  @override
+  String get noSavedDataBody =>
+      'Enter your goal, height and weight: they\'re saved to this account and come back on any device.';
+
+  @override
+  String get agreeAndStart => 'Agree and continue';
+
+  @override
+  String get restoreFailed =>
+      'Couldn\'t load your records. Check your connection and try again.';
+
+  @override
   String get syncing => 'Syncing…';
 
   @override

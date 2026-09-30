@@ -1328,6 +1328,36 @@ abstract class L {
   /// **'이미 계정이 있어요 · 로그인해서 불러오기'**
   String get haveAccount;
 
+  /// No description provided for @restoringData.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장된 기록을 불러오는 중…'**
+  String get restoringData;
+
+  /// No description provided for @noSavedDataTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 계정에 저장된 기록이 없어요'**
+  String get noSavedDataTitle;
+
+  /// No description provided for @noSavedDataBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표와 키·몸무게를 입력하면 이 계정에 저장되고, 다른 기기에서도 불러올 수 있어요.'**
+  String get noSavedDataBody;
+
+  /// No description provided for @agreeAndStart.
+  ///
+  /// In ko, this message translates to:
+  /// **'동의하고 입력하기'**
+  String get agreeAndStart;
+
+  /// No description provided for @restoreFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록을 불러오지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.'**
+  String get restoreFailed;
+
   /// No description provided for @syncing.
   ///
   /// In ko, this message translates to:

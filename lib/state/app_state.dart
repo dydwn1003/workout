@@ -195,6 +195,25 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  /// Waits (up to [timeout]) for the first sync after signing in, so the
+  /// account's saved records are on this device. False when it failed or
+  /// took too long.
+  Future<bool> waitForAccountData({
+    Duration timeout = const Duration(seconds: 20),
+  }) async {
+    final sync = _sync;
+    if (sync == null || !signedIn) return false;
+    final end = clock().add(timeout);
+    while (clock().isBefore(end)) {
+      if (sync.attached && !syncing) {
+        if (sync.syncedAt != null) return true;
+        if (syncFailed) return false;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    }
+    return false;
+  }
+
   Future<void> signIn(AuthMethod m) async {
     analytics.log('sign_in_start', {'method': m.name});
     await auth?.signIn(m);
