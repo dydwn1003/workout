@@ -1407,5 +1407,82 @@
         "type": "String"
       }
     }
-  }
+  },
+  "tabMyGyms": "내 헬스장",
+  "tabLounge": "운동 라운지",
+  "loungeTitle": "운동 라운지",
+  "loungeSubtitle": "헬스장 상관없이 모든 회원이 함께 이야기해요",
+  "loungeCategories": "운동별 게시판",
+  "loungeHot": "이번 주 인기글",
+  "loungeLatest": "라운지 최신글",
+  "loungeEmpty": "아직 글이 없어요. 첫 글을 남겨 보세요!",
+  "loungeBoardBadge": "운동 라운지 · 누구나 참여",
+  "topicHealth": "헬스",
+  "topicCrossfit": "크로스핏",
+  "topicRunning": "러닝",
+  "topicYoga": "요가",
+  "topicPilates": "필라테스",
+  "topicDiet": "다이어트·식단",
+  "topicHome": "홈트",
+  "topicSwimming": "수영",
+  "topicClimbing": "클라이밍",
+  "topicCycling": "자전거",
+  "topicCombat": "복싱·격투기",
+  "topicFree": "자유수다",
+  "gymLimitTitle": "내 헬스장은 {max}개까지예요",
+  "@gymLimitTitle": {
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "gymLimitBody": "하나를 빼면 {name}을(를) 추가할게요",
+  "@gymLimitBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gymLimitError": "내 헬스장은 3개까지 추가할 수 있어요",
+  "swapGym": "빼고 추가",
+  "inviteFriends": "친구 초대",
+  "inviteTitle": "친구와 같이 운동해요",
+  "inviteBody": "링크를 보내면 친구가 바로 들어올 수 있어요",
+  "inviteApp": "앱 초대하기",
+  "inviteAppDesc": "카톡·문자로 알아서핏을 알려요",
+  "inviteGym": "{name} 게시판 초대",
+  "@inviteGym": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteGymDesc": "같은 헬스장 친구를 우리 게시판으로",
+  "inviteAppText": "나 요즘 알아서핏으로 식단이랑 운동 기록하는데 같이 해볼래? 헬스장 친구들이랑 이야기도 할 수 있어 💪\n{link}",
+  "@inviteAppText": {
+    "placeholders": {
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteGymText": "알아서핏 '{name}' 게시판에서 같이 운동해요! 운동메이트 구하고 정보도 나눠요 💪\n{link}",
+  "@inviteGymText": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "linkCopied": "링크를 복사했어요. 친구에게 붙여넣어 보내세요!",
+  "shareBoard": "공유",
+  "chooseTopic": "어느 게시판에 쓸까요?",
+  "loungeHotEmpty": "이번 주 인기글이 아직 없어요. 좋아요로 골라 주세요!",
+  "allBoards": "전체"
 }

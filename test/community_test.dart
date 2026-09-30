@@ -191,5 +191,48 @@ void main() {
       expect(c.signedIn, isFalse);
       expect(c.myGyms, isEmpty);
     });
+
+    test('my gyms hold 3 at most; lounge boards are for everyone', () async {
+      final repo = MemoryCommunity.demo(me: 'me', meJoined: true);
+      final c = CommunityState(repo);
+      await c.refresh();
+      expect(c.myGyms, hasLength(2));
+      await c.join(const Gym(id: 'l-3', name: 'C'));
+      expect(c.gymsFull, isTrue);
+      await expectLater(
+        c.join(const Gym(id: 'l-4', name: 'D')),
+        throwsA(
+          isA<CommunityException>().having(
+            (e) => e.error,
+            'error',
+            CommunityError.gymLimit,
+          ),
+        ),
+      );
+      expect(c.myGyms, hasLength(3));
+      // The server says no too, even when the app's list is behind.
+      await expectLater(repo.join('l-4'), throwsA(isA<CommunityException>()));
+      await c.leave('l-1');
+      await c.join(const Gym(id: 'l-4', name: 'D'));
+      expect([for (final g in c.myGyms) g.id], ['l-2', 'l-3', 'l-4']);
+      // 라운지 boards aren't gyms: not in search, not joinable.
+      expect(await repo.searchGyms('헬스'), isEmpty);
+      await expectLater(repo.join('t-health'), throwsA(anything));
+    });
+
+    test('lounge: boards with counts, hot posts by likes', () async {
+      final repo = MemoryCommunity.demo(me: 'me', meJoined: true);
+      final boards = await repo.boards(['t-running', 't-nope', 'l-1']);
+      expect([for (final g in boards) g.id], ['t-running', 'l-1']);
+      expect(boards.first.isTopic, isTrue);
+      expect(boards.first.postCount, 1);
+      final hot = await repo.hot(topicIds);
+      expect(hot.first.gymId, 't-running');
+      expect(hot.first.likeCount, 5);
+      expect(hot.every((p) => p.likeCount > 0), isTrue);
+      final latest = await repo.feed(topicIds);
+      expect(latest, hasLength(5));
+      expect(latest.every((p) => isTopicId(p.gymId)), isTrue);
+    });
   });
 }

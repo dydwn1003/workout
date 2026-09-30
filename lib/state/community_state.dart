@@ -17,8 +17,15 @@ class CommunityState extends ChangeNotifier {
   String? _loadedFor;
   var _loadedOnce = false;
 
+  /// A board to open from an invite link (?gym=...), taken by the
+  /// community tab.
+  String? pendingBoard;
+
   bool get signedIn => repo.myId != null;
   bool isMine(String gymId) => myGyms.any((g) => g.id == gymId);
+
+  /// 내 헬스장 holds [CommunityLimits.myGyms] gyms at most.
+  bool get gymsFull => myGyms.length >= CommunityLimits.myGyms;
 
   /// Loads the profile and my gyms, again when the signed-in user changed.
   Future<void> refresh({bool force = false}) async {
@@ -57,6 +64,7 @@ class CommunityState extends ChangeNotifier {
 
   Future<void> join(Gym gym) async {
     if (isMine(gym.id)) return;
+    if (gymsFull) throw const CommunityException(CommunityError.gymLimit);
     myGyms = [...myGyms, gym.copyWith(memberCount: gym.memberCount + 1)];
     notifyListeners();
     try {

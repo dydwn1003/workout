@@ -5,8 +5,10 @@
 -- A board per gym: gyms come from the 체력단련장업 open data
 -- (tool/load_gyms.py) and users can add missing ones. Signed-in users with a
 -- nickname write posts (text + up to 4 photos) and comments, like posts,
--- report and block. Three reports from different people hide a post or
--- comment until it is reviewed (hidden = false again by hand).
+-- report and block. Everyone also shares the 운동 라운지 boards by sport,
+-- and each user keeps up to 3 gyms as "my gyms". Three reports from
+-- different people hide a post or comment until it is reviewed (hidden =
+-- false again by hand).
 
 create extension if not exists pg_trgm;
 
@@ -332,6 +334,48 @@ drop policy if exists "blocks: own" on public.user_blocks;
 create policy "blocks: own" on public.user_blocks for all to authenticated
   using (blocker = auth.uid()) with check (blocker = auth.uid());
 
+-- 운동 라운지 ---------------------------------------------------------------------
+
+-- Boards for everyone by sport: gyms rows with source 'topic' (id 't-...').
+-- They aren't in the gym search and can't be joined as "my gym".
+alter table public.gyms drop constraint if exists gyms_source_check;
+alter table public.gyms add constraint gyms_source_check
+  check (source in ('open', 'user', 'topic'));
+
+insert into public.gyms (id, name, source) values
+  ('t-health', '헬스', 'topic'),
+  ('t-crossfit', '크로스핏', 'topic'),
+  ('t-running', '러닝', 'topic'),
+  ('t-yoga', '요가', 'topic'),
+  ('t-pilates', '필라테스', 'topic'),
+  ('t-diet', '다이어트·식단', 'topic'),
+  ('t-home', '홈트', 'topic'),
+  ('t-swimming', '수영', 'topic'),
+  ('t-climbing', '클라이밍', 'topic'),
+  ('t-cycling', '자전거', 'topic'),
+  ('t-combat', '복싱·격투기', 'topic'),
+  ('t-free', '자유수다', 'topic')
+on conflict (id) do update set name = excluded.name, source = 'topic';
+
+-- My gyms: at most 3, and not the 라운지 boards.
+create or replace function public.gym_members_guard()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare n int;
+begin
+  if exists (select 1 from public.gyms where id = new.gym_id and source = 'topic') then
+    raise exception 'topic_board' using errcode = 'P0001';
+  end if;
+  perform pg_advisory_xact_lock(hashtext('gym_members:' || new.user_id::text));
+  select count(*) into n from public.gym_members
+    where user_id = new.user_id and gym_id <> new.gym_id;
+  if n >= 3 then raise exception 'gym_limit' using errcode = 'P0001'; end if;
+  return new;
+end $$;
+
+drop trigger if exists gym_members_guard on public.gym_members;
+create trigger gym_members_guard before insert on public.gym_members
+  for each row execute function public.gym_members_guard();
+
 -- Search -------------------------------------------------------------------------
 
 -- Gyms whose name or address contains every word of the query (spaces
@@ -344,7 +388,8 @@ returns setof public.gyms language sql stable set search_path = '' as $$
     from unnest(string_to_array(lower(trim(q)), ' ')) as x where x <> ''
   )
   select g.* from public.gyms g, w
-  where (select bool_and(g.search like '%' || x || '%') from unnest(w.words) as x)
+  where g.source <> 'topic'
+    and (select bool_and(g.search like '%' || x || '%') from unnest(w.words) as x)
   order by
     (select bool_and(lower(replace(g.name, ' ', '')) like '%' || x || '%')
        from unnest(w.words) as x) desc,

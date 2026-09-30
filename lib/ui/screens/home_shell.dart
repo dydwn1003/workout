@@ -45,6 +45,13 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     _checkForUpdate();
     _maybeAskReview();
     _warmUpSearch();
+    // Opened from an invite link: straight to the community tab.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (CommunityScope.maybeRead(context)?.pendingBoard == null) return;
+      final i = _tabNames.indexOf('community');
+      if (i >= 0) _select(i);
+    });
   }
 
   /// Builds the food search index once the first screen is up, so the

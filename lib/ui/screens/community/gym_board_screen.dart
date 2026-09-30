@@ -8,6 +8,7 @@ import '../../motion.dart';
 import '../../theme.dart';
 import '../../widgets.dart';
 import 'community_common.dart';
+import 'community_sheets.dart';
 import 'community_widgets.dart';
 import 'compose_sheet.dart';
 import 'post_screen.dart';
@@ -110,7 +111,7 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
     if (post == null || !mounted) return;
     HapticFeedback.mediumImpact();
     final c = CommunityScope.read(context);
-    if (!c.isMine(widget.gym.id)) {
+    if (!widget.gym.isTopic && !c.isMine(widget.gym.id) && !c.gymsFull) {
       try {
         await c.join(widget.gym); // writing here makes it one of my gyms
       } catch (_) {}
@@ -128,10 +129,12 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
     final c = CommunityScope.read(context);
     if (!await ensureCommunityMember(context) || !mounted) return;
     HapticFeedback.selectionClick();
+    if (!c.isMine(widget.gym.id)) {
+      await joinGym(context, widget.gym);
+      return;
+    }
     try {
-      c.isMine(widget.gym.id)
-          ? await c.leave(widget.gym.id)
-          : await c.join(widget.gym);
+      await c.leave(widget.gym.id);
     } catch (e) {
       if (mounted) showCommunityError(context, e);
     }
@@ -175,7 +178,7 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
     );
 
     return Scaffold(
-      floatingActionButton: _WriteButton(onTap: _write, label: t.writePost),
+      floatingActionButton: WriteButton(onTap: _write, label: t.writePost),
       body: RefreshIndicator(
         onRefresh: _load,
         edgeOffset: 120,
@@ -190,7 +193,7 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
               foregroundColor: Colors.white,
               surfaceTintColor: Colors.transparent,
               title: Text(
-                g.name,
+                boardName(t, g),
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontFamily: headingFont,
@@ -201,21 +204,27 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
               ),
               actions: [
                 IconButton(
-                  tooltip: mine ? t.leaveGym : t.joinGym,
-                  onPressed: _toggleJoin,
-                  icon: AnimatedSwitcher(
-                    duration: Motion.fast,
-                    transitionBuilder: (child, a) =>
-                        ScaleTransition(scale: a, child: child),
-                    child: Icon(
-                      mine
-                          ? Icons.bookmark_rounded
-                          : Icons.bookmark_add_outlined,
-                      key: ValueKey(mine),
-                      color: Colors.white,
+                  tooltip: t.shareBoard,
+                  onPressed: () => shareBoard(context, g),
+                  icon: const Icon(Icons.ios_share_rounded),
+                ),
+                if (!g.isTopic)
+                  IconButton(
+                    tooltip: mine ? t.leaveGym : t.joinGym,
+                    onPressed: _toggleJoin,
+                    icon: AnimatedSwitcher(
+                      duration: Motion.fast,
+                      transitionBuilder: (child, a) =>
+                          ScaleTransition(scale: a, child: child),
+                      child: Icon(
+                        mine
+                            ? Icons.bookmark_rounded
+                            : Icons.bookmark_add_outlined,
+                        key: ValueKey(mine),
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                ),
                 const SizedBox(width: 4),
               ],
               flexibleSpace: FlexibleSpaceBar(
@@ -317,17 +326,23 @@ class _BoardHeader extends StatelessWidget {
         children: [
           Positioned(
             right: -20,
-            bottom: -40,
-            child: Text(
-              gym.name.characters.first,
-              style: TextStyle(
-                fontFamily: headingFont,
-                fontWeight: FontWeight.w800,
-                fontSize: 180,
-                height: 1,
-                color: Colors.white.withValues(alpha: 0.12),
-              ),
-            ),
+            bottom: gym.isTopic ? -30 : -40,
+            child: gym.isTopic
+                ? Icon(
+                    topicStyle(gym.id).$1,
+                    size: 170,
+                    color: Colors.white.withValues(alpha: 0.14),
+                  )
+                : Text(
+                    gym.name.characters.first,
+                    style: TextStyle(
+                      fontFamily: headingFont,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 180,
+                      height: 1,
+                      color: Colors.white.withValues(alpha: 0.12),
+                    ),
+                  ),
           ),
           SafeArea(
             bottom: false,
@@ -337,7 +352,26 @@ class _BoardHeader extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  if (gym.address.isNotEmpty)
+                  if (gym.isTopic)
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.public_rounded,
+                          size: 15,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          t.loungeBoardBadge,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white.withValues(alpha: 0.92),
+                          ),
+                        ),
+                      ],
+                    )
+                  else if (gym.address.isNotEmpty)
                     Row(
                       children: [
                         const Icon(
@@ -363,54 +397,57 @@ class _BoardHeader extends StatelessWidget {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      _StatBubble(
-                        Icons.people_alt_rounded,
-                        t.gymMembers('${gym.memberCount}'),
-                      ),
-                      const SizedBox(width: 8),
+                      if (!gym.isTopic) ...[
+                        _StatBubble(
+                          Icons.people_alt_rounded,
+                          t.gymMembers('${gym.memberCount}'),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
                       _StatBubble(
                         Icons.article_rounded,
                         t.gymPosts('${gym.postCount}'),
                       ),
                       const Spacer(),
-                      GestureDetector(
-                        onTap: onJoin,
-                        child: AnimatedContainer(
-                          duration: Motion.fast,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: mine
-                                ? Colors.white.withValues(alpha: 0.25)
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                mine
-                                    ? Icons.check_rounded
-                                    : Icons.bookmark_add_rounded,
-                                size: 16,
-                                color: mine ? Colors.white : color,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                mine ? t.joinedGym : t.joinGym,
-                                style: TextStyle(
-                                  fontFamily: headingFont,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 13,
+                      if (!gym.isTopic)
+                        GestureDetector(
+                          onTap: onJoin,
+                          child: AnimatedContainer(
+                            duration: Motion.fast,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: mine
+                                  ? Colors.white.withValues(alpha: 0.25)
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  mine
+                                      ? Icons.check_rounded
+                                      : Icons.bookmark_add_rounded,
+                                  size: 16,
                                   color: mine ? Colors.white : color,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 4),
+                                Text(
+                                  mine ? t.joinedGym : t.joinGym,
+                                  style: TextStyle(
+                                    fontFamily: headingFont,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 13,
+                                    color: mine ? Colors.white : color,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ],
@@ -472,10 +509,10 @@ class _TagBarDelegate extends SliverPersistentHeaderDelegate {
 }
 
 /// The floating "글쓰기" pill with the brand gradient.
-class _WriteButton extends StatelessWidget {
+class WriteButton extends StatelessWidget {
   final VoidCallback onTap;
   final String label;
-  const _WriteButton({required this.onTap, required this.label});
+  const WriteButton({super.key, required this.onTap, required this.label});
 
   @override
   Widget build(BuildContext context) => Squish(

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../data/community.dart';
 import '../../../l10n/app_localizations.dart';
@@ -11,12 +12,15 @@ import '../../theme.dart';
 import '../../widgets.dart';
 import '../sign_in_sheet.dart';
 import 'community_common.dart';
+import 'community_sheets.dart';
 import 'community_widgets.dart';
 import 'gym_board_screen.dart';
+import 'lounge_view.dart';
 import 'post_screen.dart';
 
-/// 커뮤니티 tab: a hero card, my gyms as cards, their newest posts, and a
-/// search over every gym.
+/// 커뮤니티 tab: 내 헬스장 (a hero card, my gyms as cards, their newest
+/// posts, and a search over every gym) and 운동 라운지 (boards by sport for
+/// everyone), with 친구 초대 on top.
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
 
@@ -25,6 +29,8 @@ class CommunityScreen extends StatefulWidget {
 }
 
 class _CommunityScreenState extends State<CommunityScreen> {
+  var _tab = 0; // 0: 내 헬스장, 1: 운동 라운지
+  var _loungeOpened = false;
   final _query = TextEditingController();
   final _searchFocus = FocusNode();
   Timer? _debounce;
@@ -45,7 +51,36 @@ class _CommunityScreenState extends State<CommunityScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) CommunityScope.read(context).refresh();
+      if (!mounted) return;
+      CommunityScope.read(context).refresh();
+      _openInvitedBoard();
+    });
+  }
+
+  /// Opens the board an invite link pointed at (?gym=...).
+  Future<void> _openInvitedBoard() async {
+    final c = CommunityScope.read(context);
+    final id = c.pendingBoard;
+    if (id == null) return;
+    c.pendingBoard = null;
+    try {
+      final found = await c.repo.boards([id]);
+      if (!mounted || found.isEmpty) return;
+      final g = found.first;
+      if (g.isTopic) _setTab(1);
+      await _openGym(g);
+    } catch (e) {
+      debugPrint('invite board failed: $e');
+    }
+  }
+
+  void _setTab(int i) {
+    if (i == _tab) return;
+    HapticFeedback.selectionClick();
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _tab = i;
+      if (i == 1) _loungeOpened = true;
     });
   }
 
@@ -216,10 +251,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       builder: (_) => _AddGymSheet(initialName: _q),
     );
     if (gym == null || !mounted) return;
-    final c = CommunityScope.read(context);
-    try {
-      await c.join(gym);
-    } catch (_) {}
+    await joinGym(context, gym);
     if (!mounted) return;
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(L.of(context).gymAdded)));
@@ -245,49 +277,123 @@ class _CommunityScreenState extends State<CommunityScreen> {
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: RefreshIndicator(
-          onRefresh: _refresh,
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (n) {
-              if (!searching && n.metrics.extentAfter < 600) _moreFeed();
-              return false;
-            },
-            child: CustomScrollView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              slivers: [
-                SliverToBoxAdapter(child: _header(t, c)),
-                SliverToBoxAdapter(child: _searchField(t, searching)),
-                if (searching)
-                  ..._resultSlivers(t, c)
-                else ...[
-                  if (!c.signedIn && app.auth != null)
-                    SliverToBoxAdapter(child: _signInCard(t, c)),
-                  SliverToBoxAdapter(child: _myGyms(t, c)),
-                  if (c.myGyms.isNotEmpty) ..._feedSlivers(t),
+        child: Column(
+          children: [
+            _topBar(t, c),
+            Expanded(
+              child: IndexedStack(
+                index: _tab,
+                children: [
+                  _myGymsTab(t, c, app, searching),
+                  if (_loungeOpened) const LoungeView() else const SizedBox(),
                 ],
-                const SliverToBoxAdapter(child: SizedBox(height: 32)),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
+
+  Widget _topBar(L t, CommunityState c) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 10, 12, 12),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                t.navCommunity,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+            ),
+            Squish(
+              child: GestureDetector(
+                onTap: () => showInviteSheet(context),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(10, 7, 12, 7),
+                  decoration: BoxDecoration(
+                    color: AppColors.peachSoft,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.person_add_alt_1_rounded,
+                        size: 17,
+                        color: AppColors.peach,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        t.inviteFriends,
+                        style: const TextStyle(
+                          fontFamily: headingFont,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                          color: AppColors.peach,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _Segments(
+          index: _tab,
+          onChanged: _setTab,
+          labels: [
+            (
+              Icons.bookmark_rounded,
+              '${t.tabMyGyms} ${c.myGyms.length}/${CommunityLimits.myGyms}',
+            ),
+            (Icons.public_rounded, t.tabLounge),
+          ],
+        ),
+      ],
+    ),
+  );
+
+  Widget _myGymsTab(L t, CommunityState c, AppState app, bool searching) =>
+      RefreshIndicator(
+        onRefresh: _refresh,
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (n) {
+            if (!searching && n.metrics.extentAfter < 600) _moreFeed();
+            return false;
+          },
+          child: CustomScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            slivers: [
+              SliverToBoxAdapter(child: _header(t, c)),
+              SliverToBoxAdapter(child: _searchField(t, searching)),
+              if (searching)
+                ..._resultSlivers(t, c)
+              else ...[
+                if (!c.signedIn && app.auth != null)
+                  SliverToBoxAdapter(child: _signInCard(t, c)),
+                SliverToBoxAdapter(child: _myGyms(t, c)),
+                if (c.myGyms.isNotEmpty) ..._feedSlivers(t),
+              ],
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            ],
+          ),
+        ),
+      );
 
   Widget _header(L t, CommunityState c) {
     final today = (_feed ?? const <Post>[])
         .where((p) => DateTime.now().difference(p.createdAt).inHours < 24)
         .length;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            t.navCommunity,
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.fromLTRB(20, 18, 12, 18),
             decoration: BoxDecoration(
@@ -528,7 +634,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     child: GymCard(gym: g, onTap: () => _openGym(g)),
                   ),
                 ),
-              FindGymCard(onTap: () => _searchFocus.requestFocus()),
+              if (!c.gymsFull)
+                FindGymCard(onTap: () => _searchFocus.requestFocus()),
             ],
           ),
         ),
@@ -690,6 +797,93 @@ class _CommunityScreenState extends State<CommunityScreen> {
         ),
     ];
   }
+}
+
+/// 내 헬스장 | 운동 라운지, with a sliding highlight.
+class _Segments extends StatelessWidget {
+  final int index;
+  final ValueChanged<int> onChanged;
+  final List<(IconData, String)> labels;
+  const _Segments({
+    required this.index,
+    required this.onChanged,
+    required this.labels,
+  });
+
+  @override
+  Widget build(BuildContext context) => Container(
+    height: 48,
+    padding: const EdgeInsets.all(4),
+    decoration: BoxDecoration(
+      color: const Color(0xFFF3ECE6),
+      borderRadius: BorderRadius.circular(24),
+    ),
+    child: Stack(
+      children: [
+        AnimatedAlign(
+          duration: Motion.medium,
+          curve: Motion.ease,
+          alignment: index == 0 ? Alignment.centerLeft : Alignment.centerRight,
+          child: FractionallySizedBox(
+            widthFactor: 1 / labels.length,
+            heightFactor: 1,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x1A8B6E5A),
+                    blurRadius: 10,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Row(
+          children: [
+            for (final (i, (icon, label)) in labels.indexed)
+              Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => onChanged(i),
+                  child: Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          icon,
+                          size: 17,
+                          color: i == index
+                              ? (i == 0
+                                    ? AppColors.peach
+                                    : const Color(0xFF6A7FE0))
+                              : AppColors.inkSoft,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          label,
+                          style: TextStyle(
+                            fontFamily: headingFont,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            color: i == index
+                                ? AppColors.ink
+                                : AppColors.inkSoft,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    ),
+  );
 }
 
 class _HeroPill extends StatelessWidget {

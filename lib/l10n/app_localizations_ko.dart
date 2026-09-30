@@ -1838,4 +1838,131 @@ class LKo extends L {
   String repliesN(String n) {
     return '답글 $n';
   }
+
+  @override
+  String get tabMyGyms => '내 헬스장';
+
+  @override
+  String get tabLounge => '운동 라운지';
+
+  @override
+  String get loungeTitle => '운동 라운지';
+
+  @override
+  String get loungeSubtitle => '헬스장 상관없이 모든 회원이 함께 이야기해요';
+
+  @override
+  String get loungeCategories => '운동별 게시판';
+
+  @override
+  String get loungeHot => '이번 주 인기글';
+
+  @override
+  String get loungeLatest => '라운지 최신글';
+
+  @override
+  String get loungeEmpty => '아직 글이 없어요. 첫 글을 남겨 보세요!';
+
+  @override
+  String get loungeBoardBadge => '운동 라운지 · 누구나 참여';
+
+  @override
+  String get topicHealth => '헬스';
+
+  @override
+  String get topicCrossfit => '크로스핏';
+
+  @override
+  String get topicRunning => '러닝';
+
+  @override
+  String get topicYoga => '요가';
+
+  @override
+  String get topicPilates => '필라테스';
+
+  @override
+  String get topicDiet => '다이어트·식단';
+
+  @override
+  String get topicHome => '홈트';
+
+  @override
+  String get topicSwimming => '수영';
+
+  @override
+  String get topicClimbing => '클라이밍';
+
+  @override
+  String get topicCycling => '자전거';
+
+  @override
+  String get topicCombat => '복싱·격투기';
+
+  @override
+  String get topicFree => '자유수다';
+
+  @override
+  String gymLimitTitle(String max) {
+    return '내 헬스장은 $max개까지예요';
+  }
+
+  @override
+  String gymLimitBody(String name) {
+    return '하나를 빼면 $name을(를) 추가할게요';
+  }
+
+  @override
+  String get gymLimitError => '내 헬스장은 3개까지 추가할 수 있어요';
+
+  @override
+  String get swapGym => '빼고 추가';
+
+  @override
+  String get inviteFriends => '친구 초대';
+
+  @override
+  String get inviteTitle => '친구와 같이 운동해요';
+
+  @override
+  String get inviteBody => '링크를 보내면 친구가 바로 들어올 수 있어요';
+
+  @override
+  String get inviteApp => '앱 초대하기';
+
+  @override
+  String get inviteAppDesc => '카톡·문자로 알아서핏을 알려요';
+
+  @override
+  String inviteGym(String name) {
+    return '$name 게시판 초대';
+  }
+
+  @override
+  String get inviteGymDesc => '같은 헬스장 친구를 우리 게시판으로';
+
+  @override
+  String inviteAppText(String link) {
+    return '나 요즘 알아서핏으로 식단이랑 운동 기록하는데 같이 해볼래? 헬스장 친구들이랑 이야기도 할 수 있어 💪\n$link';
+  }
+
+  @override
+  String inviteGymText(String name, String link) {
+    return '알아서핏 \'$name\' 게시판에서 같이 운동해요! 운동메이트 구하고 정보도 나눠요 💪\n$link';
+  }
+
+  @override
+  String get linkCopied => '링크를 복사했어요. 친구에게 붙여넣어 보내세요!';
+
+  @override
+  String get shareBoard => '공유';
+
+  @override
+  String get chooseTopic => '어느 게시판에 쓸까요?';
+
+  @override
+  String get loungeHotEmpty => '이번 주 인기글이 아직 없어요. 좋아요로 골라 주세요!';
+
+  @override
+  String get allBoards => '전체';
 }

@@ -47,6 +47,9 @@ class Gym {
     userAdded: userAdded,
   );
 
+  /// A 운동 라운지 board (by sport, for everyone) rather than a gym.
+  bool get isTopic => isTopicId(id);
+
   /// "서울특별시 강남구 테헤란로 1 (역삼동)" -> "강남구 테헤란로 1".
   String get shortAddress {
     final parts = address.split(' ');
@@ -54,6 +57,24 @@ class Gym {
     return parts.skip(1).take(3).join(' ');
   }
 }
+
+/// The 운동 라운지 boards (supabase/community.sql), in display order.
+const topicIds = [
+  't-health',
+  't-crossfit',
+  't-running',
+  't-yoga',
+  't-pilates',
+  't-diet',
+  't-home',
+  't-swimming',
+  't-climbing',
+  't-cycling',
+  't-combat',
+  't-free',
+];
+
+bool isTopicId(String id) => id.startsWith('t-');
 
 class CommunityProfile {
   final String userId;
@@ -170,6 +191,9 @@ enum CommunityError {
   blockedWords,
   badImage,
   network,
+
+  /// Already 3 gyms in 내 헬스장.
+  gymLimit,
 }
 
 class CommunityException implements Exception {
@@ -187,6 +211,7 @@ class CommunityLimits {
   static const nicknameMin = 2;
   static const nicknameMax = 12;
   static const photoBytes = 5 * 1024 * 1024;
+  static const myGyms = 3;
 }
 
 /// Image type from the file's first bytes; null when not JPEG/PNG/WebP
@@ -266,6 +291,10 @@ abstract class CommunityRepository {
   Future<void> leave(String gymId);
   Future<Gym> addGym(String name, String address);
 
+  /// These boards with their counts (라운지 boards, a gym from an invite);
+  /// unknown ids are left out.
+  Future<List<Gym>> boards(List<String> ids);
+
   /// Newest first; [before] pages back from the oldest one shown, [tag]
   /// keeps one kind.
   Future<List<Post>> posts(
@@ -282,6 +311,10 @@ abstract class CommunityRepository {
     int limit = 20,
     PostTag? tag,
   });
+
+  /// The most liked posts of the last [days] days in these boards.
+  Future<List<Post>> hot(List<String> gymIds, {int days = 7, int limit = 5});
+
   Future<Post> writePost(
     String gymId,
     String body,
@@ -339,6 +372,9 @@ class SupabaseCommunity implements CommunityRepository {
     } on PostgrestException catch (e) {
       if (e.message.contains('rate_limit')) {
         throw const CommunityException(CommunityError.rateLimited);
+      }
+      if (e.message.contains('gym_limit')) {
+        throw const CommunityException(CommunityError.gymLimit);
       }
       if (e.code == '23505') {
         throw const CommunityException(CommunityError.nicknameTaken);
@@ -428,8 +464,16 @@ class SupabaseCommunity implements CommunityRepository {
   }
 
   @override
-  Future<void> join(String gymId) async {
+  Future<void> join(String gymId) => _guard(() async {
     await client.from('gym_members').upsert({'gym_id': gymId, 'user_id': myId});
+  });
+
+  @override
+  Future<List<Gym>> boards(List<String> ids) async {
+    if (ids.isEmpty) return const [];
+    final rows = await client.from('gyms').select().inFilter('id', ids);
+    final byId = {for (final r in rows) r['id'] as String: Gym.fromJson(r)};
+    return [for (final id in ids) ?byId[id]];
   }
 
   @override
@@ -488,6 +532,27 @@ class SupabaseCommunity implements CommunityRepository {
       q = q.lt('created_at', before.toUtc().toIso8601String());
     }
     final rows = await q.order('created_at', ascending: false).limit(limit);
+    final liked = await _liked([for (final r in rows) r['id'] as String]);
+    return [for (final r in rows) _post(r, liked)];
+  }
+
+  @override
+  Future<List<Post>> hot(
+    List<String> gymIds, {
+    int days = 7,
+    int limit = 5,
+  }) async {
+    if (gymIds.isEmpty) return const [];
+    final since = DateTime.now().subtract(Duration(days: days));
+    final rows = await client
+        .from('posts')
+        .select(_postColumns)
+        .inFilter('gym_id', gymIds)
+        .gte('created_at', since.toUtc().toIso8601String())
+        .gt('like_count', 0)
+        .order('like_count', ascending: false)
+        .order('comment_count', ascending: false)
+        .limit(limit);
     final liked = await _liked([for (final r in rows) r['id'] as String]);
     return [for (final r in rows) _post(r, liked)];
   }
@@ -697,7 +762,26 @@ class MemoryCommunity implements CommunityRepository {
   var _seq = 0;
 
   MemoryCommunity({this.myId, DateTime Function()? clock})
-    : clock = clock ?? DateTime.now;
+    : clock = clock ?? DateTime.now {
+    for (final (id, name) in _topicNames) {
+      gyms[id] = Gym(id: id, name: name);
+    }
+  }
+
+  static const _topicNames = [
+    ('t-health', '헬스'),
+    ('t-crossfit', '크로스핏'),
+    ('t-running', '러닝'),
+    ('t-yoga', '요가'),
+    ('t-pilates', '필라테스'),
+    ('t-diet', '다이어트·식단'),
+    ('t-home', '홈트'),
+    ('t-swimming', '수영'),
+    ('t-climbing', '클라이밍'),
+    ('t-cycling', '자전거'),
+    ('t-combat', '복싱·격투기'),
+    ('t-free', '자유수다'),
+  ];
 
   String _id() => 'm${++_seq}';
 
@@ -746,12 +830,13 @@ class MemoryCommunity implements CommunityRepository {
       ..removeWhere((w) => w.isEmpty);
     final hits = [
       for (final g in gyms.values)
-        if (words.every(
-          (w) => (g.name + g.address)
-              .toLowerCase()
-              .replaceAll(' ', '')
-              .contains(w),
-        ))
+        if (!g.isTopic &&
+            words.every(
+              (w) => (g.name + g.address)
+                  .toLowerCase()
+                  .replaceAll(' ', '')
+                  .contains(w),
+            ))
           _gym(g.id),
     ]..sort((a, b) => b.memberCount.compareTo(a.memberCount));
     return hits.take(30).toList();
@@ -763,8 +848,20 @@ class MemoryCommunity implements CommunityRepository {
   ];
 
   @override
-  Future<void> join(String gymId) async =>
-      (members[myId!] ??= <String>{}).add(gymId);
+  Future<void> join(String gymId) async {
+    final mine = members[myId!] ??= <String>{};
+    if (isTopicId(gymId)) throw StateError('topic_board');
+    if (!mine.contains(gymId) && mine.length >= CommunityLimits.myGyms) {
+      throw const CommunityException(CommunityError.gymLimit);
+    }
+    mine.add(gymId);
+  }
+
+  @override
+  Future<List<Gym>> boards(List<String> ids) async => [
+    for (final id in ids)
+      if (gyms.containsKey(id)) _gym(id),
+  ];
 
   @override
   Future<void> leave(String gymId) async => members[myId]?.remove(gymId);
@@ -807,6 +904,27 @@ class MemoryCommunity implements CommunityRepository {
             (before == null || p.createdAt.isBefore(before)))
           _withLikes(p).copyWith(gymName: gyms[p.gymId]?.name),
     ];
+    return list.take(limit).toList();
+  }
+
+  @override
+  Future<List<Post>> hot(
+    List<String> gymIds, {
+    int days = 7,
+    int limit = 5,
+  }) async {
+    final since = clock().subtract(Duration(days: days));
+    final list = [
+      for (final p in _posts)
+        if (gymIds.contains(p.gymId) &&
+            _visible(p.authorId) &&
+            p.createdAt.isAfter(since))
+          _withLikes(p).copyWith(gymName: gyms[p.gymId]?.name),
+    ]..removeWhere((p) => p.likeCount == 0);
+    list.sort((a, b) {
+      final c = b.likeCount.compareTo(a.likeCount);
+      return c != 0 ? c : b.commentCount.compareTo(a.commentCount);
+    });
     return list.take(limit).toList();
   }
 
@@ -1036,6 +1154,49 @@ class MemoryCommunity implements CommunityRepository {
       at: now.subtract(ago(d: 1, h: 6)),
       tag: PostTag.review,
     );
+    final l1 = c.seedPost(
+      't-running',
+      'u6',
+      '이번 주 토요일 아침 7시 한강 반포 10km 같이 뛰실 분! 페이스 6분대입니다',
+      at: now.subtract(ago(h: 2)),
+      tag: PostTag.mate,
+    );
+    final l2 = c.seedPost(
+      't-diet',
+      'u4',
+      '단백질 쉐이크 하루 2번 먹는데 너무 많은가요? 체중 62kg이에요',
+      at: now.subtract(ago(h: 4)),
+      tag: PostTag.question,
+    );
+    final l3 = c.seedPost(
+      't-crossfit',
+      'u5',
+      '오늘 WOD 머프 완주했습니다… 1시간 2분. 다리가 제 것이 아니네요',
+      at: now.subtract(ago(h: 9)),
+      tag: PostTag.review,
+    );
+    c.seedPost(
+      't-yoga',
+      'u1',
+      '하체 운동 다음 날 요가 30분 하니까 회복이 훨씬 빨라요. 추천합니다',
+      at: now.subtract(ago(d: 1)),
+      tag: PostTag.info,
+    );
+    c.seedPost(
+      't-free',
+      'u3',
+      '다들 운동 끝나고 뭐 드세요? 저는 무조건 국밥…',
+      at: now.subtract(ago(d: 1, h: 3)),
+    );
+    for (final u in ['u1', 'u2', 'u3', 'u4', 'u5']) {
+      c.seedLike(l1.id, u);
+    }
+    for (final u in ['u1', 'u2', 'u6']) {
+      c.seedLike(l3.id, u);
+    }
+    c.seedLike(l2.id, 'u5');
+    c.seedComment(l1.id, 'u2', '반포 어디서 모이나요? 저 갈게요');
+    c.seedComment(l2.id, 'u5', '식사로 채우기 힘들면 괜찮아요. 총량만 체중×1.6g 정도');
     c.seedComment(p1.id, 'u3', '저도 새벽파입니다 ㅎㅎ');
     final c1 = c.seedComment(p1.id, 'u1', '월수금 6시 가능해요. 스쿼트 위주면 좋아요');
     c.seedComment(p1.id, 'u2', '좋아요! 월요일 6시에 스쿼트랙 앞에서 봬요', parentId: c1.id);

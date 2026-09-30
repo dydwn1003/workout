@@ -3270,6 +3270,240 @@ abstract class L {
   /// In ko, this message translates to:
   /// **'답글 {n}'**
   String repliesN(String n);
+
+  /// No description provided for @tabMyGyms.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 헬스장'**
+  String get tabMyGyms;
+
+  /// No description provided for @tabLounge.
+  ///
+  /// In ko, this message translates to:
+  /// **'운동 라운지'**
+  String get tabLounge;
+
+  /// No description provided for @loungeTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'운동 라운지'**
+  String get loungeTitle;
+
+  /// No description provided for @loungeSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'헬스장 상관없이 모든 회원이 함께 이야기해요'**
+  String get loungeSubtitle;
+
+  /// No description provided for @loungeCategories.
+  ///
+  /// In ko, this message translates to:
+  /// **'운동별 게시판'**
+  String get loungeCategories;
+
+  /// No description provided for @loungeHot.
+  ///
+  /// In ko, this message translates to:
+  /// **'이번 주 인기글'**
+  String get loungeHot;
+
+  /// No description provided for @loungeLatest.
+  ///
+  /// In ko, this message translates to:
+  /// **'라운지 최신글'**
+  String get loungeLatest;
+
+  /// No description provided for @loungeEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 글이 없어요. 첫 글을 남겨 보세요!'**
+  String get loungeEmpty;
+
+  /// No description provided for @loungeBoardBadge.
+  ///
+  /// In ko, this message translates to:
+  /// **'운동 라운지 · 누구나 참여'**
+  String get loungeBoardBadge;
+
+  /// No description provided for @topicHealth.
+  ///
+  /// In ko, this message translates to:
+  /// **'헬스'**
+  String get topicHealth;
+
+  /// No description provided for @topicCrossfit.
+  ///
+  /// In ko, this message translates to:
+  /// **'크로스핏'**
+  String get topicCrossfit;
+
+  /// No description provided for @topicRunning.
+  ///
+  /// In ko, this message translates to:
+  /// **'러닝'**
+  String get topicRunning;
+
+  /// No description provided for @topicYoga.
+  ///
+  /// In ko, this message translates to:
+  /// **'요가'**
+  String get topicYoga;
+
+  /// No description provided for @topicPilates.
+  ///
+  /// In ko, this message translates to:
+  /// **'필라테스'**
+  String get topicPilates;
+
+  /// No description provided for @topicDiet.
+  ///
+  /// In ko, this message translates to:
+  /// **'다이어트·식단'**
+  String get topicDiet;
+
+  /// No description provided for @topicHome.
+  ///
+  /// In ko, this message translates to:
+  /// **'홈트'**
+  String get topicHome;
+
+  /// No description provided for @topicSwimming.
+  ///
+  /// In ko, this message translates to:
+  /// **'수영'**
+  String get topicSwimming;
+
+  /// No description provided for @topicClimbing.
+  ///
+  /// In ko, this message translates to:
+  /// **'클라이밍'**
+  String get topicClimbing;
+
+  /// No description provided for @topicCycling.
+  ///
+  /// In ko, this message translates to:
+  /// **'자전거'**
+  String get topicCycling;
+
+  /// No description provided for @topicCombat.
+  ///
+  /// In ko, this message translates to:
+  /// **'복싱·격투기'**
+  String get topicCombat;
+
+  /// No description provided for @topicFree.
+  ///
+  /// In ko, this message translates to:
+  /// **'자유수다'**
+  String get topicFree;
+
+  /// No description provided for @gymLimitTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 헬스장은 {max}개까지예요'**
+  String gymLimitTitle(String max);
+
+  /// No description provided for @gymLimitBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'하나를 빼면 {name}을(를) 추가할게요'**
+  String gymLimitBody(String name);
+
+  /// No description provided for @gymLimitError.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 헬스장은 3개까지 추가할 수 있어요'**
+  String get gymLimitError;
+
+  /// No description provided for @swapGym.
+  ///
+  /// In ko, this message translates to:
+  /// **'빼고 추가'**
+  String get swapGym;
+
+  /// No description provided for @inviteFriends.
+  ///
+  /// In ko, this message translates to:
+  /// **'친구 초대'**
+  String get inviteFriends;
+
+  /// No description provided for @inviteTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'친구와 같이 운동해요'**
+  String get inviteTitle;
+
+  /// No description provided for @inviteBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'링크를 보내면 친구가 바로 들어올 수 있어요'**
+  String get inviteBody;
+
+  /// No description provided for @inviteApp.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱 초대하기'**
+  String get inviteApp;
+
+  /// No description provided for @inviteAppDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'카톡·문자로 알아서핏을 알려요'**
+  String get inviteAppDesc;
+
+  /// No description provided for @inviteGym.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name} 게시판 초대'**
+  String inviteGym(String name);
+
+  /// No description provided for @inviteGymDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'같은 헬스장 친구를 우리 게시판으로'**
+  String get inviteGymDesc;
+
+  /// No description provided for @inviteAppText.
+  ///
+  /// In ko, this message translates to:
+  /// **'나 요즘 알아서핏으로 식단이랑 운동 기록하는데 같이 해볼래? 헬스장 친구들이랑 이야기도 할 수 있어 💪\n{link}'**
+  String inviteAppText(String link);
+
+  /// No description provided for @inviteGymText.
+  ///
+  /// In ko, this message translates to:
+  /// **'알아서핏 \'{name}\' 게시판에서 같이 운동해요! 운동메이트 구하고 정보도 나눠요 💪\n{link}'**
+  String inviteGymText(String name, String link);
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In ko, this message translates to:
+  /// **'링크를 복사했어요. 친구에게 붙여넣어 보내세요!'**
+  String get linkCopied;
+
+  /// No description provided for @shareBoard.
+  ///
+  /// In ko, this message translates to:
+  /// **'공유'**
+  String get shareBoard;
+
+  /// No description provided for @chooseTopic.
+  ///
+  /// In ko, this message translates to:
+  /// **'어느 게시판에 쓸까요?'**
+  String get chooseTopic;
+
+  /// No description provided for @loungeHotEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'이번 주 인기글이 아직 없어요. 좋아요로 골라 주세요!'**
+  String get loungeHotEmpty;
+
+  /// No description provided for @allBoards.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체'**
+  String get allBoards;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

@@ -1873,4 +1873,132 @@ class LEn extends L {
   String repliesN(String n) {
     return '$n replies';
   }
+
+  @override
+  String get tabMyGyms => 'My gyms';
+
+  @override
+  String get tabLounge => 'Lounge';
+
+  @override
+  String get loungeTitle => 'Workout lounge';
+
+  @override
+  String get loungeSubtitle => 'Talk with everyone, whatever your gym';
+
+  @override
+  String get loungeCategories => 'Boards by workout';
+
+  @override
+  String get loungeHot => 'Hot this week';
+
+  @override
+  String get loungeLatest => 'Latest in the lounge';
+
+  @override
+  String get loungeEmpty => 'No posts yet. Be the first!';
+
+  @override
+  String get loungeBoardBadge => 'Lounge · open to everyone';
+
+  @override
+  String get topicHealth => 'Gym training';
+
+  @override
+  String get topicCrossfit => 'CrossFit';
+
+  @override
+  String get topicRunning => 'Running';
+
+  @override
+  String get topicYoga => 'Yoga';
+
+  @override
+  String get topicPilates => 'Pilates';
+
+  @override
+  String get topicDiet => 'Diet & meals';
+
+  @override
+  String get topicHome => 'Home workout';
+
+  @override
+  String get topicSwimming => 'Swimming';
+
+  @override
+  String get topicClimbing => 'Climbing';
+
+  @override
+  String get topicCycling => 'Cycling';
+
+  @override
+  String get topicCombat => 'Boxing & MMA';
+
+  @override
+  String get topicFree => 'Free talk';
+
+  @override
+  String gymLimitTitle(String max) {
+    return 'Up to $max gyms';
+  }
+
+  @override
+  String gymLimitBody(String name) {
+    return 'Remove one to add $name';
+  }
+
+  @override
+  String get gymLimitError => 'You can keep up to 3 gyms';
+
+  @override
+  String get swapGym => 'Swap';
+
+  @override
+  String get inviteFriends => 'Invite';
+
+  @override
+  String get inviteTitle => 'Work out with friends';
+
+  @override
+  String get inviteBody => 'Send a link and friends can join right away';
+
+  @override
+  String get inviteApp => 'Invite to the app';
+
+  @override
+  String get inviteAppDesc => 'Share 알아서핏 by chat or text';
+
+  @override
+  String inviteGym(String name) {
+    return 'Invite to $name';
+  }
+
+  @override
+  String get inviteGymDesc => 'Bring gym friends to this board';
+
+  @override
+  String inviteAppText(String link) {
+    return 'I\'ve been tracking meals and workouts with 알아서핏 — join me? 💪\n$link';
+  }
+
+  @override
+  String inviteGymText(String name, String link) {
+    return 'Let\'s work out together on the \'$name\' board in 알아서핏 💪\n$link';
+  }
+
+  @override
+  String get linkCopied => 'Link copied. Paste it to your friend!';
+
+  @override
+  String get shareBoard => 'Share';
+
+  @override
+  String get chooseTopic => 'Which board?';
+
+  @override
+  String get loungeHotEmpty =>
+      'No hot posts yet this week. Like the ones you enjoy!';
+
+  @override
+  String get allBoards => 'All';
 }

@@ -125,7 +125,7 @@ class _PostScreenState extends State<PostScreen> {
         appBar: AppBar(
           leading: BackButton(onPressed: _close),
           title: Text(
-            post?.gymName ?? t.communityTitle,
+            (post == null ? null : postBoardName(t, post)) ?? t.communityTitle,
             overflow: TextOverflow.ellipsis,
           ),
           actions: [

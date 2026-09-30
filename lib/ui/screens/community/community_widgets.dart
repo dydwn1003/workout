@@ -20,9 +20,53 @@ const _palette = [
   (AppColors.butter, AppColors.butterSoft),
 ];
 
-/// A gym's own color pair, stable per gym.
-(Color, Color) gymColors(String id) =>
-    _palette[id.codeUnits.fold(0, (a, b) => a * 31 + b) % _palette.length];
+/// A gym's own color pair, stable per gym (a 라운지 board's own color).
+(Color, Color) gymColors(String id) {
+  if (isTopicId(id)) {
+    final c = topicStyle(id).$2;
+    return (c, Color.lerp(c, Colors.white, 0.85)!);
+  }
+  return _palette[id.codeUnits.fold(0, (a, b) => a * 31 + b) % _palette.length];
+}
+
+/// Icon and color of a 운동 라운지 board.
+(IconData, Color) topicStyle(String id) => switch (id) {
+  't-health' => (Icons.fitness_center_rounded, const Color(0xFFFF7A6B)),
+  't-crossfit' => (Icons.sports_gymnastics_rounded, const Color(0xFFF28B30)),
+  't-running' => (Icons.directions_run_rounded, const Color(0xFF4A9BE8)),
+  't-yoga' => (Icons.self_improvement_rounded, const Color(0xFF9A7BE0)),
+  't-pilates' => (Icons.accessibility_new_rounded, const Color(0xFFE56FA8)),
+  't-diet' => (Icons.restaurant_rounded, const Color(0xFF34B37F)),
+  't-home' => (Icons.home_rounded, const Color(0xFFE0A21B)),
+  't-swimming' => (Icons.pool_rounded, const Color(0xFF26A9BF)),
+  't-climbing' => (Icons.terrain_rounded, const Color(0xFFB9825A)),
+  't-cycling' => (Icons.directions_bike_rounded, const Color(0xFF62AE42)),
+  't-combat' => (Icons.sports_mma_rounded, const Color(0xFFE0524B)),
+  _ => (Icons.forum_rounded, const Color(0xFF8A7F95)),
+};
+
+/// A 라운지 board's name in the app's language; null for gyms.
+String? topicName(L t, String id) => switch (id) {
+  't-health' => t.topicHealth,
+  't-crossfit' => t.topicCrossfit,
+  't-running' => t.topicRunning,
+  't-yoga' => t.topicYoga,
+  't-pilates' => t.topicPilates,
+  't-diet' => t.topicDiet,
+  't-home' => t.topicHome,
+  't-swimming' => t.topicSwimming,
+  't-climbing' => t.topicClimbing,
+  't-cycling' => t.topicCycling,
+  't-combat' => t.topicCombat,
+  't-free' => t.topicFree,
+  _ => null,
+};
+
+/// The board's name to show: a 라운지 board's in the app's language.
+String boardName(L t, Gym g) => topicName(t, g.id) ?? g.name;
+
+/// Where a post is from, for feeds mixing boards.
+String? postBoardName(L t, Post p) => topicName(t, p.gymId) ?? p.gymName;
 
 /// A gym's color, a little deeper so white text on it reads well.
 Color gymDeep(String id) =>
@@ -515,7 +559,7 @@ class PostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = L.of(context);
     final meta = [
-      if (showGym && post.gymName != null) post.gymName!,
+      if (showGym) ?postBoardName(t, post),
       timeAgo(t, post.createdAt),
     ].join(' · ');
     return Material(

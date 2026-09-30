@@ -24,6 +24,7 @@ String communityErrorText(L t, Object e) => switch (e) {
   CommunityException(error: CommunityError.rateLimited) => t.rateLimited,
   CommunityException(error: CommunityError.blockedWords) => t.blockedWordsError,
   CommunityException(error: CommunityError.badImage) => t.badImage,
+  CommunityException(error: CommunityError.gymLimit) => t.gymLimitError,
   _ => t.communityError,
 };
 
