@@ -833,26 +833,57 @@ class _BellButton extends StatelessWidget {
     child: Squish(
       child: GestureDetector(
         onTap: onTap,
-        child: Container(
+        child: SizedBox(
           width: 38,
           height: 38,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFFF0E6DD), width: 1.5),
-          ),
-          child: Badge(
-            isLabelVisible: count > 0,
-            label: Text(count > 99 ? '99+' : '$count'),
-            backgroundColor: AppColors.peach,
-            offset: const Offset(6, -6),
-            child: Icon(
-              count > 0
-                  ? Icons.notifications_active_rounded
-                  : Icons.notifications_none_rounded,
-              size: 21,
-              color: count > 0 ? AppColors.peach : AppColors.inkSoft,
-            ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFFF0E6DD),
+                      width: 1.5,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.notifications_none_rounded,
+                    size: 21,
+                    color: AppColors.ink,
+                  ),
+                ),
+              ),
+              if (count > 0)
+                Positioned(
+                  top: -3,
+                  right: -3,
+                  child: Container(
+                    constraints: const BoxConstraints(minWidth: 17),
+                    height: 17,
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.peach,
+                      borderRadius: BorderRadius.circular(9),
+                      border: Border.all(color: AppColors.bg, width: 1.5),
+                    ),
+                    child: Text(
+                      count > 99 ? '99+' : '$count',
+                      style: const TextStyle(
+                        fontFamily: headingFont,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 9.5,
+                        height: 1,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
