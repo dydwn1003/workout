@@ -1507,5 +1507,63 @@
   "myPostsEmpty": "아직 쓴 글이 없어요. 첫 글을 남겨 보세요!",
   "myCommentsEmpty": "아직 단 댓글이 없어요",
   "onPost": "원글",
-  "postGone": "삭제되었거나 볼 수 없는 글이에요"
+  "postGone": "삭제되었거나 볼 수 없는 글이에요",
+  "notificationsTitle": "알림",
+  "notificationsEmpty": "아직 알림이 없어요. 글을 쓰고 댓글을 달면 여기서 소식을 알려 드릴게요!",
+  "someone": "누군가",
+  "andOthers": "{name}님 외 {n}명",
+  "@andOthers": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "nameSuffix": "{name}님",
+  "@nameSuffix": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifPostLike": "{who}이 내 글을 좋아해요",
+  "@notifPostLike": {
+    "placeholders": {
+      "who": {
+        "type": "String"
+      }
+    }
+  },
+  "notifComment": "{who}이 내 글에 댓글을 남겼어요",
+  "@notifComment": {
+    "placeholders": {
+      "who": {
+        "type": "String"
+      }
+    }
+  },
+  "notifReply": "{who}이 내 댓글에 답글을 남겼어요",
+  "@notifReply": {
+    "placeholders": {
+      "who": {
+        "type": "String"
+      }
+    }
+  },
+  "notifCommentLike": "{who}이 내 댓글을 좋아해요",
+  "@notifCommentLike": {
+    "placeholders": {
+      "who": {
+        "type": "String"
+      }
+    }
+  },
+  "notifHot": "내 글이 인기글에 올랐어요!",
+  "hotNow": "지금 뜨는 인기글",
+  "hotBadge": "HOT",
+  "notificationsSignIn": "로그인하면 내 글과 댓글 소식을 알려 드려요"
 }

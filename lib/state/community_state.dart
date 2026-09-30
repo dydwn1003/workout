@@ -36,6 +36,7 @@ class CommunityState extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       favoriteTopics = {...?prefs.getStringList(_favKey)};
+      _seenHot = {...?prefs.getStringList(_seenHotKey)};
       loungeFavoritesOnly = prefs.getBool(_favOnlyKey) ?? false;
       notifyListeners();
     } catch (e) {
@@ -78,6 +79,86 @@ class CommunityState extends ChangeNotifier {
         ]
       : topicIds;
 
+  // --- 알림 ------------------------------------------------------------------
+
+  /// Unread notifications about my posts and comments.
+  int unread = 0;
+
+  /// 인기글 now on my gyms' and my lounge boards, and the ones not seen yet.
+  List<Post> hotPosts = const [];
+  Set<String> _seenHot = {};
+  static const _seenHotKey = 'community.seenHot';
+
+  List<Post> get newHotPosts => [
+    for (final p in hotPosts)
+      if (!_seenHot.contains(p.id)) p,
+  ];
+
+  /// The red dot on 커뮤니티 and the bell.
+  int get badge => unread + newHotPosts.length;
+
+  Timer? _poll;
+  var _checking = false;
+
+  /// Checks for new notifications and 인기글 (the tab, app resume, and
+  /// every minute while the app is open).
+  Future<void> refreshNotifications() async {
+    if (_checking) return;
+    _checking = true;
+    try {
+      final boards = {...myGyms.map((g) => g.id), ...loungeBoards}.toList();
+      final r = await Future.wait([
+        signedIn ? repo.unreadNotifications() : Future.value(0),
+        repo.hot(boards, days: 2, limit: 5),
+      ]);
+      unread = r[0] as int;
+      hotPosts = [
+        for (final p in r[1] as List<Post>)
+          if (p.likeCount >= CommunityLimits.hotLikes &&
+              p.authorId != repo.myId)
+            p,
+      ];
+      notifyListeners();
+    } catch (e) {
+      debugPrint('notifications check failed: $e');
+    } finally {
+      _checking = false;
+    }
+    _poll ??= Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => refreshNotifications(),
+    );
+  }
+
+  /// The notifications screen was opened: everything there counts as seen.
+  Future<void> markAllSeen() async {
+    _seenHot = {..._seenHot, ...hotPosts.map((p) => p.id)};
+    final hadUnread = unread > 0;
+    unread = 0;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final keep = _seenHot.toList();
+      await prefs.setStringList(
+        _seenHotKey,
+        keep.length > 200 ? keep.sublist(keep.length - 200) : keep,
+      );
+    } catch (_) {}
+    if (hadUnread) {
+      try {
+        await repo.markNotificationsRead();
+      } catch (e) {
+        debugPrint('mark read failed: $e');
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _poll?.cancel();
+    super.dispose();
+  }
+
   bool get signedIn => repo.myId != null;
   bool isMine(String gymId) => myGyms.any((g) => g.id == gymId);
 
@@ -93,7 +174,9 @@ class CommunityState extends ChangeNotifier {
     if (me == null) {
       profile = null;
       myGyms = const [];
+      unread = 0;
       notifyListeners();
+      unawaited(refreshNotifications()); // 인기글 still count
       return;
     }
     loading = true;
@@ -104,6 +187,7 @@ class CommunityState extends ChangeNotifier {
       if (repo.myId != me) return; // signed out meanwhile
       profile = r[0] as CommunityProfile?;
       myGyms = r[1] as List<Gym>;
+      unawaited(refreshNotifications());
     } catch (e) {
       debugPrint('community load failed: $e');
       failed = true;
@@ -189,6 +273,9 @@ class CommunityScope extends InheritedNotifier<CommunityState> {
 
   static CommunityState read(BuildContext context) =>
       context.getInheritedWidgetOfExactType<CommunityScope>()!.notifier!;
+
+  static CommunityState? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<CommunityScope>()?.notifier;
 
   static CommunityState? maybeRead(BuildContext context) =>
       context.getInheritedWidgetOfExactType<CommunityScope>()?.notifier;

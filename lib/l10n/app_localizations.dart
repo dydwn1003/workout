@@ -3642,6 +3642,84 @@ abstract class L {
   /// In ko, this message translates to:
   /// **'삭제되었거나 볼 수 없는 글이에요'**
   String get postGone;
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림'**
+  String get notificationsTitle;
+
+  /// No description provided for @notificationsEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 알림이 없어요. 글을 쓰고 댓글을 달면 여기서 소식을 알려 드릴게요!'**
+  String get notificationsEmpty;
+
+  /// No description provided for @someone.
+  ///
+  /// In ko, this message translates to:
+  /// **'누군가'**
+  String get someone;
+
+  /// No description provided for @andOthers.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name}님 외 {n}명'**
+  String andOthers(String name, String n);
+
+  /// No description provided for @nameSuffix.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name}님'**
+  String nameSuffix(String name);
+
+  /// No description provided for @notifPostLike.
+  ///
+  /// In ko, this message translates to:
+  /// **'{who}이 내 글을 좋아해요'**
+  String notifPostLike(String who);
+
+  /// No description provided for @notifComment.
+  ///
+  /// In ko, this message translates to:
+  /// **'{who}이 내 글에 댓글을 남겼어요'**
+  String notifComment(String who);
+
+  /// No description provided for @notifReply.
+  ///
+  /// In ko, this message translates to:
+  /// **'{who}이 내 댓글에 답글을 남겼어요'**
+  String notifReply(String who);
+
+  /// No description provided for @notifCommentLike.
+  ///
+  /// In ko, this message translates to:
+  /// **'{who}이 내 댓글을 좋아해요'**
+  String notifCommentLike(String who);
+
+  /// No description provided for @notifHot.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 글이 인기글에 올랐어요!'**
+  String get notifHot;
+
+  /// No description provided for @hotNow.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 뜨는 인기글'**
+  String get hotNow;
+
+  /// No description provided for @hotBadge.
+  ///
+  /// In ko, this message translates to:
+  /// **'HOT'**
+  String get hotBadge;
+
+  /// No description provided for @notificationsSignIn.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인하면 내 글과 댓글 소식을 알려 드려요'**
+  String get notificationsSignIn;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

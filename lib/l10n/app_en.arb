@@ -588,5 +588,18 @@
   "myPostsEmpty": "No posts yet. Write your first one!",
   "myCommentsEmpty": "No comments yet",
   "onPost": "On",
-  "postGone": "This post was deleted or is hidden"
+  "postGone": "This post was deleted or is hidden",
+  "notificationsTitle": "Notifications",
+  "notificationsEmpty": "No notifications yet. Post and comment, and news shows up here!",
+  "someone": "Someone",
+  "andOthers": "{name} and {n} others",
+  "nameSuffix": "{name}",
+  "notifPostLike": "{who} liked your post",
+  "notifComment": "{who} commented on your post",
+  "notifReply": "{who} replied to your comment",
+  "notifCommentLike": "{who} liked your comment",
+  "notifHot": "Your post is trending!",
+  "hotNow": "Trending now",
+  "hotBadge": "HOT",
+  "notificationsSignIn": "Sign in to get news about your posts and comments"
 }

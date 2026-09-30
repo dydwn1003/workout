@@ -81,6 +81,30 @@ class _PostScreenState extends State<PostScreen> {
     }
   }
 
+  void _swapComment(Comment c) => setState(
+    () => _comments = [
+      for (final x in _comments ?? const <Comment>[])
+        if (x.id == c.id) c else x,
+    ],
+  );
+
+  /// Heart on a comment: shown at once, undone if the server says no.
+  Future<void> _likeComment(Comment c) async {
+    if (!await ensureCommunityMember(context) || !mounted) return;
+    HapticFeedback.selectionClick();
+    final on = !c.likedByMe;
+    _swapComment(
+      c.copyWith(likedByMe: on, likeCount: c.likeCount + (on ? 1 : -1)),
+    );
+    try {
+      await _repo.setCommentLike(c.id, on);
+    } catch (e) {
+      if (!mounted) return;
+      _swapComment(c);
+      showCommunityError(context, e);
+    }
+  }
+
   /// Scrolls to the comment and flashes it for a moment.
   void _showFocused(String id) {
     setState(() => _flash = id);
@@ -261,6 +285,10 @@ class _PostScreenState extends State<PostScreen> {
                 ],
               ),
             ),
+            if (post.likeCount >= CommunityLimits.hotLikes) ...[
+              const HotChip(),
+              const SizedBox(width: 4),
+            ],
             TagChip(post.tag),
           ],
         ),
@@ -423,6 +451,7 @@ class _PostScreenState extends State<PostScreen> {
           setState(() => _replyTo = c);
           _inputFocus.requestFocus();
         },
+        onLike: () => _likeComment(c),
         onDeleted: () => setState(
           () =>
               _comments!.removeWhere((x) => x.id == c.id || x.parentId == c.id),
@@ -609,11 +638,13 @@ class _CommentBubble extends StatelessWidget {
   final bool isReply;
   final bool highlighted;
   final VoidCallback onReply;
+  final VoidCallback onLike;
   final VoidCallback onDeleted;
   final VoidCallback onBlocked;
   const _CommentBubble({
     super.key,
     this.highlighted = false,
+    required this.onLike,
     required this.comment,
     required this.byAuthor,
     required this.isReply,
@@ -749,21 +780,31 @@ class _CommentBubble extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: onReply,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 2, bottom: 2),
-                      child: Text(
-                        t.replyAction,
-                        style: const TextStyle(
-                          fontFamily: headingFont,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12.5,
-                          color: AppColors.inkSoft,
+                  Row(
+                    children: [
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: onReply,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 2, bottom: 2),
+                          child: Text(
+                            t.replyAction,
+                            style: const TextStyle(
+                              fontFamily: headingFont,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12.5,
+                              color: AppColors.inkSoft,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      const SizedBox(width: 14),
+                      _CommentLike(
+                        liked: comment.likedByMe,
+                        count: comment.likeCount,
+                        onTap: onLike,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -773,4 +814,53 @@ class _CommentBubble extends StatelessWidget {
       ),
     );
   }
+}
+
+/// ♥ and count under a comment.
+class _CommentLike extends StatelessWidget {
+  final bool liked;
+  final int count;
+  final VoidCallback onTap;
+  const _CommentLike({
+    required this.liked,
+    required this.count,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    behavior: HitTestBehavior.opaque,
+    onTap: onTap,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedSwitcher(
+            duration: Motion.fast,
+            transitionBuilder: (child, a) =>
+                ScaleTransition(scale: a, child: child),
+            child: Icon(
+              liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+              key: ValueKey(liked),
+              size: 15,
+              color: liked ? AppColors.peach : AppColors.inkSoft,
+            ),
+          ),
+          if (count > 0) ...[
+            const SizedBox(width: 3),
+            Text(
+              '$count',
+              style: TextStyle(
+                fontFamily: headingFont,
+                fontWeight: FontWeight.w800,
+                fontSize: 12.5,
+                color: liked ? AppColors.peach : AppColors.inkSoft,
+              ),
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
 }

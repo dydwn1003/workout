@@ -635,6 +635,19 @@ S = {
  "myCommentsEmpty": ("아직 단 댓글이 없어요", "No comments yet"),
  "onPost": ("원글", "On"),
  "postGone": ("삭제되었거나 볼 수 없는 글이에요", "This post was deleted or is hidden"),
+ "notificationsTitle": ("알림", "Notifications"),
+ "notificationsEmpty": ("아직 알림이 없어요. 글을 쓰고 댓글을 달면 여기서 소식을 알려 드릴게요!", "No notifications yet. Post and comment, and news shows up here!"),
+ "someone": ("누군가", "Someone"),
+ "andOthers": ("{name}님 외 {n}명", "{name} and {n} others"),
+ "nameSuffix": ("{name}님", "{name}"),
+ "notifPostLike": ("{who}이 내 글을 좋아해요", "{who} liked your post"),
+ "notifComment": ("{who}이 내 글에 댓글을 남겼어요", "{who} commented on your post"),
+ "notifReply": ("{who}이 내 댓글에 답글을 남겼어요", "{who} replied to your comment"),
+ "notifCommentLike": ("{who}이 내 댓글을 좋아해요", "{who} liked your comment"),
+ "notifHot": ("내 글이 인기글에 올랐어요!", "Your post is trending!"),
+ "hotNow": ("지금 뜨는 인기글", "Trending now"),
+ "hotBadge": ("HOT", "HOT"),
+ "notificationsSignIn": ("로그인하면 내 글과 댓글 소식을 알려 드려요", "Sign in to get news about your posts and comments"),
 }
 
 def placeholders(s):

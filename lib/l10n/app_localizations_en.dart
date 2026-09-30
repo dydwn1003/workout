@@ -2072,4 +2072,57 @@ class LEn extends L {
 
   @override
   String get postGone => 'This post was deleted or is hidden';
+
+  @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get notificationsEmpty =>
+      'No notifications yet. Post and comment, and news shows up here!';
+
+  @override
+  String get someone => 'Someone';
+
+  @override
+  String andOthers(String name, String n) {
+    return '$name and $n others';
+  }
+
+  @override
+  String nameSuffix(String name) {
+    return '$name';
+  }
+
+  @override
+  String notifPostLike(String who) {
+    return '$who liked your post';
+  }
+
+  @override
+  String notifComment(String who) {
+    return '$who commented on your post';
+  }
+
+  @override
+  String notifReply(String who) {
+    return '$who replied to your comment';
+  }
+
+  @override
+  String notifCommentLike(String who) {
+    return '$who liked your comment';
+  }
+
+  @override
+  String get notifHot => 'Your post is trending!';
+
+  @override
+  String get hotNow => 'Trending now';
+
+  @override
+  String get hotBadge => 'HOT';
+
+  @override
+  String get notificationsSignIn =>
+      'Sign in to get news about your posts and comments';
 }

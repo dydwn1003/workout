@@ -148,6 +148,42 @@ class TagChip extends StatelessWidget {
   }
 }
 
+/// 🔥 HOT on posts with [CommunityLimits.hotLikes] likes or more.
+class HotChip extends StatelessWidget {
+  const HotChip({super.key});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.fromLTRB(6, 3, 8, 3),
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        colors: [Color(0xFFFF7A6B), Color(0xFFF28B30)],
+      ),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(
+          Icons.local_fire_department_rounded,
+          size: 13,
+          color: Colors.white,
+        ),
+        const SizedBox(width: 2),
+        Text(
+          L.of(context).hotBadge,
+          style: const TextStyle(
+            fontFamily: headingFont,
+            fontWeight: FontWeight.w800,
+            fontSize: 11,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 /// 전체 · 운동메이트 · 질문 · 정보 · 후기 · 잡담, scrolling sideways.
 class TagFilterBar extends StatelessWidget {
   final PostTag? selected;
@@ -612,6 +648,10 @@ class PostCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if (post.likeCount >= CommunityLimits.hotLikes) ...[
+                    const HotChip(),
+                    const SizedBox(width: 4),
+                  ],
                   TagChip(post.tag),
                   SizedBox(
                     width: 34,

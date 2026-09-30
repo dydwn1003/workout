@@ -283,5 +283,87 @@ void main() {
       c.setLoungeFavoritesOnly(false);
       expect(c.loungeBoards, topicIds);
     });
+
+    test('notifications: likes grouped, comments, replies, hot', () async {
+      final repo = MemoryCommunity.demo(me: 'me', meJoined: true);
+      final list = await repo.notifications();
+      final kinds = [for (final n in list) n.kind];
+      // My post: 5 likes in one, a comment, and it went hot at 5 likes.
+      final likes = list.firstWhere((n) => n.kind == NotificationKind.postLike);
+      expect(likes.count, 5);
+      expect(kinds, contains(NotificationKind.hot));
+      expect(kinds, contains(NotificationKind.comment));
+      // My comment: a like and a reply.
+      expect(kinds, contains(NotificationKind.commentLike));
+      final reply = list.firstWhere((n) => n.kind == NotificationKind.reply);
+      expect(reply.actorNickname, '초보헬린이');
+      expect(reply.commentBody, contains('루틴'));
+      expect(await repo.unreadNotifications(), list.length);
+
+      // A reply to a reply reaches the one answered, not only the thread.
+      Future<int> replies(String who) async {
+        repo.myId = who;
+        return (await repo.notifications())
+            .where((n) => n.kind == NotificationKind.reply)
+            .length;
+      }
+
+      final top = (await repo.comments(likes.postId!))
+          .firstWhere((c) => c.parentId == null); // u3's
+      final u1 = await replies('u1'), u3 = await replies('u3');
+      repo.myId = 'u1';
+      final r1 = await repo.addComment(likes.postId!, '저도요', parentId: top.id);
+      repo.myId = 'u2';
+      await repo.addComment(likes.postId!, '같이 해요', parentId: r1.id);
+      expect(await replies('u1'), u1 + 1); // u2 answered u1
+      expect(await replies('u3'), u3 + 1); // only u1's reply went to u3
+      expect(r1.parentId, top.id);
+
+      // Nothing for my own likes, nothing from people I blocked.
+      repo.myId = 'me';
+      await repo.markNotificationsRead();
+      expect(await repo.unreadNotifications(), 0);
+      await repo.setLike(likes.postId!, true);
+      await repo.block('u4');
+      repo.myId = 'u4';
+      await repo.addComment(likes.postId!, '안녕하세요');
+      repo.myId = 'me';
+      expect(await repo.unreadNotifications(), 0);
+    });
+
+    test('comment likes count and show as mine', () async {
+      final repo = MemoryCommunity.demo(me: 'me', meJoined: true);
+      final post = (await repo.feed(['l-1'])).first;
+      final c = (await repo.comments(post.id)).first;
+      await repo.setCommentLike(c.id, true);
+      var again = (await repo.comments(post.id)).first;
+      expect((again.likeCount, again.likedByMe), (1, true));
+      await repo.setCommentLike(c.id, false);
+      again = (await repo.comments(post.id)).first;
+      expect((again.likeCount, again.likedByMe), (0, false));
+    });
+
+    test('badge: unread plus new hot posts, cleared when seen', () async {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      SharedPreferences.setMockInitialValues({});
+      final repo = MemoryCommunity.demo(me: 'u6', meJoined: false);
+      final c = CommunityState(repo);
+      await c.refresh();
+      await c.refreshNotifications();
+      // The running post (5 likes) is hot in the lounge; u6 wrote it, so
+      // it isn't "new hot" for them, but their own notifications count.
+      expect(c.hotPosts.where((p) => p.authorId == 'u6'), isEmpty);
+      repo.myId = 'u1';
+      final c1 = CommunityState(repo);
+      await c1.refresh();
+      await c1.refreshNotifications();
+      expect(c1.newHotPosts.map((p) => p.gymId), contains('t-running'));
+      final before = c1.badge;
+      expect(before, greaterThan(0));
+      await c1.markAllSeen();
+      expect(c1.badge, 0);
+      c.dispose();
+      c1.dispose();
+    });
   });
 }

@@ -99,15 +99,22 @@ alter table public.comments add column if not exists parent_id uuid
   references public.comments (id) on delete cascade;
 create index if not exists comments_parent on public.comments (parent_id);
 
+-- Who a reply answers (the author of the comment tapped, before replies
+-- to a reply move under the top-level one), for the notification.
+alter table public.comments add column if not exists reply_to uuid
+  references auth.users (id) on delete set null;
+
 create or replace function public.comments_parent()
 returns trigger language plpgsql security definer set search_path = '' as $$
 declare p record;
 begin
+  new.reply_to := null;
   if new.parent_id is not null then
-    select post_id, parent_id into p from public.comments where id = new.parent_id;
+    select post_id, parent_id, author into p from public.comments where id = new.parent_id;
     if p.post_id is distinct from new.post_id then
       raise exception 'parent comment is on another post';
     end if;
+    new.reply_to := p.author;
     if p.parent_id is not null then new.parent_id := p.parent_id; end if;
   end if;
   return new;
@@ -405,6 +412,151 @@ returns setof public.gyms language sql stable set search_path = '' as $$
 $$;
 
 grant execute on function public.search_gyms(text, int) to anon, authenticated;
+
+-- Comment likes ------------------------------------------------------------------
+
+alter table public.comments add column if not exists like_count int not null default 0;
+
+create table if not exists public.comment_likes (
+  comment_id uuid not null references public.comments (id) on delete cascade,
+  user_id    uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (comment_id, user_id)
+);
+
+alter table public.comment_likes enable row level security;
+drop policy if exists "comment likes: own" on public.comment_likes;
+create policy "comment likes: own" on public.comment_likes for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+create or replace function public.comment_likes_count()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if tg_op = 'INSERT' then
+    update public.comments set like_count = like_count + 1 where id = new.comment_id;
+  else
+    update public.comments set like_count = greatest(like_count - 1, 0) where id = old.comment_id;
+  end if;
+  return null;
+end $$;
+
+drop trigger if exists comment_likes_count on public.comment_likes;
+create trigger comment_likes_count after insert or delete on public.comment_likes
+  for each row execute function public.comment_likes_count();
+
+-- Notifications ------------------------------------------------------------------
+
+-- Written only by the triggers below; each user reads and marks their own.
+create table if not exists public.notifications (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users (id) on delete cascade,  -- who gets it
+  actor      uuid references public.community_profiles (user_id) on delete cascade,
+  kind       text not null
+    check (kind in ('post_like', 'comment', 'reply', 'comment_like', 'hot')),
+  post_id    uuid references public.posts (id) on delete cascade,
+  comment_id uuid references public.comments (id) on delete cascade,
+  count      int not null default 1,   -- likes on one thing grouped: "외 N명"
+  read_at    timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists notifications_user_time
+  on public.notifications (user_id, created_at desc);
+create index if not exists notifications_unread
+  on public.notifications (user_id) where read_at is null;
+
+alter table public.notifications enable row level security;
+drop policy if exists "notifications: read own" on public.notifications;
+create policy "notifications: read own" on public.notifications for select to authenticated
+  using (user_id = auth.uid());
+drop policy if exists "notifications: mark own" on public.notifications;
+create policy "notifications: mark own" on public.notifications for update to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+drop policy if exists "notifications: delete own" on public.notifications;
+create policy "notifications: delete own" on public.notifications for delete to authenticated
+  using (user_id = auth.uid());
+
+-- Likes this many make a post 인기글 (CommunityLimits.hotLikes in the app).
+create or replace function public.community_hot_likes()
+returns int language sql immutable as $$ select 5 $$;
+
+create or replace function public.community_notify(
+  target uuid, who uuid, what text, post uuid, cmt uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  if target is null or target = who then return; end if;
+  if who is not null and exists (
+    select 1 from public.user_blocks where blocker = target and blocked = who) then
+    return;
+  end if;
+  -- Someone without a nickname yet shows as "누군가".
+  if who is not null and not exists (
+    select 1 from public.community_profiles where user_id = who) then
+    who := null;
+  end if;
+  if what in ('post_like', 'comment_like') then
+    -- Likes on the same thing stay one unread notification.
+    update public.notifications
+      set count = count + 1, actor = coalesce(who, actor), created_at = now()
+      where user_id = target and kind = what and read_at is null
+        and post_id is not distinct from post and comment_id is not distinct from cmt;
+    if found then return; end if;
+  end if;
+  insert into public.notifications (user_id, actor, kind, post_id, comment_id)
+    values (target, who, what, post, cmt);
+end $$;
+
+revoke execute on function public.community_notify(uuid, uuid, text, uuid, uuid)
+  from public, anon, authenticated;
+
+create or replace function public.notify_post_like()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare p record;
+begin
+  -- Runs after post_likes_count (triggers go by name), so like_count is new.
+  select author, like_count into p from public.posts where id = new.post_id;
+  perform public.community_notify(p.author, new.user_id, 'post_like', new.post_id, null);
+  if p.like_count = public.community_hot_likes() and not exists (
+    select 1 from public.notifications where post_id = new.post_id and kind = 'hot') then
+    perform public.community_notify(p.author, null, 'hot', new.post_id, null);
+  end if;
+  return null;
+end $$;
+
+drop trigger if exists post_likes_notify on public.post_likes;
+create trigger post_likes_notify after insert on public.post_likes
+  for each row execute function public.notify_post_like();
+
+create or replace function public.notify_comment()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare post_author uuid;
+begin
+  select author into post_author from public.posts where id = new.post_id;
+  if new.reply_to is not null then
+    perform public.community_notify(new.reply_to, new.author, 'reply', new.post_id, new.id);
+  end if;
+  if post_author is distinct from new.reply_to then
+    perform public.community_notify(post_author, new.author, 'comment', new.post_id, new.id);
+  end if;
+  return null;
+end $$;
+
+drop trigger if exists comments_notify on public.comments;
+create trigger comments_notify after insert on public.comments
+  for each row execute function public.notify_comment();
+
+create or replace function public.notify_comment_like()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare c record;
+begin
+  select author, post_id into c from public.comments where id = new.comment_id;
+  perform public.community_notify(c.author, new.user_id, 'comment_like', c.post_id, new.comment_id);
+  return null;
+end $$;
+
+drop trigger if exists comment_likes_notify on public.comment_likes;
+create trigger comment_likes_notify after insert on public.comment_likes
+  for each row execute function public.notify_comment_like();
 
 -- Photos -------------------------------------------------------------------------
 

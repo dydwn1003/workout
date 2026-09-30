@@ -17,6 +17,7 @@ import 'community_widgets.dart';
 import 'gym_board_screen.dart';
 import 'lounge_view.dart';
 import 'my_activity_screen.dart';
+import 'notifications_screen.dart';
 import 'post_screen.dart';
 
 /// 커뮤니티 tab: 내 헬스장 (a hero card, my gyms as cards, their newest
@@ -316,6 +317,15 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
             ),
+            _BellButton(
+              count: c.badge,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const NotificationsScreen(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
             if (c.signedIn || app.auth != null) ...[
               _MeButton(profile: c.profile, onTap: _openMe),
               const SizedBox(width: 8),
@@ -809,6 +819,45 @@ class _CommunityScreenState extends State<CommunityScreen> {
         ),
     ];
   }
+}
+
+/// 🔔 with the number of unread notifications and new 인기글.
+class _BellButton extends StatelessWidget {
+  final int count;
+  final VoidCallback onTap;
+  const _BellButton({required this.count, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+    message: L.of(context).notificationsTitle,
+    child: Squish(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            border: Border.all(color: const Color(0xFFF0E6DD), width: 1.5),
+          ),
+          child: Badge(
+            isLabelVisible: count > 0,
+            label: Text(count > 99 ? '99+' : '$count'),
+            backgroundColor: AppColors.peach,
+            offset: const Offset(6, -6),
+            child: Icon(
+              count > 0
+                  ? Icons.notifications_active_rounded
+                  : Icons.notifications_none_rounded,
+              size: 21,
+              color: count > 0 ? AppColors.peach : AppColors.inkSoft,
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 /// My photo (or a person icon before I have a profile): opens 내 활동.

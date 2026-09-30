@@ -2035,4 +2035,55 @@ class LKo extends L {
 
   @override
   String get postGone => '삭제되었거나 볼 수 없는 글이에요';
+
+  @override
+  String get notificationsTitle => '알림';
+
+  @override
+  String get notificationsEmpty => '아직 알림이 없어요. 글을 쓰고 댓글을 달면 여기서 소식을 알려 드릴게요!';
+
+  @override
+  String get someone => '누군가';
+
+  @override
+  String andOthers(String name, String n) {
+    return '$name님 외 $n명';
+  }
+
+  @override
+  String nameSuffix(String name) {
+    return '$name님';
+  }
+
+  @override
+  String notifPostLike(String who) {
+    return '$who이 내 글을 좋아해요';
+  }
+
+  @override
+  String notifComment(String who) {
+    return '$who이 내 글에 댓글을 남겼어요';
+  }
+
+  @override
+  String notifReply(String who) {
+    return '$who이 내 댓글에 답글을 남겼어요';
+  }
+
+  @override
+  String notifCommentLike(String who) {
+    return '$who이 내 댓글을 좋아해요';
+  }
+
+  @override
+  String get notifHot => '내 글이 인기글에 올랐어요!';
+
+  @override
+  String get hotNow => '지금 뜨는 인기글';
+
+  @override
+  String get hotBadge => 'HOT';
+
+  @override
+  String get notificationsSignIn => '로그인하면 내 글과 댓글 소식을 알려 드려요';
 }

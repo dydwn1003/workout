@@ -181,6 +181,8 @@ class Comment {
   final String? avatarUrl;
   final String body;
   final DateTime createdAt;
+  final int likeCount;
+  final bool likedByMe;
 
   const Comment({
     required this.id,
@@ -191,7 +193,100 @@ class Comment {
     this.avatarUrl,
     required this.body,
     required this.createdAt,
+    this.likeCount = 0,
+    this.likedByMe = false,
   });
+
+  Comment copyWith({
+    String? nickname,
+    String? avatarUrl,
+    int? likeCount,
+    bool? likedByMe,
+  }) => Comment(
+    id: id,
+    postId: postId,
+    parentId: parentId,
+    authorId: authorId,
+    nickname: nickname ?? this.nickname,
+    avatarUrl: avatarUrl ?? this.avatarUrl,
+    body: body,
+    createdAt: createdAt,
+    likeCount: likeCount ?? this.likeCount,
+    likedByMe: likedByMe ?? this.likedByMe,
+  );
+}
+
+enum NotificationKind {
+  postLike, // 내 글 좋아요
+  comment, // 내 글에 댓글
+  reply, // 내 댓글에 답글
+  commentLike, // 내 댓글 좋아요
+  hot; // 내 글이 인기글
+
+  static NotificationKind? parse(Object? v) => switch (v) {
+    'post_like' => postLike,
+    'comment' => comment,
+    'reply' => reply,
+    'comment_like' => commentLike,
+    'hot' => hot,
+    _ => null,
+  };
+}
+
+/// Something that happened to my posts or comments (알림).
+class CommunityNotification {
+  final String id;
+  final NotificationKind kind;
+
+  /// Who did it (the latest one for grouped likes); null for 인기글 or
+  /// someone without a nickname.
+  final String? actorId;
+  final String? actorNickname;
+  final String? actorAvatar;
+
+  /// Likes grouped into this one: "OO님 외 N명".
+  final int count;
+  final String? postId;
+  final String? commentId;
+
+  /// A bit of the post / comment it's about.
+  final String postBody;
+  final String? commentBody;
+  final String? gymId;
+  final bool read;
+  final DateTime createdAt;
+
+  const CommunityNotification({
+    required this.id,
+    required this.kind,
+    this.actorId,
+    this.actorNickname,
+    this.actorAvatar,
+    this.count = 1,
+    this.postId,
+    this.commentId,
+    this.postBody = '',
+    this.commentBody,
+    this.gymId,
+    this.read = false,
+    required this.createdAt,
+  });
+
+  CommunityNotification markRead() => CommunityNotification(
+    id: id,
+    kind: kind,
+    actorId: actorId,
+    actorNickname: actorNickname,
+    actorAvatar: actorAvatar,
+    count: count,
+    postId: postId,
+    commentId: commentId,
+    postBody: postBody,
+    commentBody: commentBody,
+    gymId: gymId,
+    read: true,
+    createdAt: createdAt,
+  );
 }
 
 /// A comment I wrote, with the post it's on (내 활동).
@@ -238,6 +333,9 @@ class CommunityLimits {
   static const nicknameMax = 12;
   static const photoBytes = 5 * 1024 * 1024;
   static const myGyms = 3;
+
+  /// Likes that make a post 인기글 (community_hot_likes() on the server).
+  static const hotLikes = 5;
 }
 
 /// Image type from the file's first bytes; null when not JPEG/PNG/WebP
@@ -374,6 +472,15 @@ abstract class CommunityRepository {
   Future<void> deleteComment(Comment comment);
 
   Future<void> setLike(String postId, bool liked);
+  Future<void> setCommentLike(String commentId, bool liked);
+
+  /// 알림: newest first, and how many aren't read yet.
+  Future<List<CommunityNotification>> notifications({
+    DateTime? before,
+    int limit = 30,
+  });
+  Future<int> unreadNotifications();
+  Future<void> markNotificationsRead();
   Future<void> report(String type, String id, ReportReason reason);
   Future<void> block(String userId);
 
@@ -796,19 +903,36 @@ class SupabaseCommunity implements CommunityRepository {
         .eq('post_id', postId)
         .order('created_at')
         .limit(300);
-    return [for (final r in rows) _comment(r)];
+    final liked = await _likedComments([
+      for (final r in rows) r['id'] as String,
+    ]);
+    return [for (final r in rows) _comment(r, liked)];
   }
 
-  Comment _comment(Map<String, dynamic> r) => Comment(
-    id: r['id'] as String,
-    postId: r['post_id'] as String,
-    parentId: r['parent_id'] as String?,
-    authorId: r['author'] as String,
-    nickname: (r['profile'] as Map?)?['nickname'] as String? ?? '',
-    avatarUrl: _avatar((r['profile'] as Map?)?['avatar']),
-    body: r['body'] as String,
-    createdAt: _time(r['created_at'])!,
-  );
+  Future<Set<String>> _likedComments(List<String> ids) async {
+    final me = myId;
+    if (me == null || ids.isEmpty) return {};
+    final rows = await client
+        .from('comment_likes')
+        .select('comment_id')
+        .eq('user_id', me)
+        .inFilter('comment_id', ids);
+    return {for (final r in rows) r['comment_id'] as String};
+  }
+
+  Comment _comment(Map<String, dynamic> r, [Set<String> liked = const {}]) =>
+      Comment(
+        id: r['id'] as String,
+        postId: r['post_id'] as String,
+        parentId: r['parent_id'] as String?,
+        authorId: r['author'] as String,
+        nickname: (r['profile'] as Map?)?['nickname'] as String? ?? '',
+        avatarUrl: _avatar((r['profile'] as Map?)?['avatar']),
+        body: r['body'] as String,
+        createdAt: _time(r['created_at'])!,
+        likeCount: (r['like_count'] as num?)?.toInt() ?? 0,
+        likedByMe: liked.contains(r['id']),
+      );
 
   @override
   Future<Comment> addComment(String postId, String body, {String? parentId}) =>
@@ -847,6 +971,84 @@ class SupabaseCommunity implements CommunityRepository {
           .eq('post_id', postId)
           .eq('user_id', myId!);
     }
+  }
+
+  @override
+  Future<void> setCommentLike(String commentId, bool liked) async {
+    if (liked) {
+      await client.from('comment_likes').upsert({
+        'comment_id': commentId,
+        'user_id': myId,
+      });
+    } else {
+      await client
+          .from('comment_likes')
+          .delete()
+          .eq('comment_id', commentId)
+          .eq('user_id', myId!);
+    }
+  }
+
+  @override
+  Future<List<CommunityNotification>> notifications({
+    DateTime? before,
+    int limit = 30,
+  }) async {
+    final me = myId;
+    if (me == null) return const [];
+    var q = client
+        .from('notifications')
+        .select(
+          '*, actor_profile:community_profiles!notifications_actor_fkey'
+          '(nickname, avatar), post:posts(body, gym_id), '
+          'comment:comments(body)',
+        )
+        .eq('user_id', me);
+    if (before != null) {
+      q = q.lt('created_at', before.toUtc().toIso8601String());
+    }
+    final rows = await q.order('created_at', ascending: false).limit(limit);
+    return [
+      for (final r in rows)
+        if (NotificationKind.parse(r['kind']) case final kind?)
+          CommunityNotification(
+            id: r['id'] as String,
+            kind: kind,
+            actorId: r['actor'] as String?,
+            actorNickname: (r['actor_profile'] as Map?)?['nickname'] as String?,
+            actorAvatar: _avatar((r['actor_profile'] as Map?)?['avatar']),
+            count: (r['count'] as num?)?.toInt() ?? 1,
+            postId: r['post_id'] as String?,
+            commentId: r['comment_id'] as String?,
+            postBody: (r['post'] as Map?)?['body'] as String? ?? '',
+            commentBody: (r['comment'] as Map?)?['body'] as String?,
+            gymId: (r['post'] as Map?)?['gym_id'] as String?,
+            read: r['read_at'] != null,
+            createdAt: _time(r['created_at'])!,
+          ),
+    ];
+  }
+
+  @override
+  Future<int> unreadNotifications() async {
+    final me = myId;
+    if (me == null) return 0;
+    return client
+        .from('notifications')
+        .count(CountOption.exact)
+        .eq('user_id', me)
+        .isFilter('read_at', null);
+  }
+
+  @override
+  Future<void> markNotificationsRead() async {
+    final me = myId;
+    if (me == null) return;
+    await client
+        .from('notifications')
+        .update({'read_at': DateTime.now().toUtc().toIso8601String()})
+        .eq('user_id', me)
+        .isFilter('read_at', null);
   }
 
   @override
@@ -915,6 +1117,8 @@ class MemoryCommunity implements CommunityRepository {
   final List<Post> _posts = [];
   final List<Comment> _comments = [];
   final Map<String, Set<String>> _likes = {}; // postId -> user ids
+  final Map<String, Set<String>> _commentLikes = {}; // commentId -> user ids
+  final List<_Note> _notes = [];
   final Set<(String, String)> blocks = {};
   final List<(String, String, ReportReason)> reports = [];
   var _seq = 0;
@@ -1152,11 +1356,72 @@ class MemoryCommunity implements CommunityRepository {
       createdAt: clock(),
     );
     _comments.add(c);
+    // Like comments_notify: whoever was answered, and the post's author.
+    final postAuthor = _posts
+        .where((p) => p.id == postId)
+        .firstOrNull
+        ?.authorId;
+    final replyTo = parent?.authorId;
+    if (replyTo != null) {
+      _notify(replyTo, authorId, NotificationKind.reply, postId, c.id);
+    }
+    if (postAuthor != replyTo) {
+      _notify(postAuthor, authorId, NotificationKind.comment, postId, c.id);
+    }
     return c;
   }
 
-  void seedLike(String postId, String userId) =>
-      (_likes[postId] ??= {}).add(userId);
+  void seedLike(String postId, String userId) {
+    final s = _likes[postId] ??= {};
+    if (!s.add(userId)) return;
+    final author = _posts.where((p) => p.id == postId).firstOrNull?.authorId;
+    _notify(author, userId, NotificationKind.postLike, postId, null);
+    if (s.length == CommunityLimits.hotLikes &&
+        !_notes.any(
+          (n) => n.postId == postId && n.kind == NotificationKind.hot,
+        )) {
+      _notify(author, null, NotificationKind.hot, postId, null);
+    }
+  }
+
+  void seedCommentLike(String commentId, String userId) {
+    if (!(_commentLikes[commentId] ??= {}).add(userId)) return;
+    final c = _comments.where((c) => c.id == commentId).firstOrNull;
+    if (c == null) return;
+    _notify(c.authorId, userId, NotificationKind.commentLike, c.postId, c.id);
+  }
+
+  /// Like community_notify(): not to myself or someone who blocked me;
+  /// likes on one thing stay one unread notification.
+  void _notify(
+    String? target,
+    String? who,
+    NotificationKind kind,
+    String? postId,
+    String? commentId,
+  ) {
+    if (target == null || target == who) return;
+    if (who != null && blocks.contains((target, who))) return;
+    if (kind == NotificationKind.postLike ||
+        kind == NotificationKind.commentLike) {
+      final same = _notes.where(
+        (n) =>
+            n.userId == target &&
+            n.kind == kind &&
+            !n.read &&
+            n.postId == postId &&
+            n.commentId == commentId,
+      );
+      if (same.isNotEmpty) {
+        same.first
+          ..count += 1
+          ..actor = who ?? same.first.actor
+          ..at = clock();
+        return;
+      }
+    }
+    _notes.add(_Note(_id(), target, who, kind, postId, commentId, clock()));
+  }
 
   @override
   Future<Post> writePost(
@@ -1258,6 +1523,8 @@ class MemoryCommunity implements CommunityRepository {
     avatarUrl: avatars[c.authorId],
     body: c.body,
     createdAt: c.createdAt,
+    likeCount: _commentLikes[c.id]?.length ?? 0,
+    likedByMe: _commentLikes[c.id]?.contains(myId) ?? false,
   );
 
   @override
@@ -1281,8 +1548,58 @@ class MemoryCommunity implements CommunityRepository {
 
   @override
   Future<void> setLike(String postId, bool liked) async {
-    final s = _likes[postId] ??= {};
-    liked ? s.add(myId!) : s.remove(myId);
+    liked ? seedLike(postId, myId!) : _likes[postId]?.remove(myId);
+  }
+
+  @override
+  Future<void> setCommentLike(String commentId, bool liked) async {
+    liked
+        ? seedCommentLike(commentId, myId!)
+        : _commentLikes[commentId]?.remove(myId);
+  }
+
+  @override
+  Future<List<CommunityNotification>> notifications({
+    DateTime? before,
+    int limit = 30,
+  }) async {
+    final mine = [
+      for (final n in _notes)
+        if (n.userId == myId && (before == null || n.at.isBefore(before))) n,
+    ]..sort((a, b) => b.at.compareTo(a.at));
+    return [
+      for (final n in mine.take(limit))
+        CommunityNotification(
+          id: n.id,
+          kind: n.kind,
+          actorId: n.actor,
+          actorNickname: n.actor == null ? null : nicknames[n.actor],
+          actorAvatar: n.actor == null ? null : avatars[n.actor],
+          count: n.count,
+          postId: n.postId,
+          commentId: n.commentId,
+          postBody:
+              _posts.where((p) => p.id == n.postId).firstOrNull?.body ?? '',
+          commentBody: _comments
+              .where((c) => c.id == n.commentId)
+              .firstOrNull
+              ?.body,
+          gymId: _posts.where((p) => p.id == n.postId).firstOrNull?.gymId,
+          read: n.read,
+          createdAt: n.at,
+        ),
+    ];
+  }
+
+  @override
+  Future<int> unreadNotifications() async =>
+      _notes.where((n) => n.userId == myId && !n.read).length;
+
+  @override
+  Future<void> markNotificationsRead() async {
+    for (final n in _notes) {
+      if (n.userId == myId) n.read = true;
+    }
   }
 
   @override
@@ -1432,8 +1749,9 @@ class MemoryCommunity implements CommunityRepository {
         tag: PostTag.review,
       );
       c.seedComment(mine.id, 'u3', '축하해요! 저는 랫풀다운부터 해요');
-      c.seedLike(mine.id, 'u3');
-      c.seedLike(mine.id, 'u1');
+      for (final u in ['u3', 'u1', 'u2', 'u5', 'u6']) {
+        c.seedLike(mine.id, u);
+      }
     }
     c.seedComment(p1.id, 'u3', '저도 새벽파입니다 ㅎㅎ');
     final c1 = c.seedComment(p1.id, 'u1', '월수금 6시 가능해요. 스쿼트 위주면 좋아요');
@@ -1441,7 +1759,14 @@ class MemoryCommunity implements CommunityRepository {
     c.seedComment(p2.id, 'u3', '처음엔 무분할로 전신 3회 추천해요. 자세 익히기 좋아요');
     c.seedComment(p3.id, 'u6', '감사합니다 오늘 못 쓸 뻔');
     if (me != null && meJoined) {
-      c.seedComment(p2.id, me, '저도 무분할로 시작했는데 자세 잡는 데 좋았어요!');
+      final myComment = c.seedComment(p2.id, me, '저도 무분할로 시작했는데 자세 잡는 데 좋았어요!');
+      c.seedCommentLike(myComment.id, 'u4');
+      c.seedComment(
+        p2.id,
+        'u4',
+        '오 감사해요! 무분할 루틴 공유해 주실 수 있나요?',
+        parentId: myComment.id,
+      );
     }
     c.seedComment(p6.id, 'u5', '저 받아봤는데 자세 교정 꼼꼼하게 봐주세요');
     for (final u in ['u1', 'u3', 'u4', 'u5', 'u6']) {
@@ -1453,4 +1778,25 @@ class MemoryCommunity implements CommunityRepository {
     c.seedLike(p3.id, 'u2');
     return c;
   }
+}
+
+class _Note {
+  final String id;
+  final String userId;
+  String? actor;
+  final NotificationKind kind;
+  final String? postId;
+  final String? commentId;
+  DateTime at;
+  var count = 1;
+  var read = false;
+  _Note(
+    this.id,
+    this.userId,
+    this.actor,
+    this.kind,
+    this.postId,
+    this.commentId,
+    this.at,
+  );
 }

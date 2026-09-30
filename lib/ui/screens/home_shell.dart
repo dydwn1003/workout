@@ -85,6 +85,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       _checkForUpdate();
       _maybeAskReview();
+      CommunityScope.maybeRead(context)?.refreshNotifications();
     }
   }
 
@@ -183,6 +184,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   }
 
   Widget _scaffold(L t, bool due) {
+    final communityBadge = CommunityScope.maybeOf(context)?.badge ?? 0;
     return Scaffold(
       body: FadeIndexedStack(
         index: _tab,
@@ -210,8 +212,16 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
           ),
           if (_community)
             NavigationDestination(
-              icon: const Icon(Icons.forum_outlined),
-              selectedIcon: const Icon(Icons.forum_rounded),
+              icon: Badge(
+                isLabelVisible: communityBadge > 0,
+                backgroundColor: AppColors.peach,
+                child: const Icon(Icons.forum_outlined),
+              ),
+              selectedIcon: Badge(
+                isLabelVisible: communityBadge > 0,
+                backgroundColor: AppColors.peach,
+                child: const Icon(Icons.forum_rounded),
+              ),
               label: t.navCommunity,
             ),
           NavigationDestination(
