@@ -307,13 +307,20 @@ create policy "blocks: own" on public.user_blocks for all to authenticated
 -- Search -------------------------------------------------------------------------
 
 -- Gyms whose name or address contains every word of the query (spaces
--- ignored within a word), busiest first.
+-- ignored within a word): ones whose name has them all first, then the
+-- busiest.
 create or replace function public.search_gyms(q text, lim int default 30)
 returns setof public.gyms language sql stable set search_path = '' as $$
-  select g.* from public.gyms g
-  where (select bool_and(g.search like '%' || w || '%')
-         from unnest(string_to_array(lower(trim(q)), ' ')) as w where w <> '')
-  order by g.member_count desc, g.post_count desc, char_length(g.name), g.name
+  with w as (
+    select array_agg(x) as words
+    from unnest(string_to_array(lower(trim(q)), ' ')) as x where x <> ''
+  )
+  select g.* from public.gyms g, w
+  where (select bool_and(g.search like '%' || x || '%') from unnest(w.words) as x)
+  order by
+    (select bool_and(lower(replace(g.name, ' ', '')) like '%' || x || '%')
+       from unnest(w.words) as x) desc,
+    g.member_count desc, g.post_count desc, char_length(g.name), g.name
   limit least(greatest(lim, 1), 50);
 $$;
 

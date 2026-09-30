@@ -18,6 +18,7 @@ Usage:
 """
 import argparse
 import csv
+import http.client
 import json
 import os
 import sys
@@ -97,37 +98,43 @@ def items_of(payload):
     return None
 
 
-def api_rows(key, rows=1000):
-    n = 1
-    while True:
-        q = urllib.parse.urlencode({"serviceKey": key, "pageNo": n, "numOfRows": rows,
-                                    "returnType": "json", "type": "json", "resultType": "json"})
-        for attempt in range(5):
-            try:
-                with urllib.request.urlopen(f"{API}?{q}", timeout=120) as r:
-                    text = r.read().decode("utf-8")
-                break
-            except (urllib.error.URLError, TimeoutError) as e:
-                if attempt == 4:
-                    raise
-                print(f"  page {n}: {e}, retrying", file=sys.stderr)
-                time.sleep(2 ** attempt)
+def api_page(key, n, rows):
+    """(items, totalCount) of one API page, retrying dropped connections."""
+    q = urllib.parse.urlencode({"serviceKey": key, "pageNo": n, "numOfRows": rows,
+                                "returnType": "json"})
+    for attempt in range(8):
         try:
+            with urllib.request.urlopen(f"{API}?{q}", timeout=120) as r:
+                text = r.read().decode("utf-8")
             payload = json.loads(text)
-        except json.JSONDecodeError:
-            sys.exit(f"not JSON (key not approved for this API yet?): {text[:300]}")
-        if "SERVICE_KEY" in text[:500] or "NO_OPENAPI" in text[:500]:
-            sys.exit(f"API refused: {text[:300]}")
-        items = items_of(payload) or []
-        if isinstance(items, dict):
-            items = [items]
-        if not items:
-            return
-        yield from items
-        print(f"  page {n}: {len(items)} rows", file=sys.stderr)
-        if len(items) < rows:
-            return
-        n += 1
+            break
+        except (OSError, http.client.HTTPException, json.JSONDecodeError) as e:
+            if attempt == 7:
+                sys.exit(f"page {n} failed: {e}")
+            print(f"  page {n}: {e}, retrying", file=sys.stderr)
+            time.sleep(2 ** min(attempt, 4))
+    if "SERVICE_KEY" in text[:500] or "NO_OPENAPI" in text[:500]:
+        sys.exit(f"API refused: {text[:300]}")
+    body = payload.get("response", {}).get("body", {}) if isinstance(payload, dict) else {}
+    items = items_of(payload) or []
+    if isinstance(items, dict):
+        items = [items]
+    return items, int(body.get("totalCount") or 0)
+
+
+def api_rows(key, rows=100):
+    """Every record, 100 per page (the API's maximum), 4 pages at a time."""
+    from concurrent.futures import ThreadPoolExecutor
+    first, total = api_page(key, 1, rows)
+    yield from first
+    pages = -(-total // rows)
+    print(f"  {total} records, {pages} pages", file=sys.stderr)
+    with ThreadPoolExecutor(4) as pool:
+        for n, (items, _) in zip(range(2, pages + 1),
+                                 pool.map(lambda n: api_page(key, n, rows), range(2, pages + 1))):
+            yield from items
+            if n % 20 == 0:
+                print(f"  page {n}/{pages}", file=sys.stderr)
 
 
 def csv_rows(path):
@@ -160,7 +167,7 @@ def upload(gyms, batch=500):
                     break
             except urllib.error.HTTPError as e:
                 sys.exit(f"upload failed: {e.code} {e.read()[:300]}")
-            except (urllib.error.URLError, TimeoutError) as e:
+            except (OSError, http.client.HTTPException):
                 if attempt == 4:
                     raise
                 time.sleep(2 ** attempt)
