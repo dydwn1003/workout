@@ -48,9 +48,14 @@ class AuthService {
   /// Sign-in options shown on this platform (Apple only on Apple devices).
   List<AuthMethod> get methods => [
     if (_apple) AuthMethod.apple,
-    AuthMethod.google,
+    // On iPhone, Google needs its iOS client id (and URL scheme) or the
+    // sign-in crashes: without it the button stays hidden.
+    if (!_iosApp || googleIosClientId.isNotEmpty) AuthMethod.google,
     AuthMethod.kakao,
   ];
+
+  static bool get _iosApp =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   String get _webRedirect => '${Uri.base.origin}${Uri.base.path}';
 

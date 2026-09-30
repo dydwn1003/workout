@@ -1,0 +1,150 @@
+# Builds the iPhone app on a GitHub macOS runner and uploads it to App Store
+# Connect, where it shows up in TestFlight (then goes to review from there).
+# No Mac needed.
+#
+# Run it from the Actions tab ("Build iOS for TestFlight" → Run workflow),
+# or push a tag like v1.0.0. Setup: docs/store/app-store.md.
+#
+# Secrets: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 (an App Store Connect API
+# key with the Admin role: Xcode uses it to make the signing certificate and
+# profile by itself), APPLE_TEAM_ID.
+# Variables: SUPABASE_URL, SUPABASE_ANON_KEY, GOOGLE_WEB_CLIENT_ID (as for
+# Android) and GOOGLE_IOS_CLIENT_ID (Google sign-in is hidden without it).
+#
+# The build number is the commit count, like the Android versionCode.
+name: Build iOS for TestFlight
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios
+  cancel-in-progress: true
+
+jobs:
+  testflight:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # commit count = build number
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.5
+          channel: stable
+          cache: true
+      - run: flutter pub get
+
+      - name: App Store Connect key
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          trim() { printf '%s' "$1" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | head -n1; }
+          KEY_ID=$(trim "$ASC_KEY_ID")
+          ISSUER=$(trim "$ASC_ISSUER_ID")
+          TEAM=$(trim "$APPLE_TEAM_ID")
+          for pair in "ASC_KEY_ID:$KEY_ID" "ASC_ISSUER_ID:$ISSUER" "APPLE_TEAM_ID:$TEAM" "ASC_KEY_P8:${ASC_KEY_P8:+set}"; do
+            if [ -z "${pair#*:}" ]; then
+              echo "::error::${pair%%:*} secret is missing (see docs/store/app-store.md)"
+              exit 1
+            fi
+          done
+          KEY_PATH="$RUNNER_TEMP/AuthKey_$KEY_ID.p8"
+          printf '%s\n' "$ASC_KEY_P8" | tr -d '\r' > "$KEY_PATH"
+          grep -q 'BEGIN PRIVATE KEY' "$KEY_PATH" || {
+            echo "::error::ASC_KEY_P8 must be the whole .p8 file, from -----BEGIN PRIVATE KEY----- to -----END PRIVATE KEY-----"
+            exit 1
+          }
+          {
+            echo "ASC_KEY_PATH=$KEY_PATH"
+            echo "ASC_KEY=$KEY_ID"
+            echo "ASC_ISSUER=$ISSUER"
+            echo "TEAM_ID=$TEAM"
+          } >> "$GITHUB_ENV"
+
+      - name: Google sign-in URL scheme
+        env:
+          GOOGLE_IOS_CLIENT_ID: ${{ vars.GOOGLE_IOS_CLIENT_ID }}
+        run: |
+          ID=$(printf '%s' "$GOOGLE_IOS_CLIENT_ID" | tr -d '[:space:]')
+          if [ -z "$ID" ]; then
+            echo "::warning::GOOGLE_IOS_CLIENT_ID variable is empty: this build has no Google sign-in (Apple and Kakao only)"
+            exit 0
+          fi
+          # 123-abc.apps.googleusercontent.com -> com.googleusercontent.apps.123-abc
+          REVERSED="com.googleusercontent.apps.${ID%.apps.googleusercontent.com}"
+          sed -i '' "s/com\.googleusercontent\.apps\.REPLACE_WITH_IOS_CLIENT_ID/$REVERSED/" ios/Runner/Info.plist
+          grep -q "$REVERSED" ios/Runner/Info.plist
+
+      - name: Build and sign
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+          GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
+          GOOGLE_IOS_CLIENT_ID: ${{ vars.GOOGLE_IOS_CLIENT_ID }}
+          IOS_APP_ID: ${{ vars.IOS_APP_ID }}
+        run: |
+          CODE=$(git rev-list --count HEAD)
+          # Writes the build settings (version, --dart-define values) that
+          # the Xcode archive below builds with.
+          flutter build ios --release --config-only \
+            --build-number="$CODE" \
+            --dart-define=STORE_LISTED=true \
+            --dart-define=IOS_APP_ID="$IOS_APP_ID" \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID" \
+            --dart-define=GOOGLE_IOS_CLIENT_ID="$(printf '%s' "$GOOGLE_IOS_CLIENT_ID" | tr -d '[:space:]')"
+          # The plugins' native code (flutter normally does this already).
+          (cd ios && pod install)
+          xcodebuild archive \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY" \
+            -authenticationKeyIssuerID "$ASC_ISSUER" \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CODE_SIGN_STYLE=Automatic
+          NAME=$(grep '^version:' pubspec.yaml | sed 's/version: *//; s/+.*//')
+          echo "VERSION_NAME=$NAME" >> "$GITHUB_ENV"
+          echo "BUILD_NUMBER=$CODE" >> "$GITHUB_ENV"
+
+      - name: Upload to App Store Connect
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY" \
+            -authenticationKeyIssuerID "$ASC_ISSUER"
+          echo "### 업로드 완료: $VERSION_NAME ($BUILD_NUMBER)" >> "$GITHUB_STEP_SUMMARY"
+          echo "App Store Connect → TestFlight에서 10~30분 뒤 처리가 끝나면 보여요." >> "$GITHUB_STEP_SUMMARY"
