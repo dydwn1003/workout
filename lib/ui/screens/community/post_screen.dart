@@ -81,6 +81,24 @@ class _PostScreenState extends State<PostScreen> {
     }
   }
 
+  /// 답글 달기: "@닉네임 " goes in front of what's typed (replacing an
+  /// earlier @someone), so the reply says who it answers.
+  void _startReply(Comment c) {
+    final rest = _input.text.replaceFirst(_mentionPrefix, '');
+    final text = '@${c.nickname} $rest';
+    _input.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+    setState(() => _replyTo = c);
+    _inputFocus.requestFocus();
+  }
+
+  void _cancelReply() {
+    _input.text = _input.text.replaceFirst(_mentionPrefix, '');
+    setState(() => _replyTo = null);
+  }
+
   void _swapComment(Comment c) => setState(
     () => _comments = [
       for (final x in _comments ?? const <Comment>[])
@@ -447,10 +465,7 @@ class _PostScreenState extends State<PostScreen> {
         highlighted: c.id == _flash,
         isReply: reply,
         byAuthor: c.authorId == post.authorId,
-        onReply: () {
-          setState(() => _replyTo = c);
-          _inputFocus.requestFocus();
-        },
+        onReply: () => _startReply(c),
         onLike: () => _likeComment(c),
         onDeleted: () => setState(
           () =>
@@ -519,7 +534,7 @@ class _PostScreenState extends State<PostScreen> {
                               ),
                             ),
                             GestureDetector(
-                              onTap: () => setState(() => _replyTo = null),
+                              onTap: _cancelReply,
                               child: const Icon(
                                 Icons.close_rounded,
                                 size: 18,
@@ -770,14 +785,7 @@ class _CommentBubble extends StatelessWidget {
                   const SizedBox(height: 3),
                   Padding(
                     padding: const EdgeInsets.only(right: 10),
-                    child: Text(
-                      comment.body,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        height: 1.5,
-                        color: AppColors.ink,
-                      ),
-                    ),
+                    child: _MentionText(comment.body),
                   ),
                   const SizedBox(height: 6),
                   Row(
@@ -863,4 +871,35 @@ class _CommentLike extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// "@닉네임 " at the start of a reply.
+final _mentionPrefix = RegExp(r'^@[0-9A-Za-z가-힣_]{1,12}\s');
+
+/// A comment's text with its leading @mention in the brand color.
+class _MentionText extends StatelessWidget {
+  final String body;
+  const _MentionText(this.body);
+
+  @override
+  Widget build(BuildContext context) {
+    const style = TextStyle(fontSize: 15, height: 1.5, color: AppColors.ink);
+    final m = _mentionPrefix.firstMatch(body);
+    if (m == null) return Text(body, style: style);
+    return Text.rich(
+      TextSpan(
+        style: style,
+        children: [
+          TextSpan(
+            text: m.group(0),
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              color: AppColors.peach,
+            ),
+          ),
+          TextSpan(text: body.substring(m.end)),
+        ],
+      ),
+    );
+  }
 }

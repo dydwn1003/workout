@@ -1755,7 +1755,12 @@ class MemoryCommunity implements CommunityRepository {
     }
     c.seedComment(p1.id, 'u3', '저도 새벽파입니다 ㅎㅎ');
     final c1 = c.seedComment(p1.id, 'u1', '월수금 6시 가능해요. 스쿼트 위주면 좋아요');
-    c.seedComment(p1.id, 'u2', '좋아요! 월요일 6시에 스쿼트랙 앞에서 봬요', parentId: c1.id);
+    c.seedComment(
+      p1.id,
+      'u2',
+      '@하체는사랑 좋아요! 월요일 6시에 스쿼트랙 앞에서 봬요',
+      parentId: c1.id,
+    );
     c.seedComment(p2.id, 'u3', '처음엔 무분할로 전신 3회 추천해요. 자세 익히기 좋아요');
     c.seedComment(p3.id, 'u6', '감사합니다 오늘 못 쓸 뻔');
     if (me != null && meJoined) {
@@ -1764,7 +1769,7 @@ class MemoryCommunity implements CommunityRepository {
       c.seedComment(
         p2.id,
         'u4',
-        '오 감사해요! 무분할 루틴 공유해 주실 수 있나요?',
+        '@헬린이철수 오 감사해요! 무분할 루틴 공유해 주실 수 있나요?',
         parentId: myComment.id,
       );
     }
