@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import '../../../data/community.dart';
@@ -21,7 +22,10 @@ class PostResult {
 
 class PostScreen extends StatefulWidget {
   final Post post;
-  const PostScreen({super.key, required this.post});
+
+  /// A comment to scroll to and flash (opened from 내 활동).
+  final String? focusCommentId;
+  const PostScreen({super.key, required this.post, this.focusCommentId});
 
   @override
   State<PostScreen> createState() => _PostScreenState();
@@ -40,6 +44,9 @@ class _PostScreenState extends State<PostScreen> {
 
   /// The comment being answered; null writes a top-level comment.
   Comment? _replyTo;
+
+  final _focusKey = GlobalKey();
+  String? _flash;
 
   @override
   void initState() {
@@ -61,11 +68,35 @@ class _PostScreenState extends State<PostScreen> {
     setState(() => _failed = false);
     try {
       final list = await _repo.comments(widget.post.id);
-      if (mounted) setState(() => _comments = list);
+      if (!mounted) return;
+      final first = _comments == null;
+      setState(() => _comments = list);
+      final focus = widget.focusCommentId;
+      if (first && focus != null && list.any((c) => c.id == focus)) {
+        _showFocused(focus);
+      }
     } catch (e) {
       debugPrint('comments load failed: $e');
       if (mounted) setState(() => _failed = true);
     }
+  }
+
+  /// Scrolls to the comment and flashes it for a moment.
+  void _showFocused(String id) {
+    setState(() => _flash = id);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final ctx = _focusKey.currentContext;
+      if (ctx != null) {
+        await Scrollable.ensureVisible(
+          ctx,
+          alignment: 0.3,
+          duration: Motion.medium,
+          curve: Motion.ease,
+        );
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 1800));
+      if (mounted) setState(() => _flash = null);
+    });
   }
 
   void _close() => Navigator.pop(
@@ -157,6 +188,10 @@ class _PostScreenState extends State<PostScreen> {
                       onRefresh: _load,
                       child: ListView(
                         controller: _scroll,
+                        // Every comment built, so one can be scrolled to.
+                        scrollCacheExtent: const ScrollCacheExtent.pixels(
+                          100000,
+                        ),
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                         children: [
                           _postCard(t, post),
@@ -196,6 +231,7 @@ class _PostScreenState extends State<PostScreen> {
             NickAvatar(
               userId: post.authorId,
               nickname: post.nickname,
+              photoUrl: post.avatarUrl,
               size: 42,
             ),
             const SizedBox(width: 10),
@@ -378,7 +414,9 @@ class _PostScreenState extends State<PostScreen> {
       key: ValueKey(c.id),
       dy: 6,
       child: _CommentBubble(
+        key: c.id == widget.focusCommentId ? _focusKey : null,
         comment: c,
+        highlighted: c.id == _flash,
         isReply: reply,
         byAuthor: c.authorId == post.authorId,
         onReply: () {
@@ -472,6 +510,7 @@ class _PostScreenState extends State<PostScreen> {
                       child: NickAvatar(
                         userId: me.userId,
                         nickname: me.nickname,
+                        photoUrl: me.avatarUrl,
                         size: 32,
                       ),
                     ),
@@ -568,10 +607,13 @@ class _CommentBubble extends StatelessWidget {
   final Comment comment;
   final bool byAuthor;
   final bool isReply;
+  final bool highlighted;
   final VoidCallback onReply;
   final VoidCallback onDeleted;
   final VoidCallback onBlocked;
   const _CommentBubble({
+    super.key,
+    this.highlighted = false,
     required this.comment,
     required this.byAuthor,
     required this.isReply,
@@ -593,16 +635,26 @@ class _CommentBubble extends StatelessWidget {
           NickAvatar(
             userId: comment.authorId,
             nickname: comment.nickname,
+            photoUrl: comment.avatarUrl,
             size: isReply ? 26 : 32,
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Container(
+            child: AnimatedContainer(
+              duration: Motion.medium,
               padding: const EdgeInsets.fromLTRB(14, 10, 4, 12),
               decoration: BoxDecoration(
-                color: mine
+                color: highlighted
+                    ? AppColors.butterSoft
+                    : mine
                     ? AppColors.peachSoft.withValues(alpha: 0.6)
                     : Colors.white,
+                border: Border.all(
+                  color: highlighted
+                      ? const Color(0xFFF5B400)
+                      : Colors.transparent,
+                  width: 1.5,
+                ),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(6),
                   topRight: Radius.circular(20),

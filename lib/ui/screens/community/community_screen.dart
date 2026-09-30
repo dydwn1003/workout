@@ -16,6 +16,7 @@ import 'community_sheets.dart';
 import 'community_widgets.dart';
 import 'gym_board_screen.dart';
 import 'lounge_view.dart';
+import 'my_activity_screen.dart';
 import 'post_screen.dart';
 
 /// 커뮤니티 tab: 내 헬스장 (a hero card, my gyms as cards, their newest
@@ -279,7 +280,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
         bottom: false,
         child: Column(
           children: [
-            _topBar(t, c),
+            _topBar(t, c, app),
             Expanded(
               child: IndexedStack(
                 index: _tab,
@@ -295,7 +296,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 
-  Widget _topBar(L t, CommunityState c) => Padding(
+  Future<void> _openMe() async {
+    if (!await ensureCommunityMember(context) || !mounted) return;
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const MyActivityScreen()));
+  }
+
+  Widget _topBar(L t, CommunityState c, AppState app) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 10, 12, 12),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -308,6 +316,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
             ),
+            if (c.signedIn || app.auth != null) ...[
+              _MeButton(profile: c.profile, onTap: _openMe),
+              const SizedBox(width: 8),
+            ],
             Squish(
               child: GestureDetector(
                 onTap: () => showInviteSheet(context),
@@ -796,6 +808,58 @@ class _CommunityScreenState extends State<CommunityScreen> {
           },
         ),
     ];
+  }
+}
+
+/// My photo (or a person icon before I have a profile): opens 내 활동.
+class _MeButton extends StatelessWidget {
+  final CommunityProfile? profile;
+  final VoidCallback onTap;
+  const _MeButton({required this.profile, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = profile;
+    return Tooltip(
+      message: L.of(context).myActivity,
+      child: Squish(
+        child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.all(2),
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [AppColors.peach, Color(0xFFFFB38A)],
+              ),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: p == null
+                  ? const SizedBox(
+                      width: 30,
+                      height: 30,
+                      child: Icon(
+                        Icons.person_rounded,
+                        size: 20,
+                        color: AppColors.peach,
+                      ),
+                    )
+                  : NickAvatar(
+                      userId: p.userId,
+                      nickname: p.nickname,
+                      photoUrl: p.avatarUrl,
+                      size: 30,
+                    ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

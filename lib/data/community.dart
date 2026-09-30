@@ -79,7 +79,10 @@ bool isTopicId(String id) => id.startsWith('t-');
 class CommunityProfile {
   final String userId;
   final String nickname;
-  const CommunityProfile(this.userId, this.nickname);
+
+  /// Public URL of the profile photo; null shows the first letter.
+  final String? avatarUrl;
+  const CommunityProfile(this.userId, this.nickname, {this.avatarUrl});
 }
 
 /// What a post is about; boards filter by it.
@@ -103,6 +106,9 @@ class Post {
   final PostTag tag;
   final String authorId;
   final String nickname;
+
+  /// The author's profile photo.
+  final String? avatarUrl;
   final String body;
 
   /// Public URLs of the photos (up to 4).
@@ -123,6 +129,7 @@ class Post {
     this.tag = PostTag.free,
     required this.authorId,
     required this.nickname,
+    this.avatarUrl,
     required this.body,
     this.images = const [],
     this.imagePaths = const [],
@@ -134,6 +141,8 @@ class Post {
   });
 
   Post copyWith({
+    String? nickname,
+    String? avatarUrl,
     String? body,
     PostTag? tag,
     String? gymName,
@@ -147,7 +156,8 @@ class Post {
     gymName: gymName ?? this.gymName,
     tag: tag ?? this.tag,
     authorId: authorId,
-    nickname: nickname,
+    nickname: nickname ?? this.nickname,
+    avatarUrl: avatarUrl ?? this.avatarUrl,
     body: body ?? this.body,
     images: images,
     imagePaths: imagePaths,
@@ -168,6 +178,7 @@ class Comment {
   final String? parentId;
   final String authorId;
   final String nickname;
+  final String? avatarUrl;
   final String body;
   final DateTime createdAt;
 
@@ -177,8 +188,23 @@ class Comment {
     this.parentId,
     required this.authorId,
     required this.nickname,
+    this.avatarUrl,
     required this.body,
     required this.createdAt,
+  });
+}
+
+/// A comment I wrote, with the post it's on (내 활동).
+class MyComment {
+  final Comment comment;
+  final String postBody;
+  final String gymId;
+  final String? gymName;
+  const MyComment({
+    required this.comment,
+    required this.postBody,
+    required this.gymId,
+    this.gymName,
   });
 }
 
@@ -285,6 +311,15 @@ abstract class CommunityRepository {
   /// Throws [CommunityException] (nicknameTaken, blockedWords).
   Future<CommunityProfile> createProfile(String nickname);
 
+  /// Changes my nickname and/or photo ([photo] is a prepared JPEG;
+  /// [removePhoto] goes back to the first letter). Throws like
+  /// [createProfile].
+  Future<CommunityProfile> updateProfile({
+    String? nickname,
+    Uint8List? photo,
+    bool removePhoto = false,
+  });
+
   Future<List<Gym>> searchGyms(String query);
   Future<List<Gym>> myGyms();
   Future<void> join(String gymId);
@@ -324,6 +359,13 @@ abstract class CommunityRepository {
   Future<Post> editPost(Post post, String body, {PostTag? tag});
   Future<void> deletePost(Post post);
 
+  /// One post (opened from 내 활동); null when gone or hidden.
+  Future<Post?> post(String id);
+
+  /// My posts and comments, newest first.
+  Future<List<Post>> myPosts({DateTime? before, int limit = 20});
+  Future<List<MyComment>> myComments({DateTime? before, int limit = 20});
+
   Future<List<Comment>> comments(String postId);
 
   /// [parentId] replies to that comment (replies to a reply go under its
@@ -350,13 +392,19 @@ class SupabaseCommunity implements CommunityRepository {
 
   static const _bucket = 'community';
   static const _postColumns =
-      '*, profile:community_profiles!posts_author_fkey(nickname), '
+      '*, profile:community_profiles!posts_author_fkey(nickname, avatar), '
       'gym:gyms(name)';
 
   @override
   String? get myId => client.auth.currentUser?.id;
 
   String _url(String path) => client.storage.from(_bucket).getPublicUrl(path);
+
+  String? _avatar(Object? path) =>
+      path is String && path.isNotEmpty ? _url(path) : null;
+
+  static const _commentColumns =
+      '*, profile:community_profiles!comments_author_fkey(nickname, avatar)';
 
   Future<T> _guard<T>(Future<T> Function() f) async {
     try {
@@ -392,6 +440,7 @@ class SupabaseCommunity implements CommunityRepository {
       tag: PostTag.parse(j['tag']),
       authorId: j['author'] as String,
       nickname: (j['profile'] as Map?)?['nickname'] as String? ?? '',
+      avatarUrl: _avatar((j['profile'] as Map?)?['avatar']),
       body: j['body'] as String,
       images: [for (final p in paths) _url(p)],
       imagePaths: paths,
@@ -420,10 +469,16 @@ class SupabaseCommunity implements CommunityRepository {
     if (me == null) return null;
     final row = await client
         .from('community_profiles')
-        .select('user_id, nickname')
+        .select('user_id, nickname, avatar')
         .eq('user_id', me)
         .maybeSingle();
-    return row == null ? null : CommunityProfile(me, row['nickname'] as String);
+    return row == null
+        ? null
+        : CommunityProfile(
+            me,
+            row['nickname'] as String,
+            avatarUrl: _avatar(row['avatar']),
+          );
   }
 
   @override
@@ -437,6 +492,61 @@ class SupabaseCommunity implements CommunityRepository {
       'nickname': n,
     });
     return CommunityProfile(myId!, n);
+  });
+
+  @override
+  Future<CommunityProfile> updateProfile({
+    String? nickname,
+    Uint8List? photo,
+    bool removePhoto = false,
+  }) => _guard(() async {
+    final me = myId!;
+    final n = nickname?.trim();
+    if (n != null && containsBlockedWords(n)) {
+      throw const CommunityException(CommunityError.blockedWords);
+    }
+    final old = await client
+        .from('community_profiles')
+        .select('avatar')
+        .eq('user_id', me)
+        .maybeSingle();
+    final oldPath = old?['avatar'] as String?;
+    String? path;
+    if (photo != null) {
+      if (imageMimeType(photo) != 'image/jpeg' ||
+          photo.length > CommunityLimits.photoBytes) {
+        throw const CommunityException(CommunityError.badImage);
+      }
+      path = '$me/avatar-${_uuid()}.jpg';
+      await client.storage
+          .from(_bucket)
+          .uploadBinary(
+            path,
+            photo,
+            fileOptions: const FileOptions(contentType: 'image/jpeg'),
+          );
+    }
+    final row = await client
+        .from('community_profiles')
+        .update({
+          'nickname': ?n,
+          'avatar': ?path,
+          if (removePhoto && path == null) 'avatar': null,
+        })
+        .eq('user_id', me)
+        .select('nickname, avatar')
+        .single();
+    // The replaced photo isn't needed anymore.
+    if (oldPath != null && (path != null || removePhoto)) {
+      try {
+        await client.storage.from(_bucket).remove([oldPath]);
+      } catch (_) {}
+    }
+    return CommunityProfile(
+      me,
+      row['nickname'] as String,
+      avatarUrl: _avatar(row['avatar']),
+    );
   });
 
   @override
@@ -623,6 +733,54 @@ class SupabaseCommunity implements CommunityRepository {
       });
 
   @override
+  Future<Post?> post(String id) async {
+    final row = await client
+        .from('posts')
+        .select(_postColumns)
+        .eq('id', id)
+        .maybeSingle();
+    if (row == null) return null;
+    return _post(row, await _liked([id]));
+  }
+
+  @override
+  Future<List<Post>> myPosts({DateTime? before, int limit = 20}) async {
+    final me = myId;
+    if (me == null) return const [];
+    var q = client.from('posts').select(_postColumns).eq('author', me);
+    if (before != null) {
+      q = q.lt('created_at', before.toUtc().toIso8601String());
+    }
+    final rows = await q.order('created_at', ascending: false).limit(limit);
+    final liked = await _liked([for (final r in rows) r['id'] as String]);
+    return [for (final r in rows) _post(r, liked)];
+  }
+
+  @override
+  Future<List<MyComment>> myComments({DateTime? before, int limit = 20}) async {
+    final me = myId;
+    if (me == null) return const [];
+    var q = client
+        .from('comments')
+        .select('$_commentColumns, post:posts(body, gym_id, gym:gyms(name))')
+        .eq('author', me);
+    if (before != null) {
+      q = q.lt('created_at', before.toUtc().toIso8601String());
+    }
+    final rows = await q.order('created_at', ascending: false).limit(limit);
+    return [
+      for (final r in rows)
+        if (r['post'] case final Map<String, dynamic> p)
+          MyComment(
+            comment: _comment(r),
+            postBody: p['body'] as String? ?? '',
+            gymId: p['gym_id'] as String? ?? '',
+            gymName: (p['gym'] as Map?)?['name'] as String?,
+          ),
+    ];
+  }
+
+  @override
   Future<void> deletePost(Post post) async {
     await client.from('posts').delete().eq('id', post.id);
     if (post.imagePaths.isNotEmpty) {
@@ -634,7 +792,7 @@ class SupabaseCommunity implements CommunityRepository {
   Future<List<Comment>> comments(String postId) async {
     final rows = await client
         .from('comments')
-        .select('*, profile:community_profiles!comments_author_fkey(nickname)')
+        .select(_commentColumns)
         .eq('post_id', postId)
         .order('created_at')
         .limit(300);
@@ -647,6 +805,7 @@ class SupabaseCommunity implements CommunityRepository {
     parentId: r['parent_id'] as String?,
     authorId: r['author'] as String,
     nickname: (r['profile'] as Map?)?['nickname'] as String? ?? '',
+    avatarUrl: _avatar((r['profile'] as Map?)?['avatar']),
     body: r['body'] as String,
     createdAt: _time(r['created_at'])!,
   );
@@ -664,9 +823,7 @@ class SupabaseCommunity implements CommunityRepository {
               'body': body.trim(),
               'parent_id': ?parentId,
             })
-            .select(
-              '*, profile:community_profiles!comments_author_fkey(nickname)',
-            )
+            .select(_commentColumns)
             .single();
         return _comment(row);
       });
@@ -753,6 +910,7 @@ class MemoryCommunity implements CommunityRepository {
 
   final Map<String, Gym> gyms = {};
   final Map<String, String> nicknames = {}; // userId -> nickname
+  final Map<String, String> avatars = {}; // userId -> photo URL
   final Map<String, Set<String>> members = {}; // userId -> gym ids
   final List<Post> _posts = [];
   final List<Comment> _comments = [];
@@ -788,6 +946,8 @@ class MemoryCommunity implements CommunityRepository {
   bool _visible(String author) => !blocks.contains((myId ?? '', author));
 
   Post _withLikes(Post p) => p.copyWith(
+    nickname: nicknames[p.authorId],
+    avatarUrl: avatars[p.authorId],
     likeCount: _likes[p.id]?.length ?? 0,
     likedByMe: _likes[p.id]?.contains(myId) ?? false,
     commentCount: _comments.where((c) => c.postId == p.id).length,
@@ -806,7 +966,9 @@ class MemoryCommunity implements CommunityRepository {
   @override
   Future<CommunityProfile?> myProfile() async {
     final n = nicknames[myId];
-    return n == null ? null : CommunityProfile(myId!, n);
+    return n == null
+        ? null
+        : CommunityProfile(myId!, n, avatarUrl: avatars[myId]);
   }
 
   @override
@@ -821,7 +983,25 @@ class MemoryCommunity implements CommunityRepository {
       throw const CommunityException(CommunityError.nicknameTaken);
     }
     nicknames[myId!] = n;
-    return CommunityProfile(myId!, n);
+    return CommunityProfile(myId!, n, avatarUrl: avatars[myId]);
+  }
+
+  @override
+  Future<CommunityProfile> updateProfile({
+    String? nickname,
+    Uint8List? photo,
+    bool removePhoto = false,
+  }) async {
+    if (nickname != null) await createProfile(nickname);
+    if (photo != null) {
+      if (imageMimeType(photo) == null) {
+        throw const CommunityException(CommunityError.badImage);
+      }
+      avatars[myId!] = 'data:image/jpeg;base64,${base64Encode(photo)}';
+    } else if (removePhoto) {
+      avatars.remove(myId);
+    }
+    return (await myProfile())!;
   }
 
   @override
@@ -1009,7 +1189,7 @@ class MemoryCommunity implements CommunityRepository {
         for (final b in photos)
           'data:${imageMimeType(b)};base64,${base64Encode(b)}',
       ],
-    ).copyWith(gymName: gyms[gymId]?.name);
+    ).copyWith(gymName: gyms[gymId]?.name, avatarUrl: avatars[myId]);
   }
 
   @override
@@ -1025,6 +1205,39 @@ class MemoryCommunity implements CommunityRepository {
   }
 
   @override
+  Future<Post?> post(String id) async {
+    final p = _posts.where((p) => p.id == id).firstOrNull;
+    return p == null
+        ? null
+        : _withLikes(p).copyWith(gymName: gyms[p.gymId]?.name);
+  }
+
+  @override
+  Future<List<Post>> myPosts({DateTime? before, int limit = 20}) async => [
+    for (final p in _posts.reversed)
+      if (p.authorId == myId &&
+          (before == null || p.createdAt.isBefore(before)))
+        _withLikes(p).copyWith(gymName: gyms[p.gymId]?.name),
+  ].take(limit).toList();
+
+  @override
+  Future<List<MyComment>> myComments({
+    DateTime? before,
+    int limit = 20,
+  }) async => [
+    for (final c in _comments.reversed)
+      if (c.authorId == myId &&
+          (before == null || c.createdAt.isBefore(before)))
+        if (_posts.where((p) => p.id == c.postId).firstOrNull case final p?)
+          MyComment(
+            comment: _withAuthor(c),
+            postBody: p.body,
+            gymId: p.gymId,
+            gymName: gyms[p.gymId]?.name,
+          ),
+  ].take(limit).toList();
+
+  @override
   Future<void> deletePost(Post post) async {
     _posts.removeWhere((p) => p.id == post.id);
     _comments.removeWhere((c) => c.postId == post.id);
@@ -1033,8 +1246,19 @@ class MemoryCommunity implements CommunityRepository {
   @override
   Future<List<Comment>> comments(String postId) async => [
     for (final c in _comments)
-      if (c.postId == postId && _visible(c.authorId)) c,
+      if (c.postId == postId && _visible(c.authorId)) _withAuthor(c),
   ];
+
+  Comment _withAuthor(Comment c) => Comment(
+    id: c.id,
+    postId: c.postId,
+    parentId: c.parentId,
+    authorId: c.authorId,
+    nickname: nicknames[c.authorId] ?? c.nickname,
+    avatarUrl: avatars[c.authorId],
+    body: c.body,
+    createdAt: c.createdAt,
+  );
 
   @override
   Future<Comment> addComment(
@@ -1045,7 +1269,9 @@ class MemoryCommunity implements CommunityRepository {
     if (containsBlockedWords(body)) {
       throw const CommunityException(CommunityError.blockedWords);
     }
-    return seedComment(postId, myId!, body.trim(), parentId: parentId);
+    return _withAuthor(
+      seedComment(postId, myId!, body.trim(), parentId: parentId),
+    );
   }
 
   @override
@@ -1197,11 +1423,26 @@ class MemoryCommunity implements CommunityRepository {
     c.seedLike(l2.id, 'u5');
     c.seedComment(l1.id, 'u2', '반포 어디서 모이나요? 저 갈게요');
     c.seedComment(l2.id, 'u5', '식사로 채우기 힘들면 괜찮아요. 총량만 체중×1.6g 정도');
+    if (me != null && meJoined) {
+      final mine = c.seedPost(
+        'l-1',
+        me,
+        '오늘 처음으로 풀업 5개 성공했어요! 다들 등 운동 뭐부터 하세요?',
+        at: now.subtract(ago(d: 3)),
+        tag: PostTag.review,
+      );
+      c.seedComment(mine.id, 'u3', '축하해요! 저는 랫풀다운부터 해요');
+      c.seedLike(mine.id, 'u3');
+      c.seedLike(mine.id, 'u1');
+    }
     c.seedComment(p1.id, 'u3', '저도 새벽파입니다 ㅎㅎ');
     final c1 = c.seedComment(p1.id, 'u1', '월수금 6시 가능해요. 스쿼트 위주면 좋아요');
     c.seedComment(p1.id, 'u2', '좋아요! 월요일 6시에 스쿼트랙 앞에서 봬요', parentId: c1.id);
     c.seedComment(p2.id, 'u3', '처음엔 무분할로 전신 3회 추천해요. 자세 익히기 좋아요');
     c.seedComment(p3.id, 'u6', '감사합니다 오늘 못 쓸 뻔');
+    if (me != null && meJoined) {
+      c.seedComment(p2.id, me, '저도 무분할로 시작했는데 자세 잡는 데 좋았어요!');
+    }
     c.seedComment(p6.id, 'u5', '저 받아봤는데 자세 교정 꼼꼼하게 봐주세요');
     for (final u in ['u1', 'u3', 'u4', 'u5', 'u6']) {
       c.seedLike(p1.id, u);

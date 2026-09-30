@@ -43,6 +43,7 @@ Future<void> main() async {
       : CommunityState(communityRepo);
   // An invite link (web, ?gym=<board id>) opens that board.
   community?.pendingBoard = Uri.base.queryParameters['gym'];
+  await community?.loadLocal();
   final state = AppState(
     SyncingRepository(LocalCoachRepository()),
     beforeAccountDelete: communityRepo?.deleteMyPhotos,

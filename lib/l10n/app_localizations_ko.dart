@@ -1965,4 +1965,58 @@ class LKo extends L {
 
   @override
   String get allBoards => '전체';
+
+  @override
+  String get editProfile => '프로필 편집';
+
+  @override
+  String get editProfileSubtitle => '커뮤니티에서 보이는 사진과 닉네임이에요';
+
+  @override
+  String get nicknameLabel => '닉네임';
+
+  @override
+  String get choosePhoto => '사진 선택';
+
+  @override
+  String get removePhoto => '사진 삭제';
+
+  @override
+  String get profileSaved => '프로필을 저장했어요';
+
+  @override
+  String get myProfile => '내 프로필';
+
+  @override
+  String get favoritesOnly => '즐겨찾기만';
+
+  @override
+  String get favoritesHint => '게시판의 ☆를 눌러 자주 보는 운동을 즐겨찾기 해 보세요';
+
+  @override
+  String get favoriteAdd => '즐겨찾기';
+
+  @override
+  String get favoriteAdded => '즐겨찾기에 추가했어요';
+
+  @override
+  String get myActivity => '내 활동';
+
+  @override
+  String get myPostsTab => '내가 쓴 글';
+
+  @override
+  String get myCommentsTab => '내 댓글';
+
+  @override
+  String get myPostsEmpty => '아직 쓴 글이 없어요. 첫 글을 남겨 보세요!';
+
+  @override
+  String get myCommentsEmpty => '아직 단 댓글이 없어요';
+
+  @override
+  String get onPost => '원글';
+
+  @override
+  String get postGone => '삭제되었거나 볼 수 없는 글이에요';
 }

@@ -2001,4 +2001,58 @@ class LEn extends L {
 
   @override
   String get allBoards => 'All';
+
+  @override
+  String get editProfile => 'Edit profile';
+
+  @override
+  String get editProfileSubtitle => 'Your photo and nickname in the community';
+
+  @override
+  String get nicknameLabel => 'Nickname';
+
+  @override
+  String get choosePhoto => 'Choose photo';
+
+  @override
+  String get removePhoto => 'Remove photo';
+
+  @override
+  String get profileSaved => 'Profile saved';
+
+  @override
+  String get myProfile => 'My profile';
+
+  @override
+  String get favoritesOnly => 'Favorites';
+
+  @override
+  String get favoritesHint => 'Tap ☆ on a board to keep your workouts here';
+
+  @override
+  String get favoriteAdd => 'Favorite';
+
+  @override
+  String get favoriteAdded => 'Added to favorites';
+
+  @override
+  String get myActivity => 'My activity';
+
+  @override
+  String get myPostsTab => 'My posts';
+
+  @override
+  String get myCommentsTab => 'My comments';
+
+  @override
+  String get myPostsEmpty => 'No posts yet. Write your first one!';
+
+  @override
+  String get myCommentsEmpty => 'No comments yet';
+
+  @override
+  String get onPost => 'On';
+
+  @override
+  String get postGone => 'This post was deleted or is hidden';
 }

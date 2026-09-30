@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/community.dart';
 
@@ -20,6 +23,60 @@ class CommunityState extends ChangeNotifier {
   /// A board to open from an invite link (?gym=...), taken by the
   /// community tab.
   String? pendingBoard;
+
+  /// 운동 라운지 boards I starred (on this device, as many as I like),
+  /// and whether the lounge shows only those.
+  Set<String> favoriteTopics = {};
+  bool loungeFavoritesOnly = false;
+
+  static const _favKey = 'community.favoriteTopics';
+  static const _favOnlyKey = 'community.loungeFavoritesOnly';
+
+  Future<void> loadLocal() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      favoriteTopics = {...?prefs.getStringList(_favKey)};
+      loungeFavoritesOnly = prefs.getBool(_favOnlyKey) ?? false;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('community prefs failed: $e');
+    }
+  }
+
+  Future<void> _saveLocal() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(_favKey, favoriteTopics.toList());
+      await prefs.setBool(_favOnlyKey, loungeFavoritesOnly);
+    } catch (e) {
+      debugPrint('community prefs failed: $e');
+    }
+  }
+
+  bool isFavorite(String id) => favoriteTopics.contains(id);
+
+  void toggleFavorite(String id) {
+    favoriteTopics = {...favoriteTopics};
+    if (!favoriteTopics.remove(id)) favoriteTopics.add(id);
+    notifyListeners();
+    _saveLocal();
+  }
+
+  void setLoungeFavoritesOnly(bool v) {
+    loungeFavoritesOnly = v;
+    notifyListeners();
+    _saveLocal();
+  }
+
+  /// The lounge boards to show: my favorites (in lounge order) when
+  /// asked and there are any, else all of them.
+  List<String> get loungeBoards =>
+      loungeFavoritesOnly && favoriteTopics.isNotEmpty
+      ? [
+          for (final id in topicIds)
+            if (favoriteTopics.contains(id)) id,
+        ]
+      : topicIds;
 
   bool get signedIn => repo.myId != null;
   bool isMine(String gymId) => myGyms.any((g) => g.id == gymId);
@@ -59,6 +116,19 @@ class CommunityState extends ChangeNotifier {
 
   Future<void> createProfile(String nickname) async {
     profile = await repo.createProfile(nickname);
+    notifyListeners();
+  }
+
+  Future<void> updateProfile({
+    String? nickname,
+    Uint8List? photo,
+    bool removePhoto = false,
+  }) async {
+    profile = await repo.updateProfile(
+      nickname: nickname,
+      photo: photo,
+      removePhoto: removePhoto,
+    );
     notifyListeners();
   }
 

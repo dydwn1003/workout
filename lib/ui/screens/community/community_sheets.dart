@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../data/community.dart';
+import '../../../data/photo_prep.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../state/community_state.dart';
 import '../../motion.dart';
@@ -360,6 +362,321 @@ class _GymLimitSheet extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// A round profile photo that picks a new one on tap: [onChanged] gets
+/// the prepared JPEG, or null with `removed` when the photo was taken off.
+class AvatarPicker extends StatefulWidget {
+  final String userId;
+  final String nickname;
+  final String? currentUrl;
+  final double size;
+  final void Function(Uint8List? photo, bool removed) onChanged;
+  const AvatarPicker({
+    super.key,
+    required this.userId,
+    required this.nickname,
+    required this.currentUrl,
+    required this.onChanged,
+    this.size = 96,
+  });
+
+  @override
+  State<AvatarPicker> createState() => _AvatarPickerState();
+}
+
+class _AvatarPickerState extends State<AvatarPicker> {
+  Uint8List? _photo;
+  var _removed = false;
+  var _busy = false;
+
+  bool get _hasPhoto =>
+      _photo != null || (!_removed && widget.currentUrl != null);
+
+  Future<void> _pick() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final f = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1200,
+        maxHeight: 1200,
+      );
+      if (f == null) return;
+      final bytes = await prepareAvatar(await f.readAsBytes());
+      if (!mounted) return;
+      if (bytes == null) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(L.of(context).badImage)));
+        return;
+      }
+      setState(() {
+        _photo = bytes;
+        _removed = false;
+      });
+      widget.onChanged(bytes, false);
+    } catch (e) {
+      debugPrint('avatar pick failed: $e');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void _remove() {
+    setState(() {
+      _photo = null;
+      _removed = true;
+    });
+    widget.onChanged(null, true);
+  }
+
+  Future<void> _menu() async {
+    if (!_hasPhoto) return _pick();
+    final t = L.of(context);
+    final remove = await showModalBottomSheet<bool>(
+      context: context,
+      sheetAnimationStyle: Motion.sheet,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library_rounded),
+              title: Text(t.choosePhoto),
+              onTap: () => Navigator.pop(context, false),
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.delete_outline_rounded,
+                color: AppColors.peach,
+              ),
+              title: Text(t.removePhoto),
+              onTap: () => Navigator.pop(context, true),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (remove == null || !mounted) return;
+    remove ? _remove() : await _pick();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = widget.size;
+    final photo = _photo;
+    return Squish(
+      child: GestureDetector(
+        onTap: _menu,
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 3),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x228B6E5A),
+                      blurRadius: 12,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: photo != null
+                    ? ClipOval(
+                        child: Image.memory(
+                          photo,
+                          width: size,
+                          height: size,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : NickAvatar(
+                        userId: widget.userId,
+                        nickname: widget.nickname,
+                        photoUrl: _removed ? null : widget.currentUrl,
+                        size: size - 6,
+                      ),
+              ),
+              Positioned(
+                right: -2,
+                bottom: -2,
+                child: Container(
+                  width: size * 0.34,
+                  height: size * 0.34,
+                  decoration: BoxDecoration(
+                    color: AppColors.peach,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2.5),
+                  ),
+                  child: _busy
+                      ? const Padding(
+                          padding: EdgeInsets.all(7),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Icon(
+                          Icons.photo_camera_rounded,
+                          size: size * 0.18,
+                          color: Colors.white,
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 프로필 편집: photo and nickname.
+Future<void> showProfileSheet(BuildContext context) =>
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      sheetAnimationStyle: Motion.sheet,
+      builder: (_) => const _ProfileSheet(),
+    );
+
+class _ProfileSheet extends StatefulWidget {
+  const _ProfileSheet();
+
+  @override
+  State<_ProfileSheet> createState() => _ProfileSheetState();
+}
+
+class _ProfileSheetState extends State<_ProfileSheet> {
+  late final CommunityProfile _me = CommunityScope.read(context).profile!;
+  late final _nick = TextEditingController(text: _me.nickname);
+  Uint8List? _photo;
+  var _removePhoto = false;
+  var _busy = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _nick.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final t = L.of(context);
+    final n = _nick.text.trim();
+    if (!validNickname(n)) {
+      setState(
+        () => _error = containsBlockedWords(n)
+            ? t.blockedWordsError
+            : t.nicknameInvalid,
+      );
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    final c = CommunityScope.read(context);
+    try {
+      await c.updateProfile(
+        nickname: n == _me.nickname ? null : n,
+        photo: _photo,
+        removePhoto: _removePhoto,
+      );
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      Navigator.pop(context);
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(t.profileSaved)));
+    } catch (e) {
+      if (mounted) setState(() => _error = communityErrorText(t, e));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L.of(context);
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        24,
+        8,
+        24,
+        24 + MediaQuery.viewInsetsOf(context).bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            t.editProfile,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            t.editProfileSubtitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 13, color: AppColors.inkSoft),
+          ),
+          const SizedBox(height: 20),
+          Center(
+            child: ListenableBuilder(
+              listenable: _nick,
+              builder: (context, _) => AvatarPicker(
+                userId: _me.userId,
+                nickname: _nick.text.trim().isEmpty
+                    ? _me.nickname
+                    : _nick.text.trim(),
+                currentUrl: _me.avatarUrl,
+                onChanged: (photo, removed) {
+                  _photo = photo;
+                  _removePhoto = removed;
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          TextField(
+            controller: _nick,
+            maxLength: CommunityLimits.nicknameMax,
+            style: const TextStyle(
+              fontFamily: headingFont,
+              fontWeight: FontWeight.w800,
+              fontSize: 17,
+            ),
+            decoration: InputDecoration(
+              labelText: t.nicknameLabel,
+              errorText: _error,
+              prefixIcon: const Icon(
+                Icons.alternate_email_rounded,
+                color: AppColors.peach,
+              ),
+            ),
+            onSubmitted: (_) => _save(),
+          ),
+          const SizedBox(height: 12),
+          FilledButton(
+            onPressed: _busy ? null : _save,
+            child: _busy
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(t.save),
+          ),
+        ],
       ),
     );
   }

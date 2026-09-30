@@ -33,23 +33,43 @@ class _LoungeViewState extends State<LoungeView> {
   var _loadingMore = false;
 
   CommunityRepository get _repo => CommunityScope.read(context).repo;
-  List<String> get _ids => _topic == null ? topicIds : [_topic!];
+  List<String> get _shown => CommunityScope.read(context).loungeBoards;
+  List<String> get _ids => _topic == null ? _shown : [_topic!];
+  String? _shownKey;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _load();
+    });
+  }
+
+  /// Reloads when the boards shown change (favorites only on/off, stars).
+  void _syncShown(CommunityState c) {
+    final key = c.loungeBoards.join(',');
+    if (_shownKey == null) {
+      _shownKey = key;
+      return;
+    }
+    if (key == _shownKey) return;
+    _shownKey = key;
+    if (_topic != null && !c.loungeBoards.contains(_topic)) _topic = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _load();
+    });
   }
 
   Future<void> _load() async {
     setState(() => _failed = false);
+    final shown = _shown;
     try {
       final r = await Future.wait([
         _repo.boards(topicIds),
-        _repo.hot(topicIds, limit: 3),
+        _repo.hot(shown, limit: 3),
         _repo.feed(_ids, limit: _page),
       ]);
-      if (!mounted) return;
+      if (!mounted || shown.join(',') != _shown.join(',')) return;
       final boards = r[0] as List<Gym>;
       setState(() {
         // Boards the server doesn't have yet still show (0 posts).
@@ -164,6 +184,7 @@ class _LoungeViewState extends State<LoungeView> {
   @override
   Widget build(BuildContext context) {
     final t = L.of(context);
+    _syncShown(CommunityScope.of(context));
     return Stack(
       children: [
         RefreshIndicator(
@@ -266,12 +287,39 @@ class _LoungeViewState extends State<LoungeView> {
 
   Widget _categories(L t) {
     final boards = _boards;
+    final c = CommunityScope.of(context);
+    final favOnly = c.loungeFavoritesOnly;
+    // Favorites first; only them when asked (and there are some).
+    final ids = favOnly && c.favoriteTopics.isNotEmpty
+        ? c.loungeBoards
+        : [
+            ...topicIds.where(c.isFavorite),
+            ...topicIds.where((id) => !c.isFavorite(id)),
+          ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SectionTitle(t.loungeCategories),
+          SectionTitle(
+            t.loungeCategories,
+            trailing: _FavOnlySwitch(
+              on: favOnly,
+              label: t.favoritesOnly,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                c.setLoungeFavoritesOnly(!favOnly);
+              },
+            ),
+          ),
+          if (favOnly && c.favoriteTopics.isEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+              child: Text(
+                t.favoritesHint,
+                style: const TextStyle(color: AppColors.inkSoft),
+              ),
+            ),
           LayoutBuilder(
             builder: (context, box) {
               const gap = 8.0;
@@ -282,7 +330,7 @@ class _LoungeViewState extends State<LoungeView> {
                   spacing: gap,
                   runSpacing: gap,
                   children: [
-                    for (final (i, id) in topicIds.indexed)
+                    for (final (i, id) in ids.indexed)
                       FadeSlideIn(
                         key: ValueKey('topic-$id'),
                         delay: stagger(i),
@@ -291,6 +339,11 @@ class _LoungeViewState extends State<LoungeView> {
                           width: w,
                           child: _TopicTile(
                             id: id,
+                            favorite: c.isFavorite(id),
+                            onFavorite: () {
+                              HapticFeedback.selectionClick();
+                              c.toggleFavorite(id);
+                            },
                             posts: boards == null
                                 ? null
                                 : boards
@@ -391,7 +444,7 @@ class _LoungeViewState extends State<LoungeView> {
                 selected: _topic == null,
                 onTap: () => _setTopic(null),
               ),
-              for (final id in topicIds)
+              for (final id in CommunityScope.of(context).loungeBoards)
                 _TopicChip(
                   label: topicName(t, id)!,
                   icon: topicStyle(id).$1,
@@ -452,64 +505,123 @@ class _TopicTile extends StatelessWidget {
   final String id;
   final int? posts;
   final VoidCallback onTap;
+  final bool favorite;
+
+  /// Null hides the star (the board picker).
+  final VoidCallback? onFavorite;
   const _TopicTile({
     required this.id,
     required this.posts,
     required this.onTap,
+    this.favorite = false,
+    this.onFavorite,
   });
 
   @override
   Widget build(BuildContext context) {
     final t = L.of(context);
     final (icon, color) = topicStyle(id);
-    return Squish(
-      child: Material(
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: const BorderSide(color: Color(0xFFF0E6DD)),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(4, 12, 4, 10),
-            child: Column(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Color.lerp(color, Colors.white, 0.84),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, color: color, size: 22),
+    return Stack(
+      children: [
+        Squish(
+          child: SizedBox(
+            width: double.infinity,
+            child: Material(
+              color: favorite
+                  ? Color.lerp(color, Colors.white, 0.9)
+                  : Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+                side: BorderSide(
+                  color: favorite
+                      ? color.withValues(alpha: 0.45)
+                      : const Color(0xFFF0E6DD),
+                  width: favorite ? 1.5 : 1,
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  topicName(t, id)!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: headingFont,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 12.5,
-                    color: AppColors.ink,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: onTap,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 12, 4, 10),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color.lerp(color, Colors.white, 0.25)!,
+                              color,
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Icon(icon, color: Colors.white, size: 22),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        topicName(t, id)!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: headingFont,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12.5,
+                          color: AppColors.ink,
+                        ),
+                      ),
+                      if (posts != null)
+                        Text(
+                          t.gymPosts('$posts'),
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            color: AppColors.inkSoft,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                if (posts != null)
-                  Text(
-                    t.gymPosts('$posts'),
-                    style: const TextStyle(
-                      fontSize: 10.5,
-                      color: AppColors.inkSoft,
-                    ),
-                  ),
-              ],
+              ),
             ),
           ),
         ),
-      ),
+        if (onFavorite != null)
+          Positioned(
+            right: 0,
+            top: 0,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onFavorite,
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: AnimatedSwitcher(
+                  duration: Motion.fast,
+                  transitionBuilder: (child, a) =>
+                      ScaleTransition(scale: a, child: child),
+                  child: Icon(
+                    favorite ? Icons.star_rounded : Icons.star_outline_rounded,
+                    key: ValueKey(favorite),
+                    size: 20,
+                    color: favorite
+                        ? const Color(0xFFF5B400)
+                        : AppColors.inkSoft.withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -649,6 +761,56 @@ class _HotRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// ★ 즐겨찾기만: shows only my starred boards.
+class _FavOnlySwitch extends StatelessWidget {
+  final bool on;
+  final String label;
+  final VoidCallback onTap;
+  const _FavOnlySwitch({
+    required this.on,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    onTap: onTap,
+    child: AnimatedContainer(
+      duration: Motion.fast,
+      curve: Motion.ease,
+      padding: const EdgeInsets.fromLTRB(9, 6, 11, 6),
+      decoration: BoxDecoration(
+        color: on ? const Color(0xFFF5B400) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: on ? const Color(0xFFF5B400) : const Color(0xFFF0E6DD),
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            on ? Icons.star_rounded : Icons.star_outline_rounded,
+            size: 16,
+            color: on ? Colors.white : const Color(0xFFF5B400),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: headingFont,
+              fontWeight: FontWeight.w800,
+              fontSize: 12.5,
+              color: on ? Colors.white : AppColors.ink,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 /// Which 라운지 board a new post goes to.

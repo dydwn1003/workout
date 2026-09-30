@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:adapt_coach/data/community.dart';
 import 'package:adapt_coach/state/community_state.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   test('blocked words ignore spacing and punctuation', () {
@@ -233,6 +234,54 @@ void main() {
       final latest = await repo.feed(topicIds);
       expect(latest, hasLength(5));
       expect(latest.every((p) => isTopicId(p.gymId)), isTrue);
+    });
+
+    test('profile: nickname and photo change everywhere', () async {
+      final repo = MemoryCommunity.demo(me: 'me', meJoined: true);
+      final c = CommunityState(repo);
+      await c.refresh();
+      final jpeg = Uint8List.fromList([0xFF, 0xD8, 0xFF, 0xE0, 1, 2]);
+      await c.updateProfile(nickname: '풀업왕', photo: jpeg);
+      expect(c.profile!.nickname, '풀업왕');
+      expect(c.profile!.avatarUrl, startsWith('data:image/jpeg'));
+      final mine = await repo.myPosts();
+      expect(mine.single.nickname, '풀업왕');
+      expect(mine.single.avatarUrl, isNotNull);
+      await c.updateProfile(removePhoto: true);
+      expect(c.profile!.avatarUrl, isNull);
+      await expectLater(
+        c.updateProfile(nickname: '하체는사랑'),
+        throwsA(isA<CommunityException>()),
+      );
+    });
+
+    test('my activity: my posts and comments with their posts', () async {
+      final repo = MemoryCommunity.demo(me: 'me', meJoined: true);
+      final posts = await repo.myPosts();
+      expect(posts.single.body, contains('풀업'));
+      final comments = await repo.myComments();
+      expect(comments.single.postBody, contains('3분할'));
+      expect(comments.single.gymName, '에이블짐 강남점');
+      final post = await repo.post(comments.single.comment.postId);
+      expect(post!.authorId, 'u4');
+      expect(await repo.post('nope'), isNull);
+    });
+
+    test('lounge favorites: any number, favorites only on demand', () {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      SharedPreferences.setMockInitialValues({});
+      final c = CommunityState(MemoryCommunity(myId: 'me'));
+      expect(c.loungeBoards, topicIds);
+      c.setLoungeFavoritesOnly(true);
+      expect(c.loungeBoards, topicIds); // none starred yet: all
+      for (final id in ['t-yoga', 't-running', 't-free', 't-diet']) {
+        c.toggleFavorite(id);
+      }
+      expect(c.loungeBoards, ['t-running', 't-yoga', 't-diet', 't-free']);
+      c.toggleFavorite('t-free');
+      expect(c.isFavorite('t-free'), isFalse);
+      c.setLoungeFavoritesOnly(false);
+      expect(c.loungeBoards, topicIds);
     });
   });
 }

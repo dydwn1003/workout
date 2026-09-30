@@ -203,6 +203,36 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
                 ),
               ),
               actions: [
+                if (g.isTopic)
+                  IconButton(
+                    tooltip: t.favoriteAdd,
+                    onPressed: () {
+                      HapticFeedback.selectionClick();
+                      final on = !c.isFavorite(g.id);
+                      c.toggleFavorite(g.id);
+                      if (on) {
+                        ScaffoldMessenger.of(context)
+                          ..hideCurrentSnackBar()
+                          ..showSnackBar(
+                            SnackBar(content: Text(t.favoriteAdded)),
+                          );
+                      }
+                    },
+                    icon: AnimatedSwitcher(
+                      duration: Motion.fast,
+                      transitionBuilder: (child, a) =>
+                          ScaleTransition(scale: a, child: child),
+                      child: Icon(
+                        c.isFavorite(g.id)
+                            ? Icons.star_rounded
+                            : Icons.star_outline_rounded,
+                        key: ValueKey(c.isFavorite(g.id)),
+                        color: c.isFavorite(g.id)
+                            ? const Color(0xFFFFD34D)
+                            : Colors.white,
+                      ),
+                    ),
+                  ),
                 IconButton(
                   tooltip: t.shareBoard,
                   onPressed: () => shareBoard(context, g),

@@ -3504,6 +3504,114 @@ abstract class L {
   /// In ko, this message translates to:
   /// **'전체'**
   String get allBoards;
+
+  /// No description provided for @editProfile.
+  ///
+  /// In ko, this message translates to:
+  /// **'프로필 편집'**
+  String get editProfile;
+
+  /// No description provided for @editProfileSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'커뮤니티에서 보이는 사진과 닉네임이에요'**
+  String get editProfileSubtitle;
+
+  /// No description provided for @nicknameLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'닉네임'**
+  String get nicknameLabel;
+
+  /// No description provided for @choosePhoto.
+  ///
+  /// In ko, this message translates to:
+  /// **'사진 선택'**
+  String get choosePhoto;
+
+  /// No description provided for @removePhoto.
+  ///
+  /// In ko, this message translates to:
+  /// **'사진 삭제'**
+  String get removePhoto;
+
+  /// No description provided for @profileSaved.
+  ///
+  /// In ko, this message translates to:
+  /// **'프로필을 저장했어요'**
+  String get profileSaved;
+
+  /// No description provided for @myProfile.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 프로필'**
+  String get myProfile;
+
+  /// No description provided for @favoritesOnly.
+  ///
+  /// In ko, this message translates to:
+  /// **'즐겨찾기만'**
+  String get favoritesOnly;
+
+  /// No description provided for @favoritesHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'게시판의 ☆를 눌러 자주 보는 운동을 즐겨찾기 해 보세요'**
+  String get favoritesHint;
+
+  /// No description provided for @favoriteAdd.
+  ///
+  /// In ko, this message translates to:
+  /// **'즐겨찾기'**
+  String get favoriteAdd;
+
+  /// No description provided for @favoriteAdded.
+  ///
+  /// In ko, this message translates to:
+  /// **'즐겨찾기에 추가했어요'**
+  String get favoriteAdded;
+
+  /// No description provided for @myActivity.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 활동'**
+  String get myActivity;
+
+  /// No description provided for @myPostsTab.
+  ///
+  /// In ko, this message translates to:
+  /// **'내가 쓴 글'**
+  String get myPostsTab;
+
+  /// No description provided for @myCommentsTab.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 댓글'**
+  String get myCommentsTab;
+
+  /// No description provided for @myPostsEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 쓴 글이 없어요. 첫 글을 남겨 보세요!'**
+  String get myPostsEmpty;
+
+  /// No description provided for @myCommentsEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 단 댓글이 없어요'**
+  String get myCommentsEmpty;
+
+  /// No description provided for @onPost.
+  ///
+  /// In ko, this message translates to:
+  /// **'원글'**
+  String get onPost;
+
+  /// No description provided for @postGone.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제되었거나 볼 수 없는 글이에요'**
+  String get postGone;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

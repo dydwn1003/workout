@@ -25,4 +25,12 @@ void main() {
   test('unreadable bytes give null', () async {
     expect(await prepareUploadPhoto(Uint8List.fromList([1, 2, 3, 4])), isNull);
   });
+
+  test('profile photos: the middle square, 400 px', () async {
+    final src = img.Image(width: 1200, height: 800)
+      ..clear(img.ColorRgb8(10, 120, 200));
+    final out = await prepareAvatar(Uint8List.fromList(img.encodePng(src)));
+    final back = img.decodeJpg(out!)!;
+    expect((back.width, back.height), (400, 400));
+  });
 }

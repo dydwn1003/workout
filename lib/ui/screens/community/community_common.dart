@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../data/community.dart';
@@ -8,6 +9,7 @@ import '../../motion.dart';
 import '../../theme.dart';
 import '../../widgets.dart';
 import '../sign_in_sheet.dart';
+import 'community_sheets.dart';
 
 /// "방금", "5분 전", "3시간 전", "2일 전", then the date.
 String timeAgo(L t, DateTime at, {DateTime? now}) {
@@ -45,20 +47,41 @@ const _avatarColors = [
   (AppColors.butter, AppColors.butterSoft),
 ];
 
-/// A circle with the nickname's first letter, colored by the author.
+/// The profile photo, or a circle with the nickname's first letter
+/// colored by the author.
 class NickAvatar extends StatelessWidget {
   final String userId;
   final String nickname;
+  final String? photoUrl;
   final double size;
   const NickAvatar({
     super.key,
     required this.userId,
     required this.nickname,
+    this.photoUrl,
     this.size = 36,
   });
 
   @override
   Widget build(BuildContext context) {
+    final url = photoUrl;
+    if (url != null) {
+      final px = (size * MediaQuery.devicePixelRatioOf(context)).round();
+      return ClipOval(
+        child: Image.network(
+          url,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          cacheWidth: px,
+          errorBuilder: (_, _, _) => _letter(),
+        ),
+      );
+    }
+    return _letter();
+  }
+
+  Widget _letter() {
     final (fg, bg) =
         _avatarColors[userId.codeUnits.fold(0, (a, b) => a + b) %
             _avatarColors.length];
@@ -112,6 +135,7 @@ class _SetupSheetState extends State<_SetupSheet> {
   final _nick = TextEditingController();
   String? _error;
   var _busy = false;
+  Uint8List? _photo;
 
   @override
   void dispose() {
@@ -135,7 +159,16 @@ class _SetupSheetState extends State<_SetupSheet> {
       _error = null;
     });
     try {
-      await CommunityScope.read(context).createProfile(n);
+      final c = CommunityScope.read(context);
+      await c.createProfile(n);
+      final photo = _photo;
+      if (photo != null) {
+        try {
+          await c.updateProfile(photo: photo);
+        } catch (e) {
+          debugPrint('avatar upload failed: $e'); // can be set later
+        }
+      }
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) setState(() => _error = communityErrorText(t, e));
@@ -151,130 +184,148 @@ class _SetupSheetState extends State<_SetupSheet> {
         .split('\n')
         .map((l) => l.replaceFirst(RegExp(r'^[·•]\s*'), ''))
         .toList();
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        24,
-        8,
-        24,
-        24 + MediaQuery.viewInsetsOf(context).bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              const Mascot(size: 56, mood: MascotMood.cheer),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      t.setupTitle,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      t.setupSubtitle,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.inkSoft,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _nick,
-            autofocus: true,
-            maxLength: CommunityLimits.nicknameMax,
-            style: const TextStyle(
-              fontFamily: headingFont,
-              fontWeight: FontWeight.w800,
-              fontSize: 17,
-            ),
-            decoration: InputDecoration(
-              hintText: t.nicknameHint,
-              errorText: _error,
-              prefixIcon: const Icon(
-                Icons.alternate_email_rounded,
-                color: AppColors.peach,
-              ),
-            ),
-            onSubmitted: (_) => _save(),
-          ),
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppColors.line, width: 1.5),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          24,
+          8,
+          24,
+          24 + MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
               children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.shield_rounded,
-                      size: 18,
-                      color: AppColors.mint,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      t.rulesTitle,
-                      style: const TextStyle(
-                        fontFamily: headingFont,
-                        fontWeight: FontWeight.w800,
+                const Mascot(size: 56, mood: MascotMood.cheer),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        t.setupTitle,
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                for (final r in rules)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 7),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.only(top: 2),
-                          child: Icon(
-                            Icons.check_circle_rounded,
-                            size: 15,
-                            color: AppColors.mint,
-                          ),
+                      const SizedBox(height: 2),
+                      Text(
+                        t.setupSubtitle,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.inkSoft,
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            r,
-                            style: const TextStyle(fontSize: 13, height: 1.45),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
+                ),
               ],
             ),
-          ),
-          const SizedBox(height: 16),
-          FilledButton(
-            onPressed: _busy ? null : _save,
-            child: _busy
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(t.agreeRules),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Center(
+              child: ListenableBuilder(
+                listenable: _nick,
+                builder: (context, _) => AvatarPicker(
+                  userId: CommunityScope.read(context).repo.myId ?? '',
+                  nickname: _nick.text.trim(),
+                  currentUrl: null,
+                  size: 84,
+                  onChanged: (photo, _) => _photo = photo,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _nick,
+              autofocus: true,
+              maxLength: CommunityLimits.nicknameMax,
+              style: const TextStyle(
+                fontFamily: headingFont,
+                fontWeight: FontWeight.w800,
+                fontSize: 17,
+              ),
+              decoration: InputDecoration(
+                hintText: t.nicknameHint,
+                errorText: _error,
+                prefixIcon: const Icon(
+                  Icons.alternate_email_rounded,
+                  color: AppColors.peach,
+                ),
+              ),
+              onSubmitted: (_) => _save(),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: AppColors.line, width: 1.5),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.shield_rounded,
+                        size: 18,
+                        color: AppColors.mint,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        t.rulesTitle,
+                        style: const TextStyle(
+                          fontFamily: headingFont,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  for (final r in rules)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 7),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(top: 2),
+                            child: Icon(
+                              Icons.check_circle_rounded,
+                              size: 15,
+                              color: AppColors.mint,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              r,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                height: 1.45,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: _busy ? null : _save,
+              child: _busy
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(t.agreeRules),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -581,6 +581,7 @@ class PostCard extends StatelessWidget {
                   NickAvatar(
                     userId: post.authorId,
                     nickname: post.nickname,
+                    photoUrl: post.avatarUrl,
                     size: 30,
                   ),
                   const SizedBox(width: 8),

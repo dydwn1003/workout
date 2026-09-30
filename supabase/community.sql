@@ -45,6 +45,10 @@ create table if not exists public.community_profiles (
 create unique index if not exists community_profiles_nickname
   on public.community_profiles (lower(nickname));
 
+-- Profile photo: a path in the community bucket, in the user's own folder.
+alter table public.community_profiles add column if not exists avatar text
+  check (char_length(avatar) <= 200);
+
 -- My gyms (joined boards, shown first) -----------------------------------------
 
 create table if not exists public.gym_members (
@@ -285,10 +289,13 @@ drop policy if exists "profiles: read" on public.community_profiles;
 create policy "profiles: read" on public.community_profiles for select to anon, authenticated using (true);
 drop policy if exists "profiles: own" on public.community_profiles;
 create policy "profiles: own" on public.community_profiles for insert to authenticated
-  with check (user_id = auth.uid());
+  with check (user_id = auth.uid()
+    and (avatar is null or avatar like auth.uid()::text || '/%'));
 drop policy if exists "profiles: own update" on public.community_profiles;
 create policy "profiles: own update" on public.community_profiles for update to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid()
+    and (avatar is null or avatar like auth.uid()::text || '/%'));
 
 drop policy if exists "members: own" on public.gym_members;
 create policy "members: own" on public.gym_members for all to authenticated
