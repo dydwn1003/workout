@@ -569,6 +569,10 @@ S = {
  "authorBadge": ("작성자", "Author"),
  "setupSubtitle": ("헬스장 친구들에게 보이는 이름이에요", "This is how gym friends will see you"),
  "searchResults": ("검색 결과 {n}", "{n} results"),
+ "replyAction": ("답글 달기", "Reply"),
+ "replyingTo": ("{name}님에게 답글", "Replying to {name}"),
+ "replyHint": ("답글을 남겨 주세요", "Write a reply"),
+ "repliesN": ("답글 {n}", "{n} replies"),
 }
 
 def placeholders(s):

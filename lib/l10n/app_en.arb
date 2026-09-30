@@ -522,5 +522,9 @@
   "newBadge": "New",
   "authorBadge": "Author",
   "setupSubtitle": "This is how gym friends will see you",
-  "searchResults": "{n} results"
+  "searchResults": "{n} results",
+  "replyAction": "Reply",
+  "replyingTo": "Replying to {name}",
+  "replyHint": "Write a reply",
+  "repliesN": "{n} replies"
 }

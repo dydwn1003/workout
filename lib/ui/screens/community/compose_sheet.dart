@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../data/community.dart';
+import '../../../data/photo_prep.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../state/community_state.dart';
 import '../../motion.dart';
@@ -75,9 +76,10 @@ class _ComposeSheetState extends State<_ComposeSheet> {
       var rejected = false;
       final picked = <Uint8List>[];
       for (final f in files.take(room)) {
-        final bytes = await f.readAsBytes();
-        if (imageMimeType(bytes) == null ||
-            bytes.length > CommunityLimits.photoBytes) {
+        // Every photo becomes a plain JPEG: HEIC and other formats work,
+        // and the location saved in the photo is dropped.
+        final bytes = await prepareUploadPhoto(await f.readAsBytes());
+        if (bytes == null || bytes.length > CommunityLimits.photoBytes) {
           rejected = true;
         } else {
           picked.add(bytes);

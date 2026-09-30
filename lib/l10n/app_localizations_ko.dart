@@ -1822,4 +1822,20 @@ class LKo extends L {
   String searchResults(String n) {
     return '검색 결과 $n';
   }
+
+  @override
+  String get replyAction => '답글 달기';
+
+  @override
+  String replyingTo(String name) {
+    return '$name님에게 답글';
+  }
+
+  @override
+  String get replyHint => '답글을 남겨 주세요';
+
+  @override
+  String repliesN(String n) {
+    return '답글 $n';
+  }
 }

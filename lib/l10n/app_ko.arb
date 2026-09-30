@@ -1389,5 +1389,23 @@
         "type": "String"
       }
     }
+  },
+  "replyAction": "답글 달기",
+  "replyingTo": "{name}님에게 답글",
+  "@replyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "replyHint": "답글을 남겨 주세요",
+  "repliesN": "답글 {n}",
+  "@repliesN": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
   }
 }

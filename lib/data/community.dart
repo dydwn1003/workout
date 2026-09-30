@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// 헬스장 커뮤니티: a board per gym (supabase/community.sql).
@@ -141,6 +141,10 @@ class Post {
 class Comment {
   final String id;
   final String postId;
+
+  /// The comment this replies to (always a top-level one); null for
+  /// top-level comments.
+  final String? parentId;
   final String authorId;
   final String nickname;
   final String body;
@@ -149,6 +153,7 @@ class Comment {
   const Comment({
     required this.id,
     required this.postId,
+    this.parentId,
     required this.authorId,
     required this.nickname,
     required this.body,
@@ -287,7 +292,10 @@ abstract class CommunityRepository {
   Future<void> deletePost(Post post);
 
   Future<List<Comment>> comments(String postId);
-  Future<Comment> addComment(String postId, String body);
+
+  /// [parentId] replies to that comment (replies to a reply go under its
+  /// top-level comment).
+  Future<Comment> addComment(String postId, String body, {String? parentId});
   Future<void> deleteComment(Comment comment);
 
   Future<void> setLike(String postId, bool liked);
@@ -320,6 +328,14 @@ class SupabaseCommunity implements CommunityRepository {
   Future<T> _guard<T>(Future<T> Function() f) async {
     try {
       return await f();
+    } on StorageException catch (e) {
+      debugPrint('photo upload failed: ${e.statusCode} ${e.message}');
+      if (e.statusCode == '413' ||
+          e.statusCode == '415' ||
+          e.message.contains('mime')) {
+        throw const CommunityException(CommunityError.badImage);
+      }
+      rethrow;
     } on PostgrestException catch (e) {
       if (e.message.contains('rate_limit')) {
         throw const CommunityException(CommunityError.rateLimited);
@@ -483,46 +499,46 @@ class SupabaseCommunity implements CommunityRepository {
     List<Uint8List> photos, {
     PostTag tag = PostTag.free,
   }) => _guard(() async {
-        if (containsBlockedWords(body)) {
-          throw const CommunityException(CommunityError.blockedWords);
-        }
-        final me = myId!;
-        final paths = <String>[];
-        for (final bytes in photos.take(CommunityLimits.photos)) {
-          final type = imageMimeType(bytes);
-          if (type == null || bytes.length > CommunityLimits.photoBytes) {
-            throw const CommunityException(CommunityError.badImage);
-          }
-          final ext = type.split('/').last.replaceAll('jpeg', 'jpg');
-          final path = '$me/${_uuid()}.$ext';
-          await client.storage
-              .from(_bucket)
-              .uploadBinary(
-                path,
-                bytes,
-                fileOptions: FileOptions(contentType: type),
-              );
-          paths.add(path);
-        }
-        try {
-          final row = await client
-              .from('posts')
-              .insert({
-                'gym_id': gymId,
-                'body': body.trim(),
-                'images': paths,
-                'tag': tag.name,
-              })
-              .select(_postColumns)
-              .single();
-          return _post(row, const {});
-        } catch (_) {
-          if (paths.isNotEmpty) {
-            await client.storage.from(_bucket).remove(paths);
-          }
-          rethrow;
-        }
-      });
+    if (containsBlockedWords(body)) {
+      throw const CommunityException(CommunityError.blockedWords);
+    }
+    final me = myId!;
+    final paths = <String>[];
+    for (final bytes in photos.take(CommunityLimits.photos)) {
+      final type = imageMimeType(bytes);
+      if (type == null || bytes.length > CommunityLimits.photoBytes) {
+        throw const CommunityException(CommunityError.badImage);
+      }
+      final ext = type.split('/').last.replaceAll('jpeg', 'jpg');
+      final path = '$me/${_uuid()}.$ext';
+      await client.storage
+          .from(_bucket)
+          .uploadBinary(
+            path,
+            bytes,
+            fileOptions: FileOptions(contentType: type),
+          );
+      paths.add(path);
+    }
+    try {
+      final row = await client
+          .from('posts')
+          .insert({
+            'gym_id': gymId,
+            'body': body.trim(),
+            'images': paths,
+            'tag': tag.name,
+          })
+          .select(_postColumns)
+          .single();
+      return _post(row, const {});
+    } catch (_) {
+      if (paths.isNotEmpty) {
+        await client.storage.from(_bucket).remove(paths);
+      }
+      rethrow;
+    }
+  });
 
   @override
   Future<Post> editPost(Post post, String body, {PostTag? tag}) =>
@@ -563,6 +579,7 @@ class SupabaseCommunity implements CommunityRepository {
   Comment _comment(Map<String, dynamic> r) => Comment(
     id: r['id'] as String,
     postId: r['post_id'] as String,
+    parentId: r['parent_id'] as String?,
     authorId: r['author'] as String,
     nickname: (r['profile'] as Map?)?['nickname'] as String? ?? '',
     body: r['body'] as String,
@@ -570,17 +587,24 @@ class SupabaseCommunity implements CommunityRepository {
   );
 
   @override
-  Future<Comment> addComment(String postId, String body) => _guard(() async {
-    if (containsBlockedWords(body)) {
-      throw const CommunityException(CommunityError.blockedWords);
-    }
-    final row = await client
-        .from('comments')
-        .insert({'post_id': postId, 'body': body.trim()})
-        .select('*, profile:community_profiles!comments_author_fkey(nickname)')
-        .single();
-    return _comment(row);
-  });
+  Future<Comment> addComment(String postId, String body, {String? parentId}) =>
+      _guard(() async {
+        if (containsBlockedWords(body)) {
+          throw const CommunityException(CommunityError.blockedWords);
+        }
+        final row = await client
+            .from('comments')
+            .insert({
+              'post_id': postId,
+              'body': body.trim(),
+              'parent_id': ?parentId,
+            })
+            .select(
+              '*, profile:community_profiles!comments_author_fkey(nickname)',
+            )
+            .single();
+        return _comment(row);
+      });
 
   @override
   Future<void> deleteComment(Comment comment) async {
@@ -810,10 +834,20 @@ class MemoryCommunity implements CommunityRepository {
     return p;
   }
 
-  Comment seedComment(String postId, String authorId, String body) {
+  Comment seedComment(
+    String postId,
+    String authorId,
+    String body, {
+    String? parentId,
+  }) {
+    // Replies to a reply go under its top-level comment.
+    final parent = parentId == null
+        ? null
+        : _comments.where((c) => c.id == parentId).firstOrNull;
     final c = Comment(
       id: _id(),
       postId: postId,
+      parentId: parent?.parentId ?? parent?.id,
       authorId: authorId,
       nickname: nicknames[authorId] ?? '',
       body: body,
@@ -885,16 +919,21 @@ class MemoryCommunity implements CommunityRepository {
   ];
 
   @override
-  Future<Comment> addComment(String postId, String body) async {
+  Future<Comment> addComment(
+    String postId,
+    String body, {
+    String? parentId,
+  }) async {
     if (containsBlockedWords(body)) {
       throw const CommunityException(CommunityError.blockedWords);
     }
-    return seedComment(postId, myId!, body.trim());
+    return seedComment(postId, myId!, body.trim(), parentId: parentId);
   }
 
   @override
-  Future<void> deleteComment(Comment comment) async =>
-      _comments.removeWhere((c) => c.id == comment.id);
+  Future<void> deleteComment(Comment comment) async => _comments.removeWhere(
+    (c) => c.id == comment.id || c.parentId == comment.id,
+  );
 
   @override
   Future<void> setLike(String postId, bool liked) async {
@@ -997,9 +1036,9 @@ class MemoryCommunity implements CommunityRepository {
       at: now.subtract(ago(d: 1, h: 6)),
       tag: PostTag.review,
     );
-    c.seedComment(p1.id, 'u1', '저요! 월수금 가능해요');
     c.seedComment(p1.id, 'u3', '저도 새벽파입니다 ㅎㅎ');
-    c.seedComment(p1.id, 'u2', '좋아요! 월요일 6시에 스쿼트랙 앞에서 봬요');
+    final c1 = c.seedComment(p1.id, 'u1', '월수금 6시 가능해요. 스쿼트 위주면 좋아요');
+    c.seedComment(p1.id, 'u2', '좋아요! 월요일 6시에 스쿼트랙 앞에서 봬요', parentId: c1.id);
     c.seedComment(p2.id, 'u3', '처음엔 무분할로 전신 3회 추천해요. 자세 익히기 좋아요');
     c.seedComment(p3.id, 'u6', '감사합니다 오늘 못 쓸 뻔');
     c.seedComment(p6.id, 'u5', '저 받아봤는데 자세 교정 꼼꼼하게 봐주세요');

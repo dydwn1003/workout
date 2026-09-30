@@ -24,12 +24,16 @@ const _palette = [
 (Color, Color) gymColors(String id) =>
     _palette[id.codeUnits.fold(0, (a, b) => a * 31 + b) % _palette.length];
 
+/// A gym's color, a little deeper so white text on it reads well.
+Color gymDeep(String id) =>
+    Color.lerp(gymColors(id).$1, const Color(0xFF3B3340), 0.3)!;
+
 LinearGradient gymGradient(String id) {
   final (c, _) = gymColors(id);
   return LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [c, Color.lerp(c, Colors.white, 0.35)!],
+    colors: [gymDeep(id), Color.lerp(c, const Color(0xFF3B3340), 0.08)!],
   );
 }
 
@@ -229,7 +233,7 @@ class GymCard extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                     fontSize: 96,
                     height: 1,
-                    color: Colors.white.withValues(alpha: 0.16),
+                    color: Colors.white.withValues(alpha: 0.12),
                   ),
                 ),
               ),
@@ -285,6 +289,9 @@ class GymCard extends StatelessWidget {
                       fontSize: 16,
                       height: 1.25,
                       color: Colors.white,
+                      shadows: [
+                        Shadow(color: Color(0x33000000), blurRadius: 6),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -485,7 +492,8 @@ class _MiniStat extends StatelessWidget {
   );
 }
 
-/// A post in a board or feed: tag, text, photos, author, likes, comments.
+/// A post in a board or feed, kept compact: author and time, tag, three
+/// lines of text, photo thumbnails, likes and comments.
 class PostCard extends StatelessWidget {
   final Post post;
   final VoidCallback onTap;
@@ -506,105 +514,170 @@ class PostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = L.of(context);
-    return Squish(
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(24),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 8, 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    TagChip(post.tag),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: showGym && post.gymName != null
-                          ? Text(
-                              post.gymName!,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.inkSoft,
-                              ),
-                            )
-                          : const SizedBox(),
+    final meta = [
+      if (showGym && post.gymName != null) post.gymName!,
+      timeAgo(t, post.createdAt),
+    ].join(' · ');
+    return Material(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: Color(0xFFF0E6DD)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 4, 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  NickAvatar(
+                    userId: post.authorId,
+                    nickname: post.nickname,
+                    size: 30,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          post.nickname,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: headingFont,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13.5,
+                            color: AppColors.ink,
+                          ),
+                        ),
+                        Text(
+                          meta,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.inkSoft,
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      timeAgo(t, post.createdAt),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.inkSoft,
-                      ),
-                    ),
-                    PostMenuButton(
+                  ),
+                  TagChip(post.tag),
+                  SizedBox(
+                    width: 34,
+                    child: PostMenuButton(
                       post: post,
                       onChanged: onChanged,
                       onBlocked: onBlocked,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: Text(
-                    post.body,
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      height: 1.5,
-                      color: AppColors.ink,
-                    ),
-                  ),
-                ),
-                if (post.images.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: PhotoGrid(urls: post.images),
                   ),
                 ],
-                const SizedBox(height: 10),
-                Row(
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: Text(
+                  post.body,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14.5,
+                    height: 1.5,
+                    color: AppColors.ink,
+                  ),
+                ),
+              ),
+              if (post.images.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                PhotoThumbs(urls: post.images),
+              ],
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  LikePill(post: post, onChanged: onChanged),
+                  const SizedBox(width: 6),
+                  CountPill(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    count: post.commentCount,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Up to three small squares in a card; "+2" on the last when there are
+/// more. Tapping opens the photo.
+class PhotoThumbs extends StatelessWidget {
+  final List<String> urls;
+  const PhotoThumbs({super.key, required this.urls});
+
+  @override
+  Widget build(BuildContext context) {
+    const size = 76.0;
+    final shown = urls.length > 3 ? 3 : urls.length;
+    return SizedBox(
+      height: size,
+      child: Row(
+        children: [
+          for (var i = 0; i < shown; i++) ...[
+            if (i > 0) const SizedBox(width: 6),
+            GestureDetector(
+              onTap: () => showPhotoViewer(context, urls, i),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Stack(
                   children: [
-                    NickAvatar(
-                      userId: post.authorId,
-                      nickname: post.nickname,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        post.nickname,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontFamily: headingFont,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13,
+                    Hero(
+                      tag: '${urls[i]}#$i',
+                      child: Image.network(
+                        urls[i],
+                        width: size,
+                        height: size,
+                        fit: BoxFit.cover,
+                        cacheWidth: 240,
+                        errorBuilder: (_, _, _) => Container(
+                          width: size,
+                          height: size,
+                          color: AppColors.line,
+                          child: const Icon(
+                            Icons.broken_image_outlined,
+                            color: AppColors.inkSoft,
+                          ),
                         ),
                       ),
                     ),
-                    LikePill(post: post, onChanged: onChanged),
-                    const SizedBox(width: 6),
-                    CountPill(
-                      icon: Icons.chat_bubble_outline_rounded,
-                      count: post.commentCount,
-                    ),
-                    const SizedBox(width: 8),
+                    if (i == 2 && urls.length > 3)
+                      Container(
+                        width: size,
+                        height: size,
+                        color: Colors.black45,
+                        alignment: Alignment.center,
+                        child: Text(
+                          '+${urls.length - 3}',
+                          style: const TextStyle(
+                            fontFamily: headingFont,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
+          ],
+        ],
       ),
     );
   }
@@ -678,7 +751,7 @@ class CountPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) => AnimatedContainer(
     duration: Motion.fast,
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
     decoration: BoxDecoration(
       color: bg,
       borderRadius: BorderRadius.circular(20),
@@ -760,8 +833,8 @@ class _LikePillState extends State<LikePill>
       child: AnimatedContainer(
         duration: Motion.fast,
         padding: EdgeInsets.symmetric(
-          horizontal: big ? 16 : 10,
-          vertical: big ? 9 : 5,
+          horizontal: big ? 16 : 9,
+          vertical: big ? 9 : 4,
         ),
         decoration: BoxDecoration(
           color: liked ? AppColors.peachSoft : const Color(0xFFF7F1EC),

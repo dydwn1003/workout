@@ -36,6 +36,10 @@ class _PostScreenState extends State<PostScreen> {
   final _scroll = ScrollController();
   var _sending = false;
   var _photo = 0;
+  final _inputFocus = FocusNode();
+
+  /// The comment being answered; null writes a top-level comment.
+  Comment? _replyTo;
 
   @override
   void initState() {
@@ -47,6 +51,7 @@ class _PostScreenState extends State<PostScreen> {
   void dispose() {
     _input.dispose();
     _scroll.dispose();
+    _inputFocus.dispose();
     super.dispose();
   }
 
@@ -76,12 +81,21 @@ class _PostScreenState extends State<PostScreen> {
     if (text.isEmpty || _sending) return;
     if (!await ensureCommunityMember(context) || !mounted) return;
     setState(() => _sending = true);
+    final replyTo = _replyTo;
     try {
-      final c = await _repo.addComment(widget.post.id, text);
+      final c = await _repo.addComment(
+        widget.post.id,
+        text,
+        parentId: replyTo == null ? null : (replyTo.parentId ?? replyTo.id),
+      );
       if (!mounted) return;
       HapticFeedback.lightImpact();
       _input.clear();
-      setState(() => _comments = [...?_comments, c]);
+      setState(() {
+        _comments = [...?_comments, c];
+        _replyTo = null;
+      });
+      if (replyTo != null) return; // stays where the thread is
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scroll.hasClients) {
           _scroll.animateTo(
@@ -354,21 +368,38 @@ class _PostScreenState extends State<PostScreen> {
         ),
       ];
     }
-    return [
+    // Top-level comments in order, each followed by its replies.
+    final ids = {for (final c in comments) c.id};
+    final top = [
       for (final c in comments)
-        FadeSlideIn(
-          key: ValueKey(c.id),
-          dy: 6,
-          child: _CommentBubble(
-            comment: c,
-            byAuthor: c.authorId == post.authorId,
-            onDeleted: () =>
-                setState(() => _comments!.removeWhere((x) => x.id == c.id)),
-            onBlocked: () => setState(
-              () => _comments!.removeWhere((x) => x.authorId == c.authorId),
-            ),
-          ),
+        if (c.parentId == null || !ids.contains(c.parentId)) c,
+    ];
+    Widget bubble(Comment c, {required bool reply}) => FadeSlideIn(
+      key: ValueKey(c.id),
+      dy: 6,
+      child: _CommentBubble(
+        comment: c,
+        isReply: reply,
+        byAuthor: c.authorId == post.authorId,
+        onReply: () {
+          setState(() => _replyTo = c);
+          _inputFocus.requestFocus();
+        },
+        onDeleted: () => setState(
+          () =>
+              _comments!.removeWhere((x) => x.id == c.id || x.parentId == c.id),
         ),
+        onBlocked: () => setState(
+          () => _comments!.removeWhere((x) => x.authorId == c.authorId),
+        ),
+      ),
+    );
+    return [
+      for (final c in top) ...[
+        bubble(c, reply: false),
+        for (final r in comments)
+          if (r.parentId == c.id) bubble(r, reply: true),
+      ],
     ];
   }
 
@@ -390,90 +421,140 @@ class _PostScreenState extends State<PostScreen> {
         top: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 10, 8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (me != null) ...[
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: NickAvatar(
-                    userId: me.userId,
-                    nickname: me.nickname,
-                    size: 32,
-                  ),
-                ),
-                const SizedBox(width: 8),
-              ],
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF7F1EC),
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: TextField(
-                    controller: _input,
-                    minLines: 1,
-                    maxLines: 4,
-                    maxLength: CommunityLimits.commentLength,
-                    buildCounter: (
-                      _, {
-                      required currentLength,
-                      required isFocused,
-                      maxLength,
-                    }) => null,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _send(),
-                    onTap: () => ensureCommunityMember(context),
-                    decoration: InputDecoration(
-                      hintText: t.commentHint,
-                      isDense: true,
-                      filled: false,
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              ListenableBuilder(
-                listenable: _input,
-                builder: (context, _) {
-                  final ready = !_sending && _input.text.trim().isNotEmpty;
-                  return GestureDetector(
-                    onTap: ready ? _send : null,
-                    child: AnimatedContainer(
-                      duration: Motion.fast,
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        gradient: ready
-                            ? const LinearGradient(
-                                colors: [AppColors.peach, Color(0xFFFFA98F)],
-                              )
-                            : null,
-                        color: ready ? null : AppColors.line,
-                        shape: BoxShape.circle,
-                      ),
-                      child: _sending
-                          ? const Padding(
-                              padding: EdgeInsets.all(12),
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(
-                              Icons.arrow_upward_rounded,
-                              color: Colors.white,
+              AnimatedSize(
+                duration: Motion.fast,
+                curve: Motion.ease,
+                child: _replyTo == null
+                    ? const SizedBox(width: double.infinity)
+                    : Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.subdirectory_arrow_right_rounded,
+                              size: 18,
+                              color: AppColors.peach,
                             ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                t.replyingTo(_replyTo!.nickname),
+                                style: const TextStyle(
+                                  fontFamily: headingFont,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 13,
+                                  color: AppColors.peach,
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => setState(() => _replyTo = null),
+                              child: const Icon(
+                                Icons.close_rounded,
+                                size: 18,
+                                color: AppColors.inkSoft,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (me != null) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: NickAvatar(
+                        userId: me.userId,
+                        nickname: me.nickname,
+                        size: 32,
+                      ),
                     ),
-                  );
-                },
+                    const SizedBox(width: 8),
+                  ],
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF7F1EC),
+                        borderRadius: BorderRadius.circular(22),
+                      ),
+                      child: TextField(
+                        controller: _input,
+                        minLines: 1,
+                        maxLines: 4,
+                        maxLength: CommunityLimits.commentLength,
+                        buildCounter: (
+                          _, {
+                          required currentLength,
+                          required isFocused,
+                          maxLength,
+                        }) => null,
+                        focusNode: _inputFocus,
+                        textInputAction: TextInputAction.send,
+                        onSubmitted: (_) => _send(),
+                        onTap: () => ensureCommunityMember(context),
+                        decoration: InputDecoration(
+                          hintText: _replyTo == null
+                              ? t.commentHint
+                              : t.replyHint,
+                          isDense: true,
+                          filled: false,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ListenableBuilder(
+                    listenable: _input,
+                    builder: (context, _) {
+                      final ready = !_sending && _input.text.trim().isNotEmpty;
+                      return GestureDetector(
+                        onTap: ready ? _send : null,
+                        child: AnimatedContainer(
+                          duration: Motion.fast,
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            gradient: ready
+                                ? const LinearGradient(
+                                    colors: [
+                                      AppColors.peach,
+                                      Color(0xFFFFA98F),
+                                    ],
+                                  )
+                                : null,
+                            color: ready ? null : AppColors.line,
+                            shape: BoxShape.circle,
+                          ),
+                          child: _sending
+                              ? const Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.arrow_upward_rounded,
+                                  color: Colors.white,
+                                ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),
@@ -486,11 +567,15 @@ class _PostScreenState extends State<PostScreen> {
 class _CommentBubble extends StatelessWidget {
   final Comment comment;
   final bool byAuthor;
+  final bool isReply;
+  final VoidCallback onReply;
   final VoidCallback onDeleted;
   final VoidCallback onBlocked;
   const _CommentBubble({
     required this.comment,
     required this.byAuthor,
+    required this.isReply,
+    required this.onReply,
     required this.onDeleted,
     required this.onBlocked,
   });
@@ -501,14 +586,14 @@ class _CommentBubble extends StatelessWidget {
     final c = CommunityScope.read(context);
     final mine = comment.authorId == c.repo.myId;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: EdgeInsets.only(left: isReply ? 40 : 0, bottom: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           NickAvatar(
             userId: comment.authorId,
             nickname: comment.nickname,
-            size: 32,
+            size: isReply ? 26 : 32,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -604,7 +689,28 @@ class _CommentBubble extends StatelessWidget {
                     padding: const EdgeInsets.only(right: 10),
                     child: Text(
                       comment.body,
-                      style: const TextStyle(fontSize: 14.5, height: 1.45),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        height: 1.5,
+                        color: AppColors.ink,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onReply,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 2, bottom: 2),
+                      child: Text(
+                        t.replyAction,
+                        style: const TextStyle(
+                          fontFamily: headingFont,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12.5,
+                          color: AppColors.inkSoft,
+                        ),
+                      ),
                     ),
                   ),
                 ],

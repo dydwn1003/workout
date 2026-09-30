@@ -1857,4 +1857,20 @@ class LEn extends L {
   String searchResults(String n) {
     return '$n results';
   }
+
+  @override
+  String get replyAction => 'Reply';
+
+  @override
+  String replyingTo(String name) {
+    return 'Replying to $name';
+  }
+
+  @override
+  String get replyHint => 'Write a reply';
+
+  @override
+  String repliesN(String n) {
+    return '$n replies';
+  }
 }

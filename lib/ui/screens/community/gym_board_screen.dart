@@ -173,7 +173,6 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
       (x) => x.id == widget.gym.id,
       orElse: () => widget.gym,
     );
-    final (color, _) = gymColors(g.id);
 
     return Scaffold(
       floatingActionButton: _WriteButton(onTap: _write, label: t.writePost),
@@ -187,7 +186,7 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
               pinned: true,
               stretch: true,
               expandedHeight: 210,
-              backgroundColor: color,
+              backgroundColor: gymDeep(g.id),
               foregroundColor: Colors.white,
               surfaceTintColor: Colors.transparent,
               title: Text(
@@ -326,7 +325,7 @@ class _BoardHeader extends StatelessWidget {
                 fontWeight: FontWeight.w800,
                 fontSize: 180,
                 height: 1,
-                color: Colors.white.withValues(alpha: 0.16),
+                color: Colors.white.withValues(alpha: 0.12),
               ),
             ),
           ),

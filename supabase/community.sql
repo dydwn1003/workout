@@ -88,6 +88,29 @@ create table if not exists public.comments (
 
 create index if not exists comments_post_time on public.comments (post_id, created_at);
 
+-- Replies: one level. A reply to a reply goes under its top-level comment.
+alter table public.comments add column if not exists parent_id uuid
+  references public.comments (id) on delete cascade;
+create index if not exists comments_parent on public.comments (parent_id);
+
+create or replace function public.comments_parent()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare p record;
+begin
+  if new.parent_id is not null then
+    select post_id, parent_id into p from public.comments where id = new.parent_id;
+    if p.post_id is distinct from new.post_id then
+      raise exception 'parent comment is on another post';
+    end if;
+    if p.parent_id is not null then new.parent_id := p.parent_id; end if;
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists comments_parent on public.comments;
+create trigger comments_parent before insert on public.comments
+  for each row execute function public.comments_parent();
+
 create table if not exists public.post_likes (
   post_id    uuid not null references public.posts (id) on delete cascade,
   user_id    uuid not null default auth.uid() references auth.users (id) on delete cascade,

@@ -3246,6 +3246,30 @@ abstract class L {
   /// In ko, this message translates to:
   /// **'검색 결과 {n}'**
   String searchResults(String n);
+
+  /// No description provided for @replyAction.
+  ///
+  /// In ko, this message translates to:
+  /// **'답글 달기'**
+  String get replyAction;
+
+  /// No description provided for @replyingTo.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name}님에게 답글'**
+  String replyingTo(String name);
+
+  /// No description provided for @replyHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'답글을 남겨 주세요'**
+  String get replyHint;
+
+  /// No description provided for @repliesN.
+  ///
+  /// In ko, this message translates to:
+  /// **'답글 {n}'**
+  String repliesN(String n);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {
