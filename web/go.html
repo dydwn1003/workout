@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>알아서핏 설치하기</title>
+<meta property="og:title" content="알아서핏 · 같이 운동해요">
+<meta property="og:description" content="식단·운동 기록부터 헬스장 커뮤니티까지, 알아서 맞춰주는 칼로리 코치">
+<meta property="og:image" content="icons/Icon-512.png">
+<style>
+  :root { --ink: #3B3340; --soft: #766C7D; --bg: #FFF8F1; --peach: #FF8E7F; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+         background: var(--bg); color: var(--ink);
+         font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
+  main { width: 100%; max-width: 420px; padding: 32px 16px; text-align: center; }
+  img { width: 88px; height: 88px; border-radius: 22px; }
+  h1 { font-size: 22px; margin: 16px 0 4px; }
+  p { color: var(--soft); margin: 0 0 24px; }
+  a.btn { display: block; padding: 14px; border-radius: 16px; margin: 10px 0; font-weight: 700;
+          text-decoration: none; color: #fff; background: var(--peach); }
+  a.btn.alt { color: var(--ink); background: #fff; border: 1.5px solid #F1E6DC; }
+</style>
+</head>
+<body>
+<main>
+  <img src="icons/Icon-192.png" alt="">
+  <h1>알아서핏</h1>
+  <p id="msg">스토어로 이동하고 있어요…</p>
+  <a class="btn" id="play" href="#">Google Play에서 받기</a>
+  <a class="btn" id="ios" href="#" hidden>App Store에서 받기</a>
+  <a class="btn alt" id="web" href="./">웹에서 바로 열기</a>
+</main>
+<script>
+// Invite links (앱의 친구 초대) land here: phones go to their store, the
+// rest to the web app. ?gym=<board> opens that board on the web.
+// When the iPhone app is out, put its App Store link here.
+var PLAY = 'https://play.google.com/store/apps/details?id=com.alasfit.app';
+var APP_STORE = '';
+
+var gym = new URLSearchParams(location.search).get('gym');
+var web = './' + (gym ? '?gym=' + encodeURIComponent(gym) : '');
+document.getElementById('play').href = PLAY;
+document.getElementById('web').href = web;
+if (APP_STORE) {
+  var ios = document.getElementById('ios');
+  ios.href = APP_STORE;
+  ios.hidden = false;
+}
+
+var ua = navigator.userAgent;
+var isAndroid = /android/i.test(ua);
+var isIOS = /iphone|ipad|ipod/i.test(ua) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+if (isAndroid) {
+  location.replace(PLAY);
+} else if (isIOS && APP_STORE) {
+  location.replace(APP_STORE);
+} else {
+  // iPhone before the App Store release, and computers: the web app.
+  document.getElementById('msg').textContent = '웹에서 바로 시작할 수 있어요';
+  location.replace(web);
+}
+</script>
+</body>
+</html>

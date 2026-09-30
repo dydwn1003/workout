@@ -13,13 +13,17 @@ import '../../widgets.dart';
 import 'community_common.dart';
 import 'community_widgets.dart';
 
-/// The web app, which invite links open (with `?gym=` and the board id).
+/// The web app. Invite links go through its go.html, which sends phones
+/// to their store (Play; App Store once the iPhone app is out) and
+/// everything else to the web app (`?gym=` opens that board there).
 const webAppUrl = String.fromEnvironment(
   'WEB_URL',
   defaultValue: 'https://dydwn1003.github.io/workout/',
 );
 
-String boardLink(String id) => '$webAppUrl?gym=${Uri.encodeQueryComponent(id)}';
+const inviteUrl = '${webAppUrl}go.html';
+
+String boardLink(String id) => '$inviteUrl?gym=${Uri.encodeQueryComponent(id)}';
 
 /// The share sheet, or the clipboard where there's none (desktop browsers).
 Future<void> shareText(BuildContext context, String text) async {
@@ -126,7 +130,7 @@ class _InviteSheet extends StatelessWidget {
               title: t.inviteApp,
               subtitle: t.inviteAppDesc,
               onTap: () =>
-                  share(() => shareText(root, t.inviteAppText(webAppUrl))),
+                  share(() => shareText(root, t.inviteAppText(inviteUrl))),
             ),
             for (final g in c.myGyms)
               _InviteOption(
