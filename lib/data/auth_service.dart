@@ -73,6 +73,24 @@ class AuthService {
     AuthMethod.apple => _appleSignIn(),
   };
 
+  /// GoogleSignIn may be initialized only once per app run.
+  static Future<void>? _googleReady;
+
+  /// On iPhone, Google puts a nonce in the ID token, and Supabase only
+  /// accepts it when it gets the raw nonce too: ours, hashed for Google.
+  static String? _googleNonce;
+
+  Future<void> _initGoogle() => _googleReady ??= () {
+    final ios = _iosApp;
+    final raw = ios ? client.auth.generateRawNonce() : null;
+    _googleNonce = raw;
+    return GoogleSignIn.instance.initialize(
+      clientId: ios && googleIosClientId.isNotEmpty ? googleIosClientId : null,
+      serverClientId: googleWebClientId.isEmpty ? null : googleWebClientId,
+      nonce: raw == null ? null : sha256.convert(utf8.encode(raw)).toString(),
+    );
+  }();
+
   Future<void> _google() async {
     if (kIsWeb) {
       await client.auth.signInWithOAuth(
@@ -81,19 +99,19 @@ class AuthService {
       );
       return;
     }
-    final google = GoogleSignIn.instance;
-    await google.initialize(
-      clientId: defaultTargetPlatform == TargetPlatform.iOS
-          ? (googleIosClientId.isEmpty ? null : googleIosClientId)
-          : null,
-      serverClientId: googleWebClientId.isEmpty ? null : googleWebClientId,
-    );
-    final account = await google.authenticate();
+    try {
+      await _initGoogle();
+    } catch (_) {
+      _googleReady = null; // try again next time
+      rethrow;
+    }
+    final account = await GoogleSignIn.instance.authenticate();
     final idToken = account.authentication.idToken;
     if (idToken == null) throw const AuthException('Google: no ID token');
     await client.auth.signInWithIdToken(
       provider: OAuthProvider.google,
       idToken: idToken,
+      nonce: _googleNonce,
     );
   }
 

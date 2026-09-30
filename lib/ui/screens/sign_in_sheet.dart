@@ -38,7 +38,15 @@ class _SignInSheetState extends State<SignInSheet> {
       await s.signIn(m); // closes via build() once signed in
     } catch (e) {
       debugPrint('sign-in failed: $e');
-      messenger.showSnackBar(SnackBar(content: Text(t.signInFailed)));
+      // The reason in small print, so a failure on a phone can be told apart.
+      final why = e.toString().replaceAll('\n', ' ');
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            '${t.signInFailed}\n${why.length > 140 ? '${why.substring(0, 140)}…' : why}',
+          ),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _busy = null);
     }
