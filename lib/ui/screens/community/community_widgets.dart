@@ -1118,3 +1118,118 @@ class _PhotoViewerState extends State<_PhotoViewer> {
     );
   }
 }
+
+/// The 커뮤니티 tab icon: two chatting bubbles with a little heart, drawn
+/// so it can be rounder and friendlier than the stock icons. Outlined
+/// normally, filled (heart cut out) when [selected].
+class CommunityIcon extends StatelessWidget {
+  final bool selected;
+  final double size;
+  const CommunityIcon({super.key, this.selected = false, this.size = 24});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = IconTheme.of(context).color ?? AppColors.ink;
+    return SizedBox.square(
+      dimension: size,
+      child: CustomPaint(
+        painter: _CommunityIconPainter(color: color, selected: selected),
+      ),
+    );
+  }
+}
+
+class _CommunityIconPainter extends CustomPainter {
+  final Color color;
+  final bool selected;
+  _CommunityIconPainter({required this.color, required this.selected});
+
+  /// A rounded bubble and its little tail as one shape (in a 24×24 box),
+  /// [grow] wider all round for the gap around the front bubble.
+  Path _bubble(Rect r, double radius, List<Offset> tail, {double grow = 0}) {
+    final body = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          r.inflate(grow),
+          Radius.circular(radius + grow),
+        ),
+      );
+    final t = Path()..addPolygon(tail, true);
+    return Path.combine(PathOperation.union, body, t);
+  }
+
+  Path _heart(Offset c, double w) {
+    final h = w * 0.9;
+    final top = c.dy - h * 0.35;
+    return Path()
+      ..moveTo(c.dx, c.dy + h * 0.5)
+      ..cubicTo(
+        c.dx - w * 0.9,
+        c.dy - h * 0.05,
+        c.dx - w * 0.45,
+        top - h * 0.55,
+        c.dx,
+        top,
+      )
+      ..cubicTo(
+        c.dx + w * 0.45,
+        top - h * 0.55,
+        c.dx + w * 0.9,
+        c.dy - h * 0.05,
+        c.dx,
+        c.dy + h * 0.5,
+      )
+      ..close();
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.scale(size.width / 24);
+    final stroke = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.9
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round;
+    final fill = Paint()..color = color;
+
+    // My bubble in front, and the friend's behind it on the right, drawn
+    // only where mine (with a little gap) doesn't cover it.
+    const frontRect = Rect.fromLTWH(2, 7, 15.5, 12.5);
+    const frontTail = [Offset(5, 17.5), Offset(3, 22.2), Offset(10.5, 19)];
+    final front = _bubble(frontRect, 6.25, frontTail);
+    final back = _bubble(const Rect.fromLTWH(11, 2.5, 11, 9.5), 4.75, const [
+      Offset(17.5, 10),
+      Offset(21.8, 14.2),
+      Offset(21, 8.5),
+    ]);
+    canvas.save();
+    canvas.clipPath(
+      Path.combine(
+        PathOperation.difference,
+        Path()..addRect(const Rect.fromLTWH(-2, -2, 28, 28)),
+        _bubble(frontRect, 6.25, frontTail, grow: 1.6),
+      ),
+    );
+    canvas.drawPath(
+      back,
+      selected ? (Paint()..color = color.withValues(alpha: 0.45)) : stroke,
+    );
+    canvas.restore();
+
+    if (selected) {
+      canvas.drawPath(front, fill);
+      canvas.drawPath(
+        _heart(const Offset(9.5, 12.8), 6),
+        Paint()..color = Colors.white,
+      );
+    } else {
+      canvas.drawPath(front, stroke);
+      canvas.drawPath(_heart(const Offset(9.5, 12.8), 5.2), fill);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CommunityIconPainter old) =>
+      old.color != color || old.selected != selected;
+}

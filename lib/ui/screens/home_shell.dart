@@ -12,6 +12,7 @@ import '../platform/reload.dart';
 import '../theme.dart';
 import 'checkin_screen.dart';
 import 'community/community_screen.dart';
+import 'community/community_widgets.dart';
 import 'review_sheet.dart';
 import 'settings_screen.dart';
 import 'today_screen.dart';
@@ -215,12 +216,12 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
               icon: Badge(
                 isLabelVisible: communityBadge > 0,
                 backgroundColor: AppColors.peach,
-                child: const Icon(Icons.forum_outlined),
+                child: const CommunityIcon(),
               ),
               selectedIcon: Badge(
                 isLabelVisible: communityBadge > 0,
                 backgroundColor: AppColors.peach,
-                child: const Icon(Icons.forum_rounded),
+                child: const CommunityIcon(selected: true),
               ),
               label: t.navCommunity,
             ),
