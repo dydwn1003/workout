@@ -34,7 +34,7 @@ Future<void> main() async {
   const communityOn = bool.fromEnvironment('COMMUNITY');
   const communityDemo = bool.fromEnvironment('COMMUNITY_DEMO');
   final CommunityRepository? communityRepo = communityDemo
-      ? MemoryCommunity.demo(me: 'me')
+      ? MemoryCommunity.demo(me: 'me', meJoined: true)
       : communityOn && auth != null
       ? SupabaseCommunity(auth.client)
       : null;

@@ -1773,4 +1773,88 @@ class LEn extends L {
 
   @override
   String get retry => 'Retry';
+
+  @override
+  String get tagAll => 'All';
+
+  @override
+  String get tagFree => 'Chat';
+
+  @override
+  String get tagMate => 'Workout mate';
+
+  @override
+  String get tagQuestion => 'Question';
+
+  @override
+  String get tagInfo => 'Tips';
+
+  @override
+  String get tagReview => 'Review';
+
+  @override
+  String get tagHintFree => 'How was your workout today?';
+
+  @override
+  String get tagHintMate => 'Add days, times and what you train to find a mate';
+
+  @override
+  String get tagHintQuestion => 'Ask as specifically as you can';
+
+  @override
+  String get tagHintInfo => 'Busy hours, equipment, events';
+
+  @override
+  String get tagHintReview => 'Reviews of PT, equipment or classes';
+
+  @override
+  String get chooseTag => 'What\'s it about?';
+
+  @override
+  String get heroTitle => 'What\'s happening\nat your gym?';
+
+  @override
+  String heroMyGyms(String n) {
+    return 'My gyms $n';
+  }
+
+  @override
+  String heroNewToday(String n) {
+    return 'New today $n';
+  }
+
+  @override
+  String get findGym => 'Find a gym';
+
+  @override
+  String get myGymsNews => 'From my gyms';
+
+  @override
+  String get feedEmpty => 'Nothing new yet. Say hi first!';
+
+  @override
+  String get startTitle => 'Start your gym community';
+
+  @override
+  String get startStep1 => 'Search for your gym';
+
+  @override
+  String get startStep2 => 'Add it to My gyms';
+
+  @override
+  String get startStep3 => 'Find mates and share tips';
+
+  @override
+  String get newBadge => 'New';
+
+  @override
+  String get authorBadge => 'Author';
+
+  @override
+  String get setupSubtitle => 'This is how gym friends will see you';
+
+  @override
+  String searchResults(String n) {
+    return '$n results';
+  }
 }

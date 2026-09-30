@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../../data/community.dart';
 import '../../../l10n/app_localizations.dart';
@@ -9,9 +8,12 @@ import '../../motion.dart';
 import '../../theme.dart';
 import '../../widgets.dart';
 import 'community_common.dart';
+import 'community_widgets.dart';
+import 'compose_sheet.dart';
 import 'post_screen.dart';
 
-/// One gym's board: newest posts first, more as you scroll.
+/// One gym's board: a colored header that folds away, tag filters, and the
+/// newest posts, more as you scroll.
 class GymBoardScreen extends StatefulWidget {
   final Gym gym;
   const GymBoardScreen({super.key, required this.gym});
@@ -23,6 +25,7 @@ class GymBoardScreen extends StatefulWidget {
 class _GymBoardScreenState extends State<GymBoardScreen> {
   static const _page = 20;
   final _posts = <Post>[];
+  PostTag? _tag;
   var _loading = true;
   var _failed = false;
   var _hasMore = true;
@@ -47,13 +50,14 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
   CommunityRepository get _repo => CommunityScope.read(context).repo;
 
   Future<void> _load() async {
+    final tag = _tag;
     setState(() {
       _loading = _posts.isEmpty;
       _failed = false;
     });
     try {
-      final list = await _repo.posts(widget.gym.id, limit: _page);
-      if (!mounted) return;
+      final list = await _repo.posts(widget.gym.id, limit: _page, tag: tag);
+      if (!mounted || tag != _tag) return;
       setState(() {
         _posts
           ..clear()
@@ -68,6 +72,16 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
     }
   }
 
+  void _setTag(PostTag? tag) {
+    if (tag == _tag) return;
+    setState(() {
+      _tag = tag;
+      _posts.clear();
+      _loading = true;
+    });
+    _load();
+  }
+
   Future<void> _more() async {
     if (_loadingMore || !_hasMore || _posts.isEmpty) return;
     _loadingMore = true;
@@ -76,6 +90,7 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
         widget.gym.id,
         before: _posts.last.createdAt,
         limit: _page,
+        tag: _tag,
       );
       if (!mounted) return;
       setState(() {
@@ -93,7 +108,7 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
     if (!await ensureCommunityMember(context) || !mounted) return;
     final post = await showComposeSheet(context, gymId: widget.gym.id);
     if (post == null || !mounted) return;
-    HapticFeedback.lightImpact();
+    HapticFeedback.mediumImpact();
     final c = CommunityScope.read(context);
     if (!c.isMine(widget.gym.id)) {
       try {
@@ -101,8 +116,12 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
       } catch (_) {}
     }
     c.postedIn(widget.gym.id);
-    setState(() => _posts.insert(0, post));
-    _scroll.animateTo(0, duration: Motion.medium, curve: Motion.ease);
+    setState(() {
+      if (_tag == null || _tag == post.tag) _posts.insert(0, post);
+    });
+    if (_scroll.hasClients) {
+      _scroll.animateTo(0, duration: Motion.medium, curve: Motion.ease);
+    }
   }
 
   Future<void> _toggleJoin() async {
@@ -150,641 +169,350 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
     final t = L.of(context);
     final c = CommunityScope.of(context);
     final mine = c.isMine(widget.gym.id);
+    final g = c.myGyms.firstWhere(
+      (x) => x.id == widget.gym.id,
+      orElse: () => widget.gym,
+    );
+    final (color, _) = gymColors(g.id);
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.gym.name, overflow: TextOverflow.ellipsis),
-        actions: [
-          IconButton(
-            tooltip: mine ? t.leaveGym : t.joinGym,
-            onPressed: _toggleJoin,
-            icon: AnimatedSwitcher(
-              duration: Motion.fast,
-              transitionBuilder: (child, a) =>
-                  ScaleTransition(scale: a, child: child),
-              child: Icon(
-                mine ? Icons.bookmark_rounded : Icons.bookmark_add_outlined,
-                key: ValueKey(mine),
-                color: mine ? AppColors.peach : null,
-              ),
-            ),
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _write,
-        icon: const Icon(Icons.edit_rounded),
-        label: Text(t.writePost),
-      ),
+      floatingActionButton: _WriteButton(onTap: _write, label: t.writePost),
       body: RefreshIndicator(
         onRefresh: _load,
-        child: ListView.builder(
+        edgeOffset: 120,
+        child: CustomScrollView(
           controller: _scroll,
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
-          itemCount: _posts.length + 1,
-          itemBuilder: (context, i) {
-            if (i == 0) return _header(t, mine);
-            final p = _posts[i - 1];
-            return FadeSlideIn(
-              key: ValueKey(p.id),
-              delay: stagger(i - 1),
-              dy: 8,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: PostCard(
-                  post: p,
-                  onTap: () => _openPost(p),
-                  onChanged: (u) => _replace(p, u),
-                  onBlocked: () => _dropAuthor(p.authorId),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _header(L t, bool mine) {
-    final g = widget.gym;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (g.address.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.place_outlined,
-                  size: 16,
-                  color: AppColors.inkSoft,
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    g.address,
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      color: AppColors.inkSoft,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        if (!mine)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: OutlinedButton.icon(
-              onPressed: _toggleJoin,
-              icon: const Icon(Icons.bookmark_add_outlined),
-              label: Text(t.joinGym),
-            ),
-          ),
-        if (_loading)
-          const Padding(
-            padding: EdgeInsets.all(32),
-            child: Center(child: CircularProgressIndicator()),
-          )
-        else if (_failed)
-          SoftCard(
-            padding: const EdgeInsets.all(18),
-            child: Row(
-              children: [
-                Expanded(child: Text(t.communityError)),
-                TextButton(onPressed: _load, child: Text(t.retry)),
-              ],
-            ),
-          )
-        else if (_posts.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 48),
-            child: Column(
-              children: [
-                const Icon(
-                  Icons.forum_outlined,
-                  size: 40,
-                  color: AppColors.peach,
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  t.boardEmpty,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.inkSoft),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-/// A post in the board: author, time, text (shortened), photos, likes.
-class PostCard extends StatelessWidget {
-  final Post post;
-  final VoidCallback onTap;
-  final ValueChanged<Post?> onChanged;
-  final VoidCallback onBlocked;
-  const PostCard({
-    super.key,
-    required this.post,
-    required this.onTap,
-    required this.onChanged,
-    required this.onBlocked,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final t = L.of(context);
-    return SoftCard(
-      onTap: onTap,
-      padding: const EdgeInsets.fromLTRB(16, 14, 8, 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          PostHeader(post: post, onChanged: onChanged, onBlocked: onBlocked),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: Text(
-              post.body,
-              maxLines: 6,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 14.5, height: 1.5),
-            ),
-          ),
-          if (post.images.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: PhotoStrip(urls: post.images),
-            ),
-          ],
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              LikeButton(post: post, onChanged: onChanged),
-              const SizedBox(width: 4),
-              const Icon(
-                Icons.chat_bubble_outline_rounded,
-                size: 18,
-                color: AppColors.inkSoft,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                t.commentsN('${post.commentCount}'),
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  color: AppColors.inkSoft,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Avatar, nickname, time and the ⋮ menu.
-class PostHeader extends StatelessWidget {
-  final Post post;
-  final ValueChanged<Post?> onChanged;
-  final VoidCallback onBlocked;
-  const PostHeader({
-    super.key,
-    required this.post,
-    required this.onChanged,
-    required this.onBlocked,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final t = L.of(context);
-    final c = CommunityScope.read(context);
-    final mine = post.authorId == c.repo.myId;
-    return Row(
-      children: [
-        NickAvatar(userId: post.authorId, nickname: post.nickname),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                post.nickname,
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              stretch: true,
+              expandedHeight: 210,
+              backgroundColor: color,
+              foregroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              title: Text(
+                g.name,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontFamily: headingFont,
                   fontWeight: FontWeight.w800,
-                  fontSize: 14,
+                  color: Colors.white,
+                  fontSize: 18,
                 ),
               ),
-              Text(
-                [
-                  timeAgo(t, post.createdAt),
-                  if (post.editedAt != null) t.edited,
-                ].join(' · '),
-                style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),
+              actions: [
+                IconButton(
+                  tooltip: mine ? t.leaveGym : t.joinGym,
+                  onPressed: _toggleJoin,
+                  icon: AnimatedSwitcher(
+                    duration: Motion.fast,
+                    transitionBuilder: (child, a) =>
+                        ScaleTransition(scale: a, child: child),
+                    child: Icon(
+                      mine
+                          ? Icons.bookmark_rounded
+                          : Icons.bookmark_add_outlined,
+                      key: ValueKey(mine),
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                collapseMode: CollapseMode.parallax,
+                background: _BoardHeader(
+                  gym: g,
+                  mine: mine,
+                  onJoin: _toggleJoin,
+                ),
               ),
-            ],
-          ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.more_vert_rounded, color: AppColors.inkSoft),
-          onPressed: () => showContentMenu(
-            context,
-            mine: mine,
-            type: 'post',
-            id: post.id,
-            authorId: post.authorId,
-            nickname: post.nickname,
-            onEdit: () async {
-              final edited = await showComposeSheet(
-                context,
-                gymId: post.gymId,
-                editing: post,
-              );
-              if (edited != null) onChanged(edited);
-            },
-            onDelete: () async {
-              await c.repo.deletePost(post);
-              onChanged(null);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text(t.postDeleted)));
-              }
-            },
-            onBlocked: onBlocked,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// ♡ 3 — toggles right away, undone if the server says no.
-class LikeButton extends StatelessWidget {
-  final Post post;
-  final ValueChanged<Post?> onChanged;
-  const LikeButton({super.key, required this.post, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    final liked = post.likedByMe;
-    return TextButton.icon(
-      style: TextButton.styleFrom(
-        foregroundColor: liked ? AppColors.peach : AppColors.inkSoft,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        minimumSize: const Size(0, 36),
-      ),
-      onPressed: () async {
-        if (!await ensureCommunityMember(context) || !context.mounted) return;
-        HapticFeedback.selectionClick();
-        final next = post.copyWith(
-          likedByMe: !liked,
-          likeCount: post.likeCount + (liked ? -1 : 1),
-        );
-        onChanged(next);
-        try {
-          await CommunityScope.read(context).repo.setLike(post.id, !liked);
-        } catch (e) {
-          onChanged(post);
-          if (context.mounted) showCommunityError(context, e);
-        }
-      },
-      icon: AnimatedSwitcher(
-        duration: Motion.fast,
-        transitionBuilder: (child, a) =>
-            ScaleTransition(scale: a, child: child),
-        child: Icon(
-          liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-          key: ValueKey(liked),
-          size: 18,
-        ),
-      ),
-      label: Text('${post.likeCount}', style: const TextStyle(fontSize: 13)),
-    );
-  }
-}
-
-/// Up to 4 photos in a row; tap one to see it full screen.
-class PhotoStrip extends StatelessWidget {
-  final List<String> urls;
-  final double height;
-  const PhotoStrip({super.key, required this.urls, this.height = 110});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: height,
-      child: Row(
-        children: [
-          for (final (i, u) in urls.indexed) ...[
-            if (i > 0) const SizedBox(width: 6),
-            Expanded(
-              child: GestureDetector(
-                onTap: () => showPhotoViewer(context, urls, i),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Hero(
-                    tag: u,
-                    child: Image.network(
-                      u,
-                      fit: BoxFit.cover,
-                      height: height,
-                      cacheWidth: 480,
-                      errorBuilder: (_, _, _) => Container(
-                        color: AppColors.line,
-                        child: const Icon(
-                          Icons.broken_image_outlined,
+            ),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _TagBarDelegate(
+                child: TagFilterBar(selected: _tag, onChanged: _setTag),
+              ),
+            ),
+            if (_loading)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(40),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              )
+            else if (_failed)
+              SliverToBoxAdapter(
+                child: Center(
+                  child: TextButton(onPressed: _load, child: Text(t.retry)),
+                ),
+              )
+            else if (_posts.isEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(28, 32, 28, 0),
+                  child: Column(
+                    children: [
+                      const Mascot(size: 88, mood: MascotMood.sleepy),
+                      const SizedBox(height: 12),
+                      Text(
+                        t.boardEmpty,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
                           color: AppColors.inkSoft,
+                          height: 1.5,
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 110),
+                sliver: SliverList.builder(
+                  itemCount: _posts.length,
+                  itemBuilder: (context, i) {
+                    final p = _posts[i];
+                    return FadeSlideIn(
+                      key: ValueKey('${p.id}-${_tag?.name}'),
+                      delay: stagger(i),
+                      dy: 10,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: PostCard(
+                          post: p,
+                          onTap: () => _openPost(p),
+                          onChanged: (u) => _replace(p, u),
+                          onBlocked: () => _dropAuthor(p.authorId),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
           ],
-        ],
-      ),
-    );
-  }
-}
-
-Future<void> showPhotoViewer(BuildContext context, List<String> urls, int i) =>
-    Navigator.of(context).push(
-      PageRouteBuilder<void>(
-        opaque: false,
-        barrierColor: Colors.black,
-        pageBuilder: (_, a, _) => FadeTransition(
-          opacity: a,
-          child: _PhotoViewer(urls: urls, initial: i),
         ),
       ),
     );
-
-class _PhotoViewer extends StatelessWidget {
-  final List<String> urls;
-  final int initial;
-  const _PhotoViewer({required this.urls, required this.initial});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-      ),
-      body: PageView(
-        controller: PageController(initialPage: initial),
-        children: [
-          for (final u in urls)
-            InteractiveViewer(
-              child: Center(
-                child: Hero(tag: u, child: Image.network(u)),
-              ),
-            ),
-        ],
-      ),
-    );
   }
 }
 
-/// Write a post (or edit one's text): returns the saved post.
-Future<Post?> showComposeSheet(
-  BuildContext context, {
-  required String gymId,
-  Post? editing,
-}) => showModalBottomSheet<Post>(
-  context: context,
-  isScrollControlled: true,
-  sheetAnimationStyle: Motion.sheet,
-  builder: (_) => FractionallySizedBox(
-    heightFactor: 0.9,
-    child: _ComposeSheet(gymId: gymId, editing: editing),
-  ),
-);
-
-class _ComposeSheet extends StatefulWidget {
-  final String gymId;
-  final Post? editing;
-  const _ComposeSheet({required this.gymId, this.editing});
-
-  @override
-  State<_ComposeSheet> createState() => _ComposeSheetState();
-}
-
-class _ComposeSheetState extends State<_ComposeSheet> {
-  late final _body = TextEditingController(text: widget.editing?.body);
-  final _photos = <Uint8List>[];
-  var _busy = false;
-
-  @override
-  void dispose() {
-    _body.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pick() async {
-    final t = L.of(context);
-    final room = CommunityLimits.photos - _photos.length;
-    if (room <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.photoLimit('${CommunityLimits.photos}'))),
-      );
-      return;
-    }
-    try {
-      final files = await ImagePicker().pickMultiImage(
-        maxWidth: 1600,
-        maxHeight: 1600,
-        imageQuality: 82,
-        limit: room > 1 ? room : null,
-      );
-      var rejected = false;
-      final picked = <Uint8List>[];
-      for (final f in files.take(room)) {
-        final bytes = await f.readAsBytes();
-        if (imageMimeType(bytes) == null ||
-            bytes.length > CommunityLimits.photoBytes) {
-          rejected = true;
-        } else {
-          picked.add(bytes);
-        }
-      }
-      if (!mounted) return;
-      setState(() => _photos.addAll(picked));
-      if (rejected) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(t.badImage)));
-      }
-    } catch (e) {
-      debugPrint('photo pick failed: $e');
-    }
-  }
-
-  Future<void> _submit() async {
-    final text = _body.text.trim();
-    if (text.isEmpty || _busy) return;
-    setState(() => _busy = true);
-    final repo = CommunityScope.read(context).repo;
-    try {
-      final post = widget.editing == null
-          ? await repo.writePost(widget.gymId, text, _photos)
-          : await repo.editPost(widget.editing!, text);
-      if (mounted) Navigator.pop(context, post);
-    } catch (e) {
-      if (mounted) showCommunityError(context, e);
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
+class _BoardHeader extends StatelessWidget {
+  final Gym gym;
+  final bool mine;
+  final VoidCallback onJoin;
+  const _BoardHeader({
+    required this.gym,
+    required this.mine,
+    required this.onJoin,
+  });
 
   @override
   Widget build(BuildContext context) {
     final t = L.of(context);
-    final editing = widget.editing != null;
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        16,
-        8,
-        16,
-        12 + MediaQuery.viewInsetsOf(context).bottom,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    final (color, _) = gymColors(gym.id);
+    return Container(
+      decoration: BoxDecoration(gradient: gymGradient(gym.id)),
+      child: Stack(
         children: [
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.close_rounded),
-                onPressed: () => Navigator.pop(context),
+          Positioned(
+            right: -20,
+            bottom: -40,
+            child: Text(
+              gym.name.characters.first,
+              style: TextStyle(
+                fontFamily: headingFont,
+                fontWeight: FontWeight.w800,
+                fontSize: 180,
+                height: 1,
+                color: Colors.white.withValues(alpha: 0.16),
               ),
-              Expanded(
-                child: Text(
-                  editing ? t.editPost : t.writePost,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-              ListenableBuilder(
-                listenable: _body,
-                builder: (context, _) => FilledButton(
-                  onPressed: _busy || _body.text.trim().isEmpty
-                      ? null
-                      : _submit,
-                  child: _busy
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(editing ? t.save : t.postSubmit),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: TextField(
-              controller: _body,
-              autofocus: true,
-              maxLines: null,
-              expands: true,
-              maxLength: CommunityLimits.postLength,
-              textAlignVertical: TextAlignVertical.top,
-              decoration: InputDecoration(hintText: t.postHint),
             ),
           ),
-          if (!editing) ...[
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 72,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 60, 20, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  _AddPhotoButton(
-                    count: _photos.length,
-                    onTap: _busy ? null : _pick,
-                  ),
-                  for (final (i, b) in _photos.indexed)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8),
-                      child: Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.memory(
-                              b,
-                              width: 72,
-                              height: 72,
-                              fit: BoxFit.cover,
-                              cacheWidth: 216,
+                  if (gym.address.isNotEmpty)
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.place_rounded,
+                          size: 15,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            gym.shortAddress,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white.withValues(alpha: 0.92),
                             ),
                           ),
-                          Positioned(
-                            right: 2,
-                            top: 2,
-                            child: GestureDetector(
-                              onTap: _busy
-                                  ? null
-                                  : () => setState(() => _photos.removeAt(i)),
-                              child: Container(
-                                padding: const EdgeInsets.all(2),
-                                decoration: const BoxDecoration(
-                                  color: Colors.black54,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.close_rounded,
-                                  size: 14,
-                                  color: Colors.white,
+                        ),
+                      ],
+                    ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _StatBubble(
+                        Icons.people_alt_rounded,
+                        t.gymMembers('${gym.memberCount}'),
+                      ),
+                      const SizedBox(width: 8),
+                      _StatBubble(
+                        Icons.article_rounded,
+                        t.gymPosts('${gym.postCount}'),
+                      ),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: onJoin,
+                        child: AnimatedContainer(
+                          duration: Motion.fast,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: mine
+                                ? Colors.white.withValues(alpha: 0.25)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                mine
+                                    ? Icons.check_rounded
+                                    : Icons.bookmark_add_rounded,
+                                size: 16,
+                                color: mine ? Colors.white : color,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                mine ? t.joinedGym : t.joinGym,
+                                style: TextStyle(
+                                  fontFamily: headingFont,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 13,
+                                  color: mine ? Colors.white : color,
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
+                  ),
                 ],
               ),
             ),
-          ],
+          ),
         ],
       ),
     );
   }
 }
 
-class _AddPhotoButton extends StatelessWidget {
-  final int count;
-  final VoidCallback? onTap;
-  const _AddPhotoButton({required this.count, this.onTap});
+class _StatBubble extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _StatBubble(this.icon, this.text);
 
   @override
-  Widget build(BuildContext context) => InkWell(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(12),
-    child: Container(
-      width: 72,
-      height: 72,
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.line, width: 1.5),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.add_a_photo_outlined, color: AppColors.inkSoft),
-          const SizedBox(height: 2),
-          Text(
-            '$count/${CommunityLimits.photos}',
-            style: const TextStyle(fontSize: 11.5, color: AppColors.inkSoft),
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.22),
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: Colors.white),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: const TextStyle(
+            fontFamily: headingFont,
+            fontWeight: FontWeight.w800,
+            fontSize: 12.5,
+            color: Colors.white,
           ),
-        ],
+        ),
+      ],
+    ),
+  );
+}
+
+class _TagBarDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  _TagBarDelegate({required this.child});
+
+  @override
+  double get minExtent => 60;
+  @override
+  double get maxExtent => 60;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlaps) =>
+      Container(color: AppColors.bg, alignment: Alignment.center, child: child);
+
+  @override
+  bool shouldRebuild(_TagBarDelegate old) => old.child != child;
+}
+
+/// The floating "글쓰기" pill with the brand gradient.
+class _WriteButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final String label;
+  const _WriteButton({required this.onTap, required this.label});
+
+  @override
+  Widget build(BuildContext context) => Squish(
+    child: GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppColors.peach, Color(0xFFFFA98F)],
+          ),
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.peach.withValues(alpha: 0.45),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.edit_rounded, color: Colors.white, size: 20),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: const TextStyle(
+                fontFamily: headingFont,
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     ),
   );

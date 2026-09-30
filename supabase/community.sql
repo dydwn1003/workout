@@ -69,7 +69,12 @@ create table if not exists public.posts (
   edited_at     timestamptz
 );
 
+-- What the post is about (앱의 PostTag): 잡담, 운동메이트, 질문, 정보, 후기.
+alter table public.posts add column if not exists tag text not null default 'free'
+  check (tag in ('free', 'mate', 'question', 'info', 'review'));
+
 create index if not exists posts_gym_time on public.posts (gym_id, created_at desc);
+create index if not exists posts_gym_tag_time on public.posts (gym_id, tag, created_at desc);
 create index if not exists posts_author on public.posts (author);
 
 create table if not exists public.comments (

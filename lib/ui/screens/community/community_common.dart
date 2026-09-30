@@ -6,6 +6,7 @@ import '../../../state/app_state.dart';
 import '../../../state/community_state.dart';
 import '../../motion.dart';
 import '../../theme.dart';
+import '../../widgets.dart';
 import '../sign_in_sheet.dart';
 
 /// "방금", "5분 전", "3시간 전", "2일 전", then the date.
@@ -145,10 +146,14 @@ class _SetupSheetState extends State<_SetupSheet> {
   @override
   Widget build(BuildContext context) {
     final t = L.of(context);
+    final rules = t.rulesBody
+        .split('\n')
+        .map((l) => l.replaceFirst(RegExp(r'^[·•]\s*'), ''))
+        .toList();
     return Padding(
       padding: EdgeInsets.fromLTRB(
         24,
-        20,
+        8,
         24,
         24 + MediaQuery.viewInsetsOf(context).bottom,
       ),
@@ -156,44 +161,104 @@ class _SetupSheetState extends State<_SetupSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(t.setupTitle, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Mascot(size: 56, mood: MascotMood.cheer),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.setupTitle,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      t.setupSubtitle,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.inkSoft,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           TextField(
             controller: _nick,
             autofocus: true,
             maxLength: CommunityLimits.nicknameMax,
+            style: const TextStyle(
+              fontFamily: headingFont,
+              fontWeight: FontWeight.w800,
+              fontSize: 17,
+            ),
             decoration: InputDecoration(
               hintText: t.nicknameHint,
               errorText: _error,
+              prefixIcon: const Icon(
+                Icons.alternate_email_rounded,
+                color: AppColors.peach,
+              ),
             ),
             onSubmitted: (_) => _save(),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
             decoration: BoxDecoration(
-              color: AppColors.peachSoft.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(16),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.line, width: 1.5),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  t.rulesTitle,
-                  style: const TextStyle(
-                    fontFamily: headingFont,
-                    fontWeight: FontWeight.w800,
-                  ),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.shield_rounded,
+                      size: 18,
+                      color: AppColors.mint,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      t.rulesTitle,
+                      style: const TextStyle(
+                        fontFamily: headingFont,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  t.rulesBody,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    height: 1.6,
-                    color: AppColors.ink,
+                const SizedBox(height: 8),
+                for (final r in rules)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 7),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(top: 2),
+                          child: Icon(
+                            Icons.check_circle_rounded,
+                            size: 15,
+                            color: AppColors.mint,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            r,
+                            style: const TextStyle(fontSize: 13, height: 1.45),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
               ],
             ),
           ),

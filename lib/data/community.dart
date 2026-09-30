@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -60,9 +61,25 @@ class CommunityProfile {
   const CommunityProfile(this.userId, this.nickname);
 }
 
+/// What a post is about; boards filter by it.
+enum PostTag {
+  free, // 잡담
+  mate, // 운동메이트
+  question, // 질문
+  info, // 정보
+  review; // 후기
+
+  static PostTag parse(Object? v) =>
+      values.firstWhere((t) => t.name == v, orElse: () => free);
+}
+
 class Post {
   final String id;
   final String gymId;
+
+  /// The gym's name, filled in feeds that mix several gyms.
+  final String? gymName;
+  final PostTag tag;
   final String authorId;
   final String nickname;
   final String body;
@@ -81,6 +98,8 @@ class Post {
   const Post({
     required this.id,
     required this.gymId,
+    this.gymName,
+    this.tag = PostTag.free,
     required this.authorId,
     required this.nickname,
     required this.body,
@@ -95,6 +114,8 @@ class Post {
 
   Post copyWith({
     String? body,
+    PostTag? tag,
+    String? gymName,
     int? likeCount,
     int? commentCount,
     bool? likedByMe,
@@ -102,6 +123,8 @@ class Post {
   }) => Post(
     id: id,
     gymId: gymId,
+    gymName: gymName ?? this.gymName,
+    tag: tag ?? this.tag,
     authorId: authorId,
     nickname: nickname,
     body: body ?? this.body,
@@ -238,10 +261,29 @@ abstract class CommunityRepository {
   Future<void> leave(String gymId);
   Future<Gym> addGym(String name, String address);
 
-  /// Newest first; [before] pages back from the oldest one shown.
-  Future<List<Post>> posts(String gymId, {DateTime? before, int limit = 20});
-  Future<Post> writePost(String gymId, String body, List<Uint8List> photos);
-  Future<Post> editPost(Post post, String body);
+  /// Newest first; [before] pages back from the oldest one shown, [tag]
+  /// keeps one kind.
+  Future<List<Post>> posts(
+    String gymId, {
+    DateTime? before,
+    int limit = 20,
+    PostTag? tag,
+  });
+
+  /// Newest posts of several gyms (my gyms' news), with their gym names.
+  Future<List<Post>> feed(
+    List<String> gymIds, {
+    DateTime? before,
+    int limit = 20,
+    PostTag? tag,
+  });
+  Future<Post> writePost(
+    String gymId,
+    String body,
+    List<Uint8List> photos, {
+    PostTag tag = PostTag.free,
+  });
+  Future<Post> editPost(Post post, String body, {PostTag? tag});
   Future<void> deletePost(Post post);
 
   Future<List<Comment>> comments(String postId);
@@ -267,7 +309,8 @@ class SupabaseCommunity implements CommunityRepository {
 
   static const _bucket = 'community';
   static const _postColumns =
-      '*, profile:community_profiles!posts_author_fkey(nickname)';
+      '*, profile:community_profiles!posts_author_fkey(nickname), '
+      'gym:gyms(name)';
 
   @override
   String? get myId => client.auth.currentUser?.id;
@@ -293,6 +336,8 @@ class SupabaseCommunity implements CommunityRepository {
     return Post(
       id: j['id'] as String,
       gymId: j['gym_id'] as String,
+      gymName: (j['gym'] as Map?)?['name'] as String?,
+      tag: PostTag.parse(j['tag']),
       authorId: j['author'] as String,
       nickname: (j['profile'] as Map?)?['nickname'] as String? ?? '',
       body: j['body'] as String,
@@ -407,8 +452,22 @@ class SupabaseCommunity implements CommunityRepository {
     String gymId, {
     DateTime? before,
     int limit = 20,
+    PostTag? tag,
+  }) => feed([gymId], before: before, limit: limit, tag: tag);
+
+  @override
+  Future<List<Post>> feed(
+    List<String> gymIds, {
+    DateTime? before,
+    int limit = 20,
+    PostTag? tag,
   }) async {
-    var q = client.from('posts').select(_postColumns).eq('gym_id', gymId);
+    if (gymIds.isEmpty) return const [];
+    var q = client
+        .from('posts')
+        .select(_postColumns)
+        .inFilter('gym_id', gymIds);
+    if (tag != null) q = q.eq('tag', tag.name);
     if (before != null) {
       q = q.lt('created_at', before.toUtc().toIso8601String());
     }
@@ -418,8 +477,12 @@ class SupabaseCommunity implements CommunityRepository {
   }
 
   @override
-  Future<Post> writePost(String gymId, String body, List<Uint8List> photos) =>
-      _guard(() async {
+  Future<Post> writePost(
+    String gymId,
+    String body,
+    List<Uint8List> photos, {
+    PostTag tag = PostTag.free,
+  }) => _guard(() async {
         if (containsBlockedWords(body)) {
           throw const CommunityException(CommunityError.blockedWords);
         }
@@ -444,7 +507,12 @@ class SupabaseCommunity implements CommunityRepository {
         try {
           final row = await client
               .from('posts')
-              .insert({'gym_id': gymId, 'body': body.trim(), 'images': paths})
+              .insert({
+                'gym_id': gymId,
+                'body': body.trim(),
+                'images': paths,
+                'tag': tag.name,
+              })
               .select(_postColumns)
               .single();
           return _post(row, const {});
@@ -457,13 +525,21 @@ class SupabaseCommunity implements CommunityRepository {
       });
 
   @override
-  Future<Post> editPost(Post post, String body) => _guard(() async {
-    if (containsBlockedWords(body)) {
-      throw const CommunityException(CommunityError.blockedWords);
-    }
-    await client.from('posts').update({'body': body.trim()}).eq('id', post.id);
-    return post.copyWith(body: body.trim(), editedAt: DateTime.now());
-  });
+  Future<Post> editPost(Post post, String body, {PostTag? tag}) =>
+      _guard(() async {
+        if (containsBlockedWords(body)) {
+          throw const CommunityException(CommunityError.blockedWords);
+        }
+        await client
+            .from('posts')
+            .update({'body': body.trim(), 'tag': (tag ?? post.tag).name})
+            .eq('id', post.id);
+        return post.copyWith(
+          body: body.trim(),
+          tag: tag,
+          editedAt: DateTime.now(),
+        );
+      });
 
   @override
   Future<void> deletePost(Post post) async {
@@ -689,13 +765,23 @@ class MemoryCommunity implements CommunityRepository {
     String gymId, {
     DateTime? before,
     int limit = 20,
+    PostTag? tag,
+  }) => feed([gymId], before: before, limit: limit, tag: tag);
+
+  @override
+  Future<List<Post>> feed(
+    List<String> gymIds, {
+    DateTime? before,
+    int limit = 20,
+    PostTag? tag,
   }) async {
     final list = [
       for (final p in _posts.reversed)
-        if (p.gymId == gymId &&
+        if (gymIds.contains(p.gymId) &&
+            (tag == null || p.tag == tag) &&
             _visible(p.authorId) &&
             (before == null || p.createdAt.isBefore(before)))
-          _withLikes(p),
+          _withLikes(p).copyWith(gymName: gyms[p.gymId]?.name),
     ];
     return list.take(limit).toList();
   }
@@ -707,10 +793,12 @@ class MemoryCommunity implements CommunityRepository {
     String body, {
     DateTime? at,
     List<String> images = const [],
+    PostTag tag = PostTag.free,
   }) {
     final p = Post(
       id: _id(),
       gymId: gymId,
+      tag: tag,
       authorId: authorId,
       nickname: nicknames[authorId] ?? '',
       body: body,
@@ -742,8 +830,9 @@ class MemoryCommunity implements CommunityRepository {
   Future<Post> writePost(
     String gymId,
     String body,
-    List<Uint8List> photos,
-  ) async {
+    List<Uint8List> photos, {
+    PostTag tag = PostTag.free,
+  }) async {
     if (containsBlockedWords(body)) {
       throw const CommunityException(CommunityError.blockedWords);
     }
@@ -758,13 +847,27 @@ class MemoryCommunity implements CommunityRepository {
     if (recent.length >= 5) {
       throw const CommunityException(CommunityError.rateLimited);
     }
-    return seedPost(gymId, myId!, body.trim());
+    // Photos stay in memory as data URLs (shown on the web demo).
+    return seedPost(
+      gymId,
+      myId!,
+      body.trim(),
+      tag: tag,
+      images: [
+        for (final b in photos)
+          'data:${imageMimeType(b)};base64,${base64Encode(b)}',
+      ],
+    ).copyWith(gymName: gyms[gymId]?.name);
   }
 
   @override
-  Future<Post> editPost(Post post, String body) async {
+  Future<Post> editPost(Post post, String body, {PostTag? tag}) async {
     final i = _posts.indexWhere((p) => p.id == post.id);
-    final edited = _posts[i].copyWith(body: body.trim(), editedAt: clock());
+    final edited = _posts[i].copyWith(
+      body: body.trim(),
+      tag: tag,
+      editedAt: clock(),
+    );
     _posts[i] = edited;
     return _withLikes(edited);
   }
@@ -810,9 +913,15 @@ class MemoryCommunity implements CommunityRepository {
   Future<void> deleteMyPhotos() async {}
 
   /// A few gyms, people and posts for the demo build and screenshots.
-  static MemoryCommunity demo({String? me, DateTime Function()? clock}) {
+  static MemoryCommunity demo({
+    String? me,
+    DateTime Function()? clock,
+    bool meJoined = false,
+  }) {
     final c = MemoryCommunity(myId: me, clock: clock);
     final now = c.clock();
+    Duration ago({int d = 0, int h = 0, int m = 0}) =>
+        Duration(days: d, hours: h, minutes: m);
     for (final (id, name, addr) in [
       ('l-1', '에이블짐 강남점', '서울특별시 강남구 테헤란로 152'),
       ('l-2', '바디스페이스 역삼', '서울특별시 강남구 역삼로 120'),
@@ -827,42 +936,80 @@ class MemoryCommunity implements CommunityRepository {
       'u2': '새벽운동러',
       'u3': '벤치100',
       'u4': '초보헬린이',
+      'u5': '데드리프트장인',
+      'u6': '러닝머신지박령',
     });
-    for (final u in ['u1', 'u2', 'u3', 'u4']) {
+    for (final u in ['u1', 'u2', 'u3', 'u4', 'u5', 'u6']) {
       c.members[u] = {'l-1'};
     }
     c.members['u3']!.add('l-2');
+    c.members['u5']!.add('l-2');
+    if (me != null && meJoined) {
+      c.nicknames[me] = '헬린이철수';
+      c.members[me] = {'l-1', 'l-2'};
+    }
     final p1 = c.seedPost(
       'l-1',
       'u2',
       '평일 새벽 6시에 하체 같이 하실 분 있나요? 스쿼트 보조 서로 봐주면 좋을 것 같아요!',
-      at: now.subtract(const Duration(minutes: 42)),
+      at: now.subtract(ago(m: 42)),
+      tag: PostTag.mate,
     );
     final p2 = c.seedPost(
       'l-1',
       'u4',
       '헬스 시작한 지 2주 됐는데 3분할이 나을까요 무분할이 나을까요? 주 4회 갈 수 있어요.',
-      at: now.subtract(const Duration(hours: 3)),
+      at: now.subtract(ago(h: 3)),
+      tag: PostTag.question,
     );
-    c.seedPost(
+    final p3 = c.seedPost(
       'l-1',
       'u1',
       '오늘 스미스머신 옆 케이블 하나 고장났어요. 카운터에 말해뒀습니다!',
-      at: now.subtract(const Duration(days: 1, hours: 2)),
+      at: now.subtract(ago(h: 5)),
+      tag: PostTag.info,
+    );
+    c.seedPost(
+      'l-1',
+      'u6',
+      '저녁 7~8시가 제일 붐비네요. 9시 넘어가면 랙 여유 있어요!',
+      at: now.subtract(ago(d: 1, h: 2)),
+      tag: PostTag.info,
+    );
+    c.seedPost(
+      'l-1',
+      'u5',
+      '3개월 만에 데드 140 찍었습니다… 다들 꾸준히 하면 됩니다 진짜로',
+      at: now.subtract(ago(d: 2)),
+      tag: PostTag.free,
+    );
+    final p6 = c.seedPost(
+      'l-2',
+      'u3',
+      '역삼 바디스페이스 PT 받아보신 분 후기 궁금해요. 가격대랑 선생님 스타일요!',
+      at: now.subtract(ago(h: 8)),
+      tag: PostTag.question,
     );
     c.seedPost(
       'l-2',
-      'u3',
-      '역삼 바디스페이스 PT 받아보신 분 후기 궁금해요',
-      at: now.subtract(const Duration(hours: 8)),
+      'u5',
+      '새로 들어온 해머스트렝스 로우 머신 좋네요. 등 자극 확실합니다',
+      at: now.subtract(ago(d: 1, h: 6)),
+      tag: PostTag.review,
     );
     c.seedComment(p1.id, 'u1', '저요! 월수금 가능해요');
     c.seedComment(p1.id, 'u3', '저도 새벽파입니다 ㅎㅎ');
+    c.seedComment(p1.id, 'u2', '좋아요! 월요일 6시에 스쿼트랙 앞에서 봬요');
     c.seedComment(p2.id, 'u3', '처음엔 무분할로 전신 3회 추천해요. 자세 익히기 좋아요');
-    for (final u in ['u1', 'u3', 'u4']) {
+    c.seedComment(p3.id, 'u6', '감사합니다 오늘 못 쓸 뻔');
+    c.seedComment(p6.id, 'u5', '저 받아봤는데 자세 교정 꼼꼼하게 봐주세요');
+    for (final u in ['u1', 'u3', 'u4', 'u5', 'u6']) {
       c.seedLike(p1.id, u);
     }
-    c.seedLike(p2.id, 'u1');
+    for (final u in ['u1', 'u5']) {
+      c.seedLike(p2.id, u);
+    }
+    c.seedLike(p3.id, 'u2');
     return c;
   }
 }

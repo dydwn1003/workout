@@ -11,9 +11,12 @@ import '../../theme.dart';
 import '../../widgets.dart';
 import '../sign_in_sheet.dart';
 import 'community_common.dart';
+import 'community_widgets.dart';
 import 'gym_board_screen.dart';
+import 'post_screen.dart';
 
-/// 커뮤니티 tab: my gyms, and a search over every gym to find the others.
+/// 커뮤니티 tab: a hero card, my gyms as cards, their newest posts, and a
+/// search over every gym.
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
 
@@ -23,11 +26,20 @@ class CommunityScreen extends StatefulWidget {
 
 class _CommunityScreenState extends State<CommunityScreen> {
   final _query = TextEditingController();
+  final _searchFocus = FocusNode();
   Timer? _debounce;
   String _q = '';
   List<Gym>? _results;
   var _searching = false;
   var _searchFailed = false;
+
+  // My gyms' feed.
+  PostTag? _tag;
+  List<Post>? _feed;
+  var _feedFailed = false;
+  var _feedMore = true;
+  var _feedLoadingMore = false;
+  String? _feedKey;
 
   @override
   void initState() {
@@ -41,8 +53,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
   void dispose() {
     _debounce?.cancel();
     _query.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
+
+  // --- search ---------------------------------------------------------------
 
   void _onQuery(String v) {
     _debounce?.cancel();
@@ -81,11 +96,115 @@ class _CommunityScreenState extends State<CommunityScreen> {
     }
   }
 
-  Future<void> _open(Gym gym) async {
+  void _clearSearch() {
+    _query.clear();
+    _onQuery('');
+    FocusScope.of(context).unfocus();
+  }
+
+  // --- feed -----------------------------------------------------------------
+
+  /// Reloads the feed when my gyms or the tag changed.
+  void _syncFeed(CommunityState c) {
+    final ids = [for (final g in c.myGyms) g.id]..sort();
+    final key = '${ids.join(',')}|${_tag?.name}';
+    if (key == _feedKey) return;
+    _feedKey = key;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadFeed());
+  }
+
+  Future<void> _loadFeed() async {
+    final c = CommunityScope.read(context);
+    final ids = [for (final g in c.myGyms) g.id];
+    if (ids.isEmpty) {
+      setState(() => _feed = const []);
+      return;
+    }
+    final key = _feedKey;
+    setState(() => _feedFailed = false);
+    try {
+      final list = await c.repo.feed(ids, tag: _tag);
+      if (!mounted || key != _feedKey) return;
+      setState(() {
+        _feed = list;
+        _feedMore = list.length == 20;
+      });
+    } catch (e) {
+      debugPrint('feed load failed: $e');
+      if (mounted) setState(() => _feedFailed = true);
+    }
+  }
+
+  Future<void> _moreFeed() async {
+    final feed = _feed;
+    if (_feedLoadingMore || !_feedMore || feed == null || feed.isEmpty) {
+      return;
+    }
+    _feedLoadingMore = true;
+    final c = CommunityScope.read(context);
+    try {
+      final list = await c.repo.feed(
+        [for (final g in c.myGyms) g.id],
+        tag: _tag,
+        before: feed.last.createdAt,
+      );
+      if (!mounted) return;
+      setState(() {
+        _feed = [...feed, ...list];
+        _feedMore = list.length == 20;
+      });
+    } catch (_) {
+    } finally {
+      _feedLoadingMore = false;
+    }
+  }
+
+  Future<void> _refresh() async {
+    final c = CommunityScope.read(context);
+    await c.refresh(force: true);
+    _feedKey = null;
+    if (mounted) _syncFeed(c);
+  }
+
+  void _replace(Post post, Post? updated) {
+    final feed = _feed;
+    if (feed == null) return;
+    setState(() {
+      _feed = [
+        for (final p in feed)
+          if (p.id != post.id) p else ?updated,
+      ];
+    });
+  }
+
+  // --- navigation -----------------------------------------------------------
+
+  Future<void> _openGym(Gym gym) async {
     FocusScope.of(context).unfocus();
     await Navigator.of(
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => GymBoardScreen(gym: gym)));
+    if (mounted) {
+      _feedKey = null;
+      _syncFeed(CommunityScope.read(context));
+    }
+  }
+
+  Future<void> _openPost(Post post) async {
+    final result = await Navigator.of(context).push<PostResult>(
+      MaterialPageRoute(builder: (_) => PostScreen(post: post)),
+    );
+    if (result == null || !mounted) return;
+    if (result.blockedAuthor != null) {
+      setState(
+        () => _feed = [
+          for (final p in _feed ?? const <Post>[])
+            if (p.authorId != result.blockedAuthor) p,
+        ],
+      );
+    } else {
+      _replace(post, result.post);
+    }
   }
 
   Future<void> _addGym() async {
@@ -104,293 +223,504 @@ class _CommunityScreenState extends State<CommunityScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(L.of(context).gymAdded)));
-    _query.clear();
-    _onQuery('');
-    await _open(gym);
+    _clearSearch();
+    await _openGym(gym);
   }
+
+  // --- build ----------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
     final t = L.of(context);
     final c = CommunityScope.of(context);
     final app = AppScope.of(context);
-    // Signed in or out elsewhere (settings): reload who I am.
     if (c.repo.myId != null && !c.loading && c.profile == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) c.refresh();
       });
     }
+    _syncFeed(c);
     final searching = _query.text.trim().isNotEmpty;
 
     return Scaffold(
-      appBar: AppBar(title: Text(t.communityTitle)),
-      body: RefreshIndicator(
-        onRefresh: () => c.refresh(force: true),
-        child: ListView(
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(4, 0, 4, 14),
-              child: Text(
-                t.communityIntro,
-                style: const TextStyle(color: AppColors.inkSoft, height: 1.4),
-              ),
+      body: SafeArea(
+        bottom: false,
+        child: RefreshIndicator(
+          onRefresh: _refresh,
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (n) {
+              if (!searching && n.metrics.extentAfter < 600) _moreFeed();
+              return false;
+            },
+            child: CustomScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              slivers: [
+                SliverToBoxAdapter(child: _header(t, c)),
+                SliverToBoxAdapter(child: _searchField(t, searching)),
+                if (searching)
+                  ..._resultSlivers(t, c)
+                else ...[
+                  if (!c.signedIn && app.auth != null)
+                    SliverToBoxAdapter(child: _signInCard(t, c)),
+                  SliverToBoxAdapter(child: _myGyms(t, c)),
+                  if (c.myGyms.isNotEmpty) ..._feedSlivers(t),
+                ],
+                const SliverToBoxAdapter(child: SizedBox(height: 32)),
+              ],
             ),
-            TextField(
-              controller: _query,
-              onChanged: _onQuery,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                hintText: t.gymSearchHint,
-                prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon: searching
-                    ? IconButton(
-                        icon: const Icon(Icons.close_rounded),
-                        onPressed: () {
-                          _query.clear();
-                          _onQuery('');
-                        },
-                      )
-                    : null,
-              ),
-            ),
-            const SizedBox(height: 16),
-            AnimatedSwitcher(
-              duration: Motion.fast,
-              child: searching
-                  ? _resultsView(t)
-                  : _myGymsView(t, c, app.auth != null),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _resultsView(L t) {
-    final results = _results;
-    return Column(
-      key: const ValueKey('results'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (_searching && results == null)
-          const Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(child: CircularProgressIndicator()),
-          )
-        else ...[
-          if (results != null && results.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Text(
-                _searchFailed ? t.communityError : t.gymSearchEmpty(_q),
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.inkSoft),
-              ),
-            ),
-          for (final (i, g) in (results ?? const <Gym>[]).indexed)
-            FadeSlideIn(
-              key: ValueKey('gym-${g.id}'),
-              delay: stagger(i),
-              dy: 8,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: GymTile(gym: g, onTap: () => _open(g)),
-              ),
-            ),
-          const SizedBox(height: 4),
-          TextButton.icon(
-            onPressed: _addGym,
-            icon: const Icon(Icons.add_location_alt_outlined),
-            label: Text(t.addGym),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _myGymsView(L t, CommunityState c, bool canSignIn) {
-    return Column(
-      key: const ValueKey('mine'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (!c.signedIn && canSignIn) ...[
-          SoftCard(
-            padding: const EdgeInsets.all(18),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.forum_outlined,
-                  color: AppColors.peach,
-                  size: 28,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    t.communitySignIn,
-                    style: const TextStyle(height: 1.4),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                FilledButton(
-                  onPressed: () async {
-                    await showSignInSheet(context);
-                    if (mounted) await c.refresh(force: true);
-                  },
-                  child: Text(t.communitySignInCta),
-                ),
-              ],
-            ),
+  Widget _header(L t, CommunityState c) {
+    final today = (_feed ?? const <Post>[])
+        .where((p) => DateTime.now().difference(p.createdAt).inHours < 24)
+        .length;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            t.navCommunity,
+            style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 12),
-        ],
-        SectionTitle(t.myGyms),
-        if (c.loading && c.myGyms.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(child: CircularProgressIndicator()),
-          )
-        else if (c.failed)
-          SoftCard(
-            padding: const EdgeInsets.all(18),
-            child: Row(
-              children: [
-                Expanded(child: Text(t.communityError)),
-                TextButton(
-                  onPressed: () => c.refresh(force: true),
-                  child: Text(t.retry),
-                ),
-              ],
-            ),
-          )
-        else if (c.myGyms.isEmpty)
-          SoftCard(
-            padding: const EdgeInsets.all(18),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.peachSoft,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.fitness_center_rounded,
-                    color: AppColors.peach,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    t.myGymsEmpty,
-                    style: const TextStyle(
-                      color: AppColors.inkSoft,
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          )
-        else
-          for (final (i, g) in c.myGyms.indexed)
-            FadeSlideIn(
-              key: ValueKey('my-${g.id}'),
-              delay: stagger(i),
-              dy: 8,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: GymTile(gym: g, mine: true, onTap: () => _open(g)),
-              ),
-            ),
-      ],
-    );
-  }
-}
-
-/// A gym in a list: name, area, members and posts.
-class GymTile extends StatelessWidget {
-  final Gym gym;
-  final bool mine;
-  final VoidCallback onTap;
-  const GymTile({
-    super.key,
-    required this.gym,
-    required this.onTap,
-    this.mine = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final t = L.of(context);
-    final last = gym.lastPostAt;
-    return SoftCard(
-      onTap: onTap,
-      padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
-      child: Row(
-        children: [
           Container(
-            width: 44,
-            height: 44,
+            padding: const EdgeInsets.fromLTRB(20, 18, 12, 18),
             decoration: BoxDecoration(
-              color: mine ? AppColors.peach : AppColors.peachSoft,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(
-              Icons.fitness_center_rounded,
-              color: mine ? Colors.white : AppColors.peach,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  gym.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: headingFont,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 15.5,
-                  ),
-                ),
-                if (gym.address.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    gym.shortAddress,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      color: AppColors.inkSoft,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 6),
-                Text(
-                  [
-                    t.gymMembers('${gym.memberCount}'),
-                    t.gymPosts('${gym.postCount}'),
-                    if (last != null) timeAgo(t, last),
-                  ].join(' · '),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.inkSoft,
-                  ),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFFF8E7F), Color(0xFFFFB38A)],
+              ),
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.peach.withValues(alpha: 0.35),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
                 ),
               ],
             ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        t.heroTitle,
+                        style: const TextStyle(
+                          fontFamily: headingFont,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 20,
+                          height: 1.3,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          _HeroPill(
+                            Icons.bookmark_rounded,
+                            t.heroMyGyms('${c.myGyms.length}'),
+                          ),
+                          _HeroPill(
+                            Icons.local_fire_department_rounded,
+                            t.heroNewToday('$today'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const Mascot(size: 76, mood: MascotMood.cheer),
+              ],
+            ),
           ),
-          const Icon(Icons.chevron_right_rounded, color: AppColors.inkSoft),
         ],
       ),
     );
   }
+
+  Widget _searchField(L t, bool searching) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+    child: Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x12B98B6E),
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: _query,
+        focusNode: _searchFocus,
+        onChanged: _onQuery,
+        textInputAction: TextInputAction.search,
+        decoration: InputDecoration(
+          hintText: t.gymSearchHint,
+          filled: false,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 16),
+          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.peach),
+          suffixIcon: searching
+              ? IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: _clearSearch,
+                )
+              : null,
+        ),
+      ),
+    ),
+  );
+
+  List<Widget> _resultSlivers(L t, CommunityState c) {
+    final results = _results;
+    if (_searching && results == null) {
+      return const [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        ),
+      ];
+    }
+    return [
+      if (results != null && results.isNotEmpty)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+            child: Text(
+              t.searchResults('${results.length}'),
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: AppColors.inkSoft,
+              ),
+            ),
+          ),
+        ),
+      if (results != null && results.isEmpty)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
+            child: MascotSays(
+              text: _searchFailed ? t.communityError : t.gymSearchEmpty(_q),
+              mood: MascotMood.thinking,
+              size: 52,
+            ),
+          ),
+        ),
+      SliverList.builder(
+        itemCount: results?.length ?? 0,
+        itemBuilder: (context, i) {
+          final g = results![i];
+          return FadeSlideIn(
+            key: ValueKey('gym-${g.id}'),
+            delay: stagger(i),
+            dy: 8,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: GymRow(
+                gym: g,
+                mine: c.isMine(g.id),
+                onTap: () => _openGym(g),
+              ),
+            ),
+          );
+        },
+      ),
+      SliverToBoxAdapter(
+        child: Center(
+          child: TextButton.icon(
+            onPressed: _addGym,
+            icon: const Icon(Icons.add_location_alt_rounded),
+            label: Text(t.addGym),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  Widget _signInCard(L t, CommunityState c) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+    child: SoftCard(
+      padding: const EdgeInsets.fromLTRB(18, 16, 14, 16),
+      child: Row(
+        children: [
+          const Mascot(size: 44, mood: MascotMood.happy),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(t.communitySignIn, style: const TextStyle(height: 1.4)),
+          ),
+          const SizedBox(width: 8),
+          FilledButton(
+            onPressed: () async {
+              await showSignInSheet(context);
+              if (mounted) await c.refresh(force: true);
+            },
+            child: Text(t.communitySignInCta),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _myGyms(L t, CommunityState c) {
+    if (c.loading && c.myGyms.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(32),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (c.failed) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: SoftCard(
+          padding: const EdgeInsets.all(18),
+          child: Row(
+            children: [
+              Expanded(child: Text(t.communityError)),
+              TextButton(
+                onPressed: () => c.refresh(force: true),
+                child: Text(t.retry),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (c.myGyms.isEmpty) return _startCard(t);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+          child: SectionTitle(t.myGyms),
+        ),
+        SizedBox(
+          height: 150,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            children: [
+              for (final (i, g) in c.myGyms.indexed)
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: FadeSlideIn(
+                    key: ValueKey('card-${g.id}'),
+                    delay: stagger(i),
+                    dy: 10,
+                    child: GymCard(gym: g, onTap: () => _openGym(g)),
+                  ),
+                ),
+              FindGymCard(onTap: () => _searchFocus.requestFocus()),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _startCard(L t) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    child: SoftCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Mascot(size: 52, mood: MascotMood.happy),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  t.startTitle,
+                  style: const TextStyle(
+                    fontFamily: headingFont,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          for (final (i, (icon, text, color, soft)) in [
+            (
+              Icons.search_rounded,
+              t.startStep1,
+              AppColors.sky,
+              AppColors.skySoft,
+            ),
+            (
+              Icons.bookmark_add_rounded,
+              t.startStep2,
+              AppColors.peach,
+              AppColors.peachSoft,
+            ),
+            (
+              Icons.people_alt_rounded,
+              t.startStep3,
+              AppColors.mint,
+              AppColors.mintSoft,
+            ),
+          ].indexed)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: soft,
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    child: Icon(icon, size: 18, color: color),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${i + 1}',
+                    style: TextStyle(
+                      fontFamily: headingFont,
+                      fontWeight: FontWeight.w800,
+                      color: color,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(text)),
+                ],
+              ),
+            ),
+          const SizedBox(height: 4),
+          FilledButton.icon(
+            onPressed: () => _searchFocus.requestFocus(),
+            icon: const Icon(Icons.search_rounded),
+            label: Text(t.findGym),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  List<Widget> _feedSlivers(L t) {
+    final feed = _feed;
+    return [
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+          child: SectionTitle(t.myGymsNews),
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: TagFilterBar(
+            selected: _tag,
+            onChanged: (tag) => setState(() => _tag = tag),
+          ),
+        ),
+      ),
+      if (_feedFailed)
+        SliverToBoxAdapter(
+          child: Center(
+            child: TextButton(onPressed: _loadFeed, child: Text(t.retry)),
+          ),
+        )
+      else if (feed == null)
+        const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        )
+      else if (feed.isEmpty)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+            child: MascotSays(
+              text: t.feedEmpty,
+              mood: MascotMood.sleepy,
+              size: 52,
+            ),
+          ),
+        )
+      else
+        SliverList.builder(
+          itemCount: feed.length,
+          itemBuilder: (context, i) {
+            final p = feed[i];
+            return FadeSlideIn(
+              key: ValueKey('feed-${p.id}-${_tag?.name}'),
+              delay: stagger(i),
+              dy: 10,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: PostCard(
+                  post: p,
+                  showGym: true,
+                  onTap: () => _openPost(p),
+                  onChanged: (u) => _replace(p, u),
+                  onBlocked: () => setState(
+                    () => _feed = [
+                      for (final x in feed)
+                        if (x.authorId != p.authorId) x,
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+    ];
+  }
+}
+
+class _HeroPill extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _HeroPill(this.icon, this.text);
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.25),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: Colors.white),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: const TextStyle(
+            fontFamily: headingFont,
+            fontWeight: FontWeight.w800,
+            fontSize: 12.5,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _AddGymSheet extends StatefulWidget {
@@ -441,7 +771,27 @@ class _AddGymSheetState extends State<_AddGymSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(t.addGymTitle, style: Theme.of(context).textTheme.titleLarge),
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.peachSoft,
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: const Icon(
+                  Icons.add_location_alt_rounded,
+                  color: AppColors.peach,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                t.addGymTitle,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
           TextField(
             controller: _name,

@@ -103,13 +103,13 @@ void main() {
 
     test('newest first, paged with before', () async {
       final all = await repo.posts('l-1');
-      expect(all.length, 3);
+      expect(all.length, 5);
       expect(
         all.map((p) => p.createdAt).toList(),
         [...all.map((p) => p.createdAt)]..sort((a, b) => b.compareTo(a)),
       );
       final older = await repo.posts('l-1', before: all.first.createdAt);
-      expect(older.length, 2);
+      expect(older.length, 4);
     });
 
     test('blocking hides the person\'s posts and comments', () async {
@@ -144,6 +144,39 @@ void main() {
           ),
         ),
       );
+    });
+
+    test('tags filter a board; the feed mixes my gyms with names', () async {
+      final mates = await repo.posts('l-1', tag: PostTag.mate);
+      expect(mates, isNotEmpty);
+      expect(mates.every((p) => p.tag == PostTag.mate), isTrue);
+      final feed = await repo.feed(['l-1', 'l-2']);
+      expect(feed.map((p) => p.gymId).toSet(), {'l-1', 'l-2'});
+      expect(feed.every((p) => p.gymName != null), isTrue);
+      final times = feed.map((p) => p.createdAt).toList();
+      expect(times, [...times]..sort((a, b) => b.compareTo(a)));
+      expect(await repo.feed(const []), isEmpty);
+
+      await repo.createProfile('헬린이');
+      final p = await repo.writePost(
+        'l-3',
+        '같이 해요',
+        const [],
+        tag: PostTag.mate,
+      );
+      expect(p.tag, PostTag.mate);
+      final edited = await repo.editPost(p, '같이 해요!', tag: PostTag.info);
+      expect(edited.tag, PostTag.info);
+      expect(PostTag.parse('nope'), PostTag.free);
+    });
+
+    test('photos stay with the post', () async {
+      await repo.createProfile('헬린이');
+      final jpeg = Uint8List.fromList([0xFF, 0xD8, 0xFF, 0xE0, 1, 2, 3]);
+      final p = await repo.writePost('l-4', '사진', [jpeg, jpeg]);
+      expect(p.images.length, 2);
+      expect(p.images.first, startsWith('data:image/jpeg;base64,'));
+      expect((await repo.posts('l-4')).single.images.length, 2);
     });
 
     test('added gyms are searchable and marked as user-added', () async {

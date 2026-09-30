@@ -3090,6 +3090,162 @@ abstract class L {
   /// In ko, this message translates to:
   /// **'다시 시도'**
   String get retry;
+
+  /// No description provided for @tagAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체'**
+  String get tagAll;
+
+  /// No description provided for @tagFree.
+  ///
+  /// In ko, this message translates to:
+  /// **'잡담'**
+  String get tagFree;
+
+  /// No description provided for @tagMate.
+  ///
+  /// In ko, this message translates to:
+  /// **'운동메이트'**
+  String get tagMate;
+
+  /// No description provided for @tagQuestion.
+  ///
+  /// In ko, this message translates to:
+  /// **'질문'**
+  String get tagQuestion;
+
+  /// No description provided for @tagInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'정보'**
+  String get tagInfo;
+
+  /// No description provided for @tagReview.
+  ///
+  /// In ko, this message translates to:
+  /// **'후기'**
+  String get tagReview;
+
+  /// No description provided for @tagHintFree.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘 운동 어땠나요? 자유롭게 이야기해요'**
+  String get tagHintFree;
+
+  /// No description provided for @tagHintMate.
+  ///
+  /// In ko, this message translates to:
+  /// **'요일, 시간, 운동 부위를 적으면 메이트를 찾기 쉬워요'**
+  String get tagHintMate;
+
+  /// No description provided for @tagHintQuestion.
+  ///
+  /// In ko, this message translates to:
+  /// **'궁금한 점을 구체적으로 적어 주세요'**
+  String get tagHintQuestion;
+
+  /// No description provided for @tagHintInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'붐비는 시간, 기구 상태, 이벤트 소식을 나눠요'**
+  String get tagHintInfo;
+
+  /// No description provided for @tagHintReview.
+  ///
+  /// In ko, this message translates to:
+  /// **'PT, 기구, 수업 후기를 남겨요'**
+  String get tagHintReview;
+
+  /// No description provided for @chooseTag.
+  ///
+  /// In ko, this message translates to:
+  /// **'어떤 글인가요?'**
+  String get chooseTag;
+
+  /// No description provided for @heroTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘 우리 헬스장엔\n무슨 일이?'**
+  String get heroTitle;
+
+  /// No description provided for @heroMyGyms.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 헬스장 {n}'**
+  String heroMyGyms(String n);
+
+  /// No description provided for @heroNewToday.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘 새 글 {n}'**
+  String heroNewToday(String n);
+
+  /// No description provided for @findGym.
+  ///
+  /// In ko, this message translates to:
+  /// **'헬스장 찾기'**
+  String get findGym;
+
+  /// No description provided for @myGymsNews.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 헬스장 소식'**
+  String get myGymsNews;
+
+  /// No description provided for @feedEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 새 글이 없어요. 먼저 인사를 남겨 보세요!'**
+  String get feedEmpty;
+
+  /// No description provided for @startTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'우리 헬스장 커뮤니티 시작하기'**
+  String get startTitle;
+
+  /// No description provided for @startStep1.
+  ///
+  /// In ko, this message translates to:
+  /// **'다니는 헬스장을 검색해요'**
+  String get startStep1;
+
+  /// No description provided for @startStep2.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 헬스장에 추가해요'**
+  String get startStep2;
+
+  /// No description provided for @startStep3.
+  ///
+  /// In ko, this message translates to:
+  /// **'운동 메이트를 찾고 정보를 나눠요'**
+  String get startStep3;
+
+  /// No description provided for @newBadge.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 글'**
+  String get newBadge;
+
+  /// No description provided for @authorBadge.
+  ///
+  /// In ko, this message translates to:
+  /// **'작성자'**
+  String get authorBadge;
+
+  /// No description provided for @setupSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'헬스장 친구들에게 보이는 이름이에요'**
+  String get setupSubtitle;
+
+  /// No description provided for @searchResults.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색 결과 {n}'**
+  String searchResults(String n);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

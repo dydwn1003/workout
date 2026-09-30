@@ -1738,4 +1738,88 @@ class LKo extends L {
 
   @override
   String get retry => '다시 시도';
+
+  @override
+  String get tagAll => '전체';
+
+  @override
+  String get tagFree => '잡담';
+
+  @override
+  String get tagMate => '운동메이트';
+
+  @override
+  String get tagQuestion => '질문';
+
+  @override
+  String get tagInfo => '정보';
+
+  @override
+  String get tagReview => '후기';
+
+  @override
+  String get tagHintFree => '오늘 운동 어땠나요? 자유롭게 이야기해요';
+
+  @override
+  String get tagHintMate => '요일, 시간, 운동 부위를 적으면 메이트를 찾기 쉬워요';
+
+  @override
+  String get tagHintQuestion => '궁금한 점을 구체적으로 적어 주세요';
+
+  @override
+  String get tagHintInfo => '붐비는 시간, 기구 상태, 이벤트 소식을 나눠요';
+
+  @override
+  String get tagHintReview => 'PT, 기구, 수업 후기를 남겨요';
+
+  @override
+  String get chooseTag => '어떤 글인가요?';
+
+  @override
+  String get heroTitle => '오늘 우리 헬스장엔\n무슨 일이?';
+
+  @override
+  String heroMyGyms(String n) {
+    return '내 헬스장 $n';
+  }
+
+  @override
+  String heroNewToday(String n) {
+    return '오늘 새 글 $n';
+  }
+
+  @override
+  String get findGym => '헬스장 찾기';
+
+  @override
+  String get myGymsNews => '내 헬스장 소식';
+
+  @override
+  String get feedEmpty => '아직 새 글이 없어요. 먼저 인사를 남겨 보세요!';
+
+  @override
+  String get startTitle => '우리 헬스장 커뮤니티 시작하기';
+
+  @override
+  String get startStep1 => '다니는 헬스장을 검색해요';
+
+  @override
+  String get startStep2 => '내 헬스장에 추가해요';
+
+  @override
+  String get startStep3 => '운동 메이트를 찾고 정보를 나눠요';
+
+  @override
+  String get newBadge => '새 글';
+
+  @override
+  String get authorBadge => '작성자';
+
+  @override
+  String get setupSubtitle => '헬스장 친구들에게 보이는 이름이에요';
+
+  @override
+  String searchResults(String n) {
+    return '검색 결과 $n';
+  }
 }

@@ -1342,5 +1342,52 @@
   "blockedWordsError": "허용되지 않는 표현이 있어요. 고쳐서 다시 올려 주세요.",
   "badImage": "JPG, PNG 사진만 올릴 수 있어요 (5MB 이하)",
   "communityError": "연결하지 못했어요. 잠시 후 다시 시도해 주세요.",
-  "retry": "다시 시도"
+  "retry": "다시 시도",
+  "tagAll": "전체",
+  "tagFree": "잡담",
+  "tagMate": "운동메이트",
+  "tagQuestion": "질문",
+  "tagInfo": "정보",
+  "tagReview": "후기",
+  "tagHintFree": "오늘 운동 어땠나요? 자유롭게 이야기해요",
+  "tagHintMate": "요일, 시간, 운동 부위를 적으면 메이트를 찾기 쉬워요",
+  "tagHintQuestion": "궁금한 점을 구체적으로 적어 주세요",
+  "tagHintInfo": "붐비는 시간, 기구 상태, 이벤트 소식을 나눠요",
+  "tagHintReview": "PT, 기구, 수업 후기를 남겨요",
+  "chooseTag": "어떤 글인가요?",
+  "heroTitle": "오늘 우리 헬스장엔\n무슨 일이?",
+  "heroMyGyms": "내 헬스장 {n}",
+  "@heroMyGyms": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "heroNewToday": "오늘 새 글 {n}",
+  "@heroNewToday": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "findGym": "헬스장 찾기",
+  "myGymsNews": "내 헬스장 소식",
+  "feedEmpty": "아직 새 글이 없어요. 먼저 인사를 남겨 보세요!",
+  "startTitle": "우리 헬스장 커뮤니티 시작하기",
+  "startStep1": "다니는 헬스장을 검색해요",
+  "startStep2": "내 헬스장에 추가해요",
+  "startStep3": "운동 메이트를 찾고 정보를 나눠요",
+  "newBadge": "새 글",
+  "authorBadge": "작성자",
+  "setupSubtitle": "헬스장 친구들에게 보이는 이름이에요",
+  "searchResults": "검색 결과 {n}",
+  "@searchResults": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  }
 }
