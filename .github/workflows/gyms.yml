@@ -1,0 +1,30 @@
+# Refreshes the gym list for the community (tool/load_gyms.py) from the
+# 체력단련장업 open data every Monday, and on demand from the Actions tab.
+# Needs the repository secrets DATA_GO_KR_KEY and SUPABASE_SERVICE_ROLE_KEY
+# (and the SUPABASE_URL variable); without them it skips.
+name: Refresh gyms
+
+on:
+  schedule:
+    - cron: '17 18 * * 0' # Monday 03:17 KST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gyms:
+    runs-on: ubuntu-latest
+    env:
+      DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load gyms
+        run: |
+          if [ -z "$DATA_GO_KR_KEY" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::warning::DATA_GO_KR_KEY or SUPABASE_SERVICE_ROLE_KEY secret is missing: skipped"
+            exit 0
+          fi
+          python3 tool/load_gyms.py
