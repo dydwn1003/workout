@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/coach_engine/coach_engine.dart';
 import '../../data/entities.dart';
@@ -45,6 +46,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
+    if (!widget.editing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _resumeRestore());
+    }
     if (widget.editing) {
       final s = AppScope.read(context);
       final p = s.profile!;
@@ -195,9 +199,48 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _signInExisting() async {
     final state = AppScope.read(context);
     if (!state.signedIn) {
+      // Kakao (and Google on the web) leave the page and reload it on the
+      // way back: remember to carry on then (see _resumeRestore).
+      await _setRestorePending(true);
+      if (!mounted) return;
       await showSignInSheet(context);
+      await _setRestorePending(false);
       if (!mounted || !state.signedIn) return;
     }
+    await _loadAccount();
+  }
+
+  static const _restorePendingKey = 'onboarding.restorePending';
+
+  Future<void> _setRestorePending(bool on) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      on
+          ? await prefs.setBool(_restorePendingKey, true)
+          : await prefs.remove(_restorePendingKey);
+    } catch (_) {}
+  }
+
+  /// Back from a sign-in that reloaded the app: finish 이미 계정이 있어요.
+  Future<void> _resumeRestore() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool(_restorePendingKey) != true) return;
+      await prefs.remove(_restorePendingKey);
+    } catch (_) {
+      return;
+    }
+    if (!mounted) return;
+    final state = AppScope.read(context);
+    // The session from the redirect may take a moment to settle.
+    for (var i = 0; i < 25 && !state.signedIn; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    }
+    if (mounted && state.signedIn) await _loadAccount();
+  }
+
+  Future<void> _loadAccount() async {
+    final state = AppScope.read(context);
     setState(() => _busy = true);
     final loaded = await state.waitForAccountData();
     // With records, the app replaces this screen by itself.
