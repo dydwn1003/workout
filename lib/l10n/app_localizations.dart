@@ -1997,7 +1997,7 @@ abstract class L {
   /// No description provided for @reportTitle.
   ///
   /// In ko, this message translates to:
-  /// **'이번 주 코칭 리포트'**
+  /// **'신고 사유를 골라 주세요'**
   String get reportTitle;
 
   /// No description provided for @reportAte.
@@ -2736,6 +2736,360 @@ abstract class L {
   /// In ko, this message translates to:
   /// **'내 식사 관리'**
   String get savedMealsManage;
+
+  /// No description provided for @navCommunity.
+  ///
+  /// In ko, this message translates to:
+  /// **'커뮤니티'**
+  String get navCommunity;
+
+  /// No description provided for @communityTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'헬스장 커뮤니티'**
+  String get communityTitle;
+
+  /// No description provided for @communityIntro.
+  ///
+  /// In ko, this message translates to:
+  /// **'같은 헬스장 사람들과 운동 메이트를 찾고 정보를 나눠요'**
+  String get communityIntro;
+
+  /// No description provided for @myGyms.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 헬스장'**
+  String get myGyms;
+
+  /// No description provided for @myGymsEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'다니는 헬스장을 검색해서 내 헬스장에 추가해 보세요'**
+  String get myGymsEmpty;
+
+  /// No description provided for @gymSearchHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'헬스장 이름이나 동네 (예: 강남 에이블짐)'**
+  String get gymSearchHint;
+
+  /// No description provided for @gymSearchEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'\'{q}\' 헬스장을 찾지 못했어요'**
+  String gymSearchEmpty(String q);
+
+  /// No description provided for @addGym.
+  ///
+  /// In ko, this message translates to:
+  /// **'찾는 헬스장이 없나요? 직접 추가하기'**
+  String get addGym;
+
+  /// No description provided for @addGymTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'헬스장 추가'**
+  String get addGymTitle;
+
+  /// No description provided for @gymName.
+  ///
+  /// In ko, this message translates to:
+  /// **'헬스장 이름'**
+  String get gymName;
+
+  /// No description provided for @gymAddress.
+  ///
+  /// In ko, this message translates to:
+  /// **'주소 (예: 서울 강남구 테헤란로 152)'**
+  String get gymAddress;
+
+  /// No description provided for @gymAdded.
+  ///
+  /// In ko, this message translates to:
+  /// **'헬스장을 추가했어요'**
+  String get gymAdded;
+
+  /// No description provided for @gymMembers.
+  ///
+  /// In ko, this message translates to:
+  /// **'멤버 {n}'**
+  String gymMembers(String n);
+
+  /// No description provided for @gymPosts.
+  ///
+  /// In ko, this message translates to:
+  /// **'글 {n}'**
+  String gymPosts(String n);
+
+  /// No description provided for @joinGym.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 헬스장에 추가'**
+  String get joinGym;
+
+  /// No description provided for @joinedGym.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 헬스장'**
+  String get joinedGym;
+
+  /// No description provided for @leaveGym.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 헬스장에서 빼기'**
+  String get leaveGym;
+
+  /// No description provided for @boardEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 글이 없어요. 첫 글을 남겨 보세요!'**
+  String get boardEmpty;
+
+  /// No description provided for @writePost.
+  ///
+  /// In ko, this message translates to:
+  /// **'글쓰기'**
+  String get writePost;
+
+  /// No description provided for @postHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'운동 메이트 찾기, 기구·붐비는 시간 정보, 궁금한 점을 자유롭게 남겨 주세요'**
+  String get postHint;
+
+  /// No description provided for @postSubmit.
+  ///
+  /// In ko, this message translates to:
+  /// **'올리기'**
+  String get postSubmit;
+
+  /// No description provided for @photoLimit.
+  ///
+  /// In ko, this message translates to:
+  /// **'사진은 {n}장까지 올릴 수 있어요'**
+  String photoLimit(String n);
+
+  /// No description provided for @commentsN.
+  ///
+  /// In ko, this message translates to:
+  /// **'댓글 {n}'**
+  String commentsN(String n);
+
+  /// No description provided for @commentHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'댓글을 남겨 주세요'**
+  String get commentHint;
+
+  /// No description provided for @noComments.
+  ///
+  /// In ko, this message translates to:
+  /// **'첫 댓글을 남겨 보세요'**
+  String get noComments;
+
+  /// No description provided for @edited.
+  ///
+  /// In ko, this message translates to:
+  /// **'수정됨'**
+  String get edited;
+
+  /// No description provided for @justNow.
+  ///
+  /// In ko, this message translates to:
+  /// **'방금'**
+  String get justNow;
+
+  /// No description provided for @minutesAgo.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}분 전'**
+  String minutesAgo(String n);
+
+  /// No description provided for @hoursAgo.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}시간 전'**
+  String hoursAgo(String n);
+
+  /// No description provided for @daysAgo.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}일 전'**
+  String daysAgo(String n);
+
+  /// No description provided for @report.
+  ///
+  /// In ko, this message translates to:
+  /// **'신고'**
+  String get report;
+
+  /// No description provided for @reasonSpam.
+  ///
+  /// In ko, this message translates to:
+  /// **'스팸·광고'**
+  String get reasonSpam;
+
+  /// No description provided for @reasonAbuse.
+  ///
+  /// In ko, this message translates to:
+  /// **'욕설·비하·괴롭힘'**
+  String get reasonAbuse;
+
+  /// No description provided for @reasonSexual.
+  ///
+  /// In ko, this message translates to:
+  /// **'음란물·성적인 내용'**
+  String get reasonSexual;
+
+  /// No description provided for @reasonPrivacy.
+  ///
+  /// In ko, this message translates to:
+  /// **'개인정보 노출'**
+  String get reasonPrivacy;
+
+  /// No description provided for @reasonOther.
+  ///
+  /// In ko, this message translates to:
+  /// **'기타 부적절한 내용'**
+  String get reasonOther;
+
+  /// No description provided for @reported.
+  ///
+  /// In ko, this message translates to:
+  /// **'신고했어요. 여러 명이 신고하면 바로 가려지고, 운영자가 24시간 안에 확인해요.'**
+  String get reported;
+
+  /// No description provided for @blockUser.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 사람 차단'**
+  String get blockUser;
+
+  /// No description provided for @blockConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name} 님을 차단할까요? 이 사람의 글과 댓글이 더 이상 보이지 않아요.'**
+  String blockConfirm(String name);
+
+  /// No description provided for @blockAction.
+  ///
+  /// In ko, this message translates to:
+  /// **'차단'**
+  String get blockAction;
+
+  /// No description provided for @blocked.
+  ///
+  /// In ko, this message translates to:
+  /// **'차단했어요'**
+  String get blocked;
+
+  /// No description provided for @deletePostConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 글을 삭제할까요? 사진과 댓글도 함께 지워져요.'**
+  String get deletePostConfirm;
+
+  /// No description provided for @deleteCommentConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'댓글을 삭제할까요?'**
+  String get deleteCommentConfirm;
+
+  /// No description provided for @postDeleted.
+  ///
+  /// In ko, this message translates to:
+  /// **'글을 삭제했어요'**
+  String get postDeleted;
+
+  /// No description provided for @editPost.
+  ///
+  /// In ko, this message translates to:
+  /// **'수정'**
+  String get editPost;
+
+  /// No description provided for @communitySignIn.
+  ///
+  /// In ko, this message translates to:
+  /// **'글을 쓰고 댓글을 달려면 로그인해 주세요'**
+  String get communitySignIn;
+
+  /// No description provided for @communitySignInCta.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인하기'**
+  String get communitySignInCta;
+
+  /// No description provided for @setupTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'커뮤니티에서 쓸 닉네임'**
+  String get setupTitle;
+
+  /// No description provided for @nicknameHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'2~12자, 한글·영문·숫자'**
+  String get nicknameHint;
+
+  /// No description provided for @nicknameInvalid.
+  ///
+  /// In ko, this message translates to:
+  /// **'2~12자의 한글, 영문, 숫자로 정해 주세요'**
+  String get nicknameInvalid;
+
+  /// No description provided for @nicknameTaken.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미 쓰고 있는 닉네임이에요'**
+  String get nicknameTaken;
+
+  /// No description provided for @rulesTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'커뮤니티 규칙'**
+  String get rulesTitle;
+
+  /// No description provided for @rulesBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'· 욕설, 비하, 괴롭힘, 음란물, 불법·상업 광고는 허용되지 않아요.\n· 다른 사람의 연락처나 사진 같은 개인정보를 올리지 마세요.\n· 만남을 강요하거나 불쾌감을 주는 행동은 금지예요.\n· 규칙을 어긴 글은 신고로 가려지고, 이용이 제한될 수 있어요.'**
+  String get rulesBody;
+
+  /// No description provided for @agreeRules.
+  ///
+  /// In ko, this message translates to:
+  /// **'규칙에 동의하고 시작하기'**
+  String get agreeRules;
+
+  /// No description provided for @rateLimited.
+  ///
+  /// In ko, this message translates to:
+  /// **'조금 뒤에 다시 올려 주세요 (10분에 5개까지)'**
+  String get rateLimited;
+
+  /// No description provided for @blockedWordsError.
+  ///
+  /// In ko, this message translates to:
+  /// **'허용되지 않는 표현이 있어요. 고쳐서 다시 올려 주세요.'**
+  String get blockedWordsError;
+
+  /// No description provided for @badImage.
+  ///
+  /// In ko, this message translates to:
+  /// **'JPG, PNG 사진만 올릴 수 있어요 (5MB 이하)'**
+  String get badImage;
+
+  /// No description provided for @communityError.
+  ///
+  /// In ko, this message translates to:
+  /// **'연결하지 못했어요. 잠시 후 다시 시도해 주세요.'**
+  String get communityError;
+
+  /// No description provided for @retry.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 시도'**
+  String get retry;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

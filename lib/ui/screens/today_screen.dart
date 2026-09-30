@@ -326,7 +326,7 @@ class _DayBody extends StatelessWidget {
             SoftCard(
               color: AppColors.peachSoft,
               padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
-              onTap: () => HomeShell.goTo(context, 2),
+              onTap: () => HomeShell.goTo(context, 'checkin'),
               child: Row(
                 children: [
                   const Icon(Icons.celebration_rounded, color: AppColors.peach),
@@ -338,7 +338,7 @@ class _DayBody extends StatelessWidget {
                     ),
                   ),
                   TextButton(
-                    onPressed: () => HomeShell.goTo(context, 2),
+                    onPressed: () => HomeShell.goTo(context, 'checkin'),
                     child: Text(t.checkinGo),
                   ),
                 ],

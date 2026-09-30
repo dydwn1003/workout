@@ -93,7 +93,8 @@ jobs:
             --build-number="$(git rev-list --count HEAD)" \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
-            --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID"
+            --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID" \
+            --dart-define=COMMUNITY="${{ vars.COMMUNITY }}"
           cp build/app/outputs/flutter-apk/app-release.apk alasfit.apk
 
       - name: Publish release

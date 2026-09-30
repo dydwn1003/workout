@@ -6,10 +6,12 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../data/update_check.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
+import '../../state/community_state.dart';
 import '../motion.dart';
 import '../platform/reload.dart';
 import '../theme.dart';
 import 'checkin_screen.dart';
+import 'community/community_screen.dart';
 import 'review_sheet.dart';
 import 'settings_screen.dart';
 import 'today_screen.dart';
@@ -18,8 +20,13 @@ import 'trend_screen.dart';
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
 
-  static void goTo(BuildContext context, int tab) =>
-      context.findAncestorStateOfType<_HomeShellState>()?._select(tab);
+  /// Switches to a tab by name ('today', 'trend', 'community', 'checkin',
+  /// 'settings').
+  static void goTo(BuildContext context, String tab) {
+    final s = context.findAncestorStateOfType<_HomeShellState>();
+    final i = s?._tabNames.indexOf(tab) ?? -1;
+    if (i >= 0) s!._select(i);
+  }
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -114,7 +121,15 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         .then((_) => _updateShown = false);
   }
 
-  static const _tabNames = ['today', 'trend', 'checkin', 'settings'];
+  /// The community tab sits after 트렌드 when it's on.
+  bool get _community => CommunityScope.maybeRead(context) != null;
+  List<String> get _tabNames => [
+    'today',
+    'trend',
+    if (_community) 'community',
+    'checkin',
+    'settings',
+  ];
 
   void _select(int i) {
     if (i != _tab) {
@@ -167,6 +182,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         children: [
           TodayScreen(key: _today),
           const TrendScreen(),
+          if (_community) const CommunityScreen(),
           const CheckinScreen(),
           const SettingsScreen(),
         ],
@@ -185,6 +201,12 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             selectedIcon: const Icon(Icons.insights_rounded),
             label: t.navTrend,
           ),
+          if (_community)
+            NavigationDestination(
+              icon: const Icon(Icons.forum_outlined),
+              selectedIcon: const Icon(Icons.forum_rounded),
+              label: t.navCommunity,
+            ),
           NavigationDestination(
             icon: Badge(
               isLabelVisible: due,

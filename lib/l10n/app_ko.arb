@@ -682,7 +682,7 @@
   "reviewBadHint": "불편했던 점을 알려 주시면 고쳐 볼게요",
   "reviewSend": "보내기",
   "reviewSent": "의견 고마워요. 꼭 참고할게요",
-  "reportTitle": "이번 주 코칭 리포트",
+  "reportTitle": "신고 사유를 골라 주세요",
   "reportAte": "먹은 양",
   "reportAteValue": "최근 {days}일 평균 {kcal} kcal",
   "@reportAteValue": {
@@ -1220,5 +1220,127 @@
   },
   "foodDataSource": "출처: 식품의약품안전처 식품영양성분 데이터베이스",
   "foodDataSourceDesc": "음식 검색의 영양정보는 공공데이터포털에서 받은 데이터를 100g 기준으로 바꾼 값이에요.",
-  "savedMealsManage": "내 식사 관리"
+  "savedMealsManage": "내 식사 관리",
+  "navCommunity": "커뮤니티",
+  "communityTitle": "헬스장 커뮤니티",
+  "communityIntro": "같은 헬스장 사람들과 운동 메이트를 찾고 정보를 나눠요",
+  "myGyms": "내 헬스장",
+  "myGymsEmpty": "다니는 헬스장을 검색해서 내 헬스장에 추가해 보세요",
+  "gymSearchHint": "헬스장 이름이나 동네 (예: 강남 에이블짐)",
+  "gymSearchEmpty": "'{q}' 헬스장을 찾지 못했어요",
+  "@gymSearchEmpty": {
+    "placeholders": {
+      "q": {
+        "type": "String"
+      }
+    }
+  },
+  "addGym": "찾는 헬스장이 없나요? 직접 추가하기",
+  "addGymTitle": "헬스장 추가",
+  "gymName": "헬스장 이름",
+  "gymAddress": "주소 (예: 서울 강남구 테헤란로 152)",
+  "gymAdded": "헬스장을 추가했어요",
+  "gymMembers": "멤버 {n}",
+  "@gymMembers": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "gymPosts": "글 {n}",
+  "@gymPosts": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "joinGym": "내 헬스장에 추가",
+  "joinedGym": "내 헬스장",
+  "leaveGym": "내 헬스장에서 빼기",
+  "boardEmpty": "아직 글이 없어요. 첫 글을 남겨 보세요!",
+  "writePost": "글쓰기",
+  "postHint": "운동 메이트 찾기, 기구·붐비는 시간 정보, 궁금한 점을 자유롭게 남겨 주세요",
+  "postSubmit": "올리기",
+  "photoLimit": "사진은 {n}장까지 올릴 수 있어요",
+  "@photoLimit": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "commentsN": "댓글 {n}",
+  "@commentsN": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "commentHint": "댓글을 남겨 주세요",
+  "noComments": "첫 댓글을 남겨 보세요",
+  "edited": "수정됨",
+  "justNow": "방금",
+  "minutesAgo": "{n}분 전",
+  "@minutesAgo": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "hoursAgo": "{n}시간 전",
+  "@hoursAgo": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "daysAgo": "{n}일 전",
+  "@daysAgo": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "report": "신고",
+  "reasonSpam": "스팸·광고",
+  "reasonAbuse": "욕설·비하·괴롭힘",
+  "reasonSexual": "음란물·성적인 내용",
+  "reasonPrivacy": "개인정보 노출",
+  "reasonOther": "기타 부적절한 내용",
+  "reported": "신고했어요. 여러 명이 신고하면 바로 가려지고, 운영자가 24시간 안에 확인해요.",
+  "blockUser": "이 사람 차단",
+  "blockConfirm": "{name} 님을 차단할까요? 이 사람의 글과 댓글이 더 이상 보이지 않아요.",
+  "@blockConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "blockAction": "차단",
+  "blocked": "차단했어요",
+  "deletePostConfirm": "이 글을 삭제할까요? 사진과 댓글도 함께 지워져요.",
+  "deleteCommentConfirm": "댓글을 삭제할까요?",
+  "postDeleted": "글을 삭제했어요",
+  "editPost": "수정",
+  "communitySignIn": "글을 쓰고 댓글을 달려면 로그인해 주세요",
+  "communitySignInCta": "로그인하기",
+  "setupTitle": "커뮤니티에서 쓸 닉네임",
+  "nicknameHint": "2~12자, 한글·영문·숫자",
+  "nicknameInvalid": "2~12자의 한글, 영문, 숫자로 정해 주세요",
+  "nicknameTaken": "이미 쓰고 있는 닉네임이에요",
+  "rulesTitle": "커뮤니티 규칙",
+  "rulesBody": "· 욕설, 비하, 괴롭힘, 음란물, 불법·상업 광고는 허용되지 않아요.\n· 다른 사람의 연락처나 사진 같은 개인정보를 올리지 마세요.\n· 만남을 강요하거나 불쾌감을 주는 행동은 금지예요.\n· 규칙을 어긴 글은 신고로 가려지고, 이용이 제한될 수 있어요.",
+  "agreeRules": "규칙에 동의하고 시작하기",
+  "rateLimited": "조금 뒤에 다시 올려 주세요 (10분에 5개까지)",
+  "blockedWordsError": "허용되지 않는 표현이 있어요. 고쳐서 다시 올려 주세요.",
+  "badImage": "JPG, PNG 사진만 올릴 수 있어요 (5MB 이하)",
+  "communityError": "연결하지 못했어요. 잠시 후 다시 시도해 주세요.",
+  "retry": "다시 시도"
 }

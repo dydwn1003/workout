@@ -4,12 +4,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'data/analytics.dart';
 import 'data/auth_service.dart';
+import 'data/community.dart';
 import 'data/reminders.dart';
 import 'data/remote_food_search.dart';
 import 'data/repository.dart';
 import 'data/sync.dart';
 import 'l10n/app_localizations.dart';
 import 'state/app_state.dart';
+import 'state/community_state.dart';
 import 'ui/screens/home_shell.dart';
 import 'ui/screens/onboarding_screen.dart';
 import 'ui/theme.dart';
@@ -27,8 +29,21 @@ Future<void> main() async {
       auth = AuthService(Supabase.instance.client);
     } catch (_) {}
   }
+  // 헬스장 커뮤니티 (--dart-define=COMMUNITY=true); COMMUNITY_DEMO=true runs
+  // it on sample data in memory, without a server.
+  const communityOn = bool.fromEnvironment('COMMUNITY');
+  const communityDemo = bool.fromEnvironment('COMMUNITY_DEMO');
+  final CommunityRepository? communityRepo = communityDemo
+      ? MemoryCommunity.demo(me: 'me')
+      : communityOn && auth != null
+      ? SupabaseCommunity(auth.client)
+      : null;
+  final community = communityRepo == null
+      ? null
+      : CommunityState(communityRepo);
   final state = AppState(
     SyncingRepository(LocalCoachRepository()),
+    beforeAccountDelete: communityRepo?.deleteMyPhotos,
     remoteSearch: RemoteFoodSearch.fromEnvironment(),
     auth: auth,
     reminderScheduler: LocalReminders.supported ? LocalReminders() : null,
@@ -42,12 +57,15 @@ Future<void> main() async {
     'onboarded': state.onboarded,
     'signed_in': state.signedIn,
   });
-  runApp(CoachApp(state: state));
+  // Signing in or out elsewhere (settings) reloads who I am there.
+  if (community != null) state.addListener(community.refresh);
+  runApp(CoachApp(state: state, community: community));
 }
 
 class CoachApp extends StatefulWidget {
   final AppState state;
-  const CoachApp({super.key, required this.state});
+  final CommunityState? community;
+  const CoachApp({super.key, required this.state, this.community});
 
   @override
   State<CoachApp> createState() => _CoachAppState();
@@ -80,7 +98,8 @@ class _CoachAppState extends State<CoachApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final state = widget.state;
-    return AppScope(
+    final community = widget.community;
+    final app = AppScope(
       state: state,
       child: ListenableBuilder(
         listenable: state,
@@ -105,5 +124,8 @@ class _CoachAppState extends State<CoachApp> with WidgetsBindingObserver {
         },
       ),
     );
+    return community == null
+        ? app
+        : CommunityScope(state: community, child: app);
   }
 }

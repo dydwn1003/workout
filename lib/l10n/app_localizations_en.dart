@@ -1096,7 +1096,7 @@ class LEn extends L {
   String get reviewSent => 'Thanks, we\'ll take it to heart';
 
   @override
-  String get reportTitle => 'This week\'s report';
+  String get reportTitle => 'Why are you reporting this?';
 
   @override
   String get reportAte => 'Eaten';
@@ -1572,4 +1572,205 @@ class LEn extends L {
 
   @override
   String get savedMealsManage => 'Manage my meals';
+
+  @override
+  String get navCommunity => 'Community';
+
+  @override
+  String get communityTitle => 'Gym community';
+
+  @override
+  String get communityIntro =>
+      'Find workout mates and share tips with people at your gym';
+
+  @override
+  String get myGyms => 'My gyms';
+
+  @override
+  String get myGymsEmpty => 'Search for your gym and add it to My gyms';
+
+  @override
+  String get gymSearchHint => 'Gym name or area';
+
+  @override
+  String gymSearchEmpty(String q) {
+    return 'No gyms match \'$q\'';
+  }
+
+  @override
+  String get addGym => 'Can\'t find it? Add your gym';
+
+  @override
+  String get addGymTitle => 'Add a gym';
+
+  @override
+  String get gymName => 'Gym name';
+
+  @override
+  String get gymAddress => 'Address';
+
+  @override
+  String get gymAdded => 'Gym added';
+
+  @override
+  String gymMembers(String n) {
+    return '$n members';
+  }
+
+  @override
+  String gymPosts(String n) {
+    return '$n posts';
+  }
+
+  @override
+  String get joinGym => 'Add to my gyms';
+
+  @override
+  String get joinedGym => 'My gym';
+
+  @override
+  String get leaveGym => 'Remove from my gyms';
+
+  @override
+  String get boardEmpty => 'No posts yet. Be the first!';
+
+  @override
+  String get writePost => 'Write';
+
+  @override
+  String get postHint =>
+      'Look for workout mates, share equipment or busy-hour tips, ask anything';
+
+  @override
+  String get postSubmit => 'Post';
+
+  @override
+  String photoLimit(String n) {
+    return 'Up to $n photos';
+  }
+
+  @override
+  String commentsN(String n) {
+    return '$n comments';
+  }
+
+  @override
+  String get commentHint => 'Add a comment';
+
+  @override
+  String get noComments => 'Be the first to comment';
+
+  @override
+  String get edited => 'edited';
+
+  @override
+  String get justNow => 'just now';
+
+  @override
+  String minutesAgo(String n) {
+    return '${n}m ago';
+  }
+
+  @override
+  String hoursAgo(String n) {
+    return '${n}h ago';
+  }
+
+  @override
+  String daysAgo(String n) {
+    return '${n}d ago';
+  }
+
+  @override
+  String get report => 'Report';
+
+  @override
+  String get reasonSpam => 'Spam or ads';
+
+  @override
+  String get reasonAbuse => 'Abuse or harassment';
+
+  @override
+  String get reasonSexual => 'Sexual content';
+
+  @override
+  String get reasonPrivacy => 'Personal information';
+
+  @override
+  String get reasonOther => 'Something else';
+
+  @override
+  String get reported =>
+      'Reported. Posts reported by several people are hidden right away and reviewed within 24 hours.';
+
+  @override
+  String get blockUser => 'Block this person';
+
+  @override
+  String blockConfirm(String name) {
+    return 'Block $name? You won\'t see their posts or comments anymore.';
+  }
+
+  @override
+  String get blockAction => 'Block';
+
+  @override
+  String get blocked => 'Blocked';
+
+  @override
+  String get deletePostConfirm =>
+      'Delete this post? Its photos and comments go too.';
+
+  @override
+  String get deleteCommentConfirm => 'Delete this comment?';
+
+  @override
+  String get postDeleted => 'Post deleted';
+
+  @override
+  String get editPost => 'Edit';
+
+  @override
+  String get communitySignIn => 'Sign in to post and comment';
+
+  @override
+  String get communitySignInCta => 'Sign in';
+
+  @override
+  String get setupTitle => 'Your community nickname';
+
+  @override
+  String get nicknameHint => '2-12 letters or numbers';
+
+  @override
+  String get nicknameInvalid => 'Use 2-12 letters or numbers';
+
+  @override
+  String get nicknameTaken => 'That nickname is taken';
+
+  @override
+  String get rulesTitle => 'Community rules';
+
+  @override
+  String get rulesBody =>
+      '· No abuse, harassment, sexual content, or illegal or commercial ads.\n· Don\'t post other people\'s contact details, photos or other personal info.\n· Don\'t pressure anyone to meet or make people uncomfortable.\n· Posts that break the rules are hidden when reported, and accounts can be restricted.';
+
+  @override
+  String get agreeRules => 'Agree and start';
+
+  @override
+  String get rateLimited => 'Please wait a bit (up to 5 posts per 10 minutes)';
+
+  @override
+  String get blockedWordsError =>
+      'That includes words that aren\'t allowed. Please edit and try again.';
+
+  @override
+  String get badImage => 'Only JPG or PNG photos up to 5 MB';
+
+  @override
+  String get communityError => 'Couldn\'t connect. Please try again later.';
+
+  @override
+  String get retry => 'Retry';
 }

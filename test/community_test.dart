@@ -1,0 +1,162 @@
+import 'dart:typed_data';
+
+import 'package:adapt_coach/data/community.dart';
+import 'package:adapt_coach/state/community_state.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  test('blocked words ignore spacing and punctuation', () {
+    expect(containsBlockedWords('오늘 하체 같이 하실 분'), isFalse);
+    expect(containsBlockedWords('시발'), isTrue);
+    expect(containsBlockedWords('시 . 발'), isTrue);
+    expect(containsBlockedWords('F u c k'), isTrue);
+    // Everyday words that contain a bad one's letters stay allowed.
+    expect(containsBlockedWords('걱정하지 말고 보지 마세요'), isFalse);
+    expect(containsBlockedWords('밤새 자지 않고 운동'), isFalse);
+    expect(containsBlockedWords('우리 시바견'), isFalse);
+  });
+
+  test('nicknames: 2-12 letters or numbers, no blocked words', () {
+    expect(validNickname('헬린이'), isTrue);
+    expect(validNickname('bench_100'), isTrue);
+    expect(validNickname('a'), isFalse);
+    expect(validNickname('너무너무긴닉네임입니다정말로'), isFalse);
+    expect(validNickname('공백 있음'), isFalse);
+    expect(validNickname('병신'), isFalse);
+  });
+
+  test('image type from the first bytes', () {
+    expect(
+      imageMimeType(Uint8List.fromList([0xFF, 0xD8, 0xFF, 0xE0, 0])),
+      'image/jpeg',
+    );
+    expect(
+      imageMimeType(
+        Uint8List.fromList([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0]),
+      ),
+      'image/png',
+    );
+    expect(
+      imageMimeType(
+        Uint8List.fromList('RIFF\x00\x00\x00\x00WEBPVP8 '.codeUnits),
+      ),
+      'image/webp',
+    );
+    // HEIC ("....ftypheic") isn't accepted by the bucket.
+    expect(
+      imageMimeType(Uint8List.fromList('\x00\x00\x00\x18ftypheic'.codeUnits)),
+      isNull,
+    );
+  });
+
+  test('gym short address drops the province', () {
+    const g = Gym(id: 'x', name: 'x', address: '서울특별시 강남구 테헤란로 152 (역삼동)');
+    expect(g.shortAddress, '강남구 테헤란로 152');
+  });
+
+  group('memory community', () {
+    late DateTime now;
+    late MemoryCommunity repo;
+    setUp(() {
+      now = DateTime(2026, 9, 30, 20);
+      repo = MemoryCommunity.demo(me: 'me', clock: () => now);
+    });
+
+    test('search matches every word, spaces ignored', () async {
+      expect((await repo.searchGyms('강남 에이블')).map((g) => g.id), ['l-1']);
+      expect((await repo.searchGyms('에이블짐강남')).map((g) => g.id), ['l-1']);
+      expect(await repo.searchGyms('없는헬스장'), isEmpty);
+    });
+
+    test('profile, join, post, like, comment', () async {
+      final c = CommunityState(repo);
+      await c.refresh();
+      expect(c.profile, isNull);
+      await expectLater(
+        c.createProfile('하체는사랑'),
+        throwsA(
+          isA<CommunityException>().having(
+            (e) => e.error,
+            'error',
+            CommunityError.nicknameTaken,
+          ),
+        ),
+      );
+      await c.createProfile('헬린이');
+      final gym = (await repo.searchGyms('망원')).single;
+      await c.join(gym);
+      expect(c.isMine(gym.id), isTrue);
+
+      final post = await repo.writePost(gym.id, '  같이 운동해요  ', const []);
+      expect(post.body, '같이 운동해요');
+      expect(post.nickname, '헬린이');
+      await repo.setLike(post.id, true);
+      await repo.addComment(post.id, '좋아요');
+      final board = await repo.posts(gym.id);
+      expect(board.single.likedByMe, isTrue);
+      expect(board.single.likeCount, 1);
+      expect(board.single.commentCount, 1);
+
+      await c.leave(gym.id);
+      expect(c.isMine(gym.id), isFalse);
+    });
+
+    test('newest first, paged with before', () async {
+      final all = await repo.posts('l-1');
+      expect(all.length, 3);
+      expect(
+        all.map((p) => p.createdAt).toList(),
+        [...all.map((p) => p.createdAt)]..sort((a, b) => b.compareTo(a)),
+      );
+      final older = await repo.posts('l-1', before: all.first.createdAt);
+      expect(older.length, 2);
+    });
+
+    test('blocking hides the person\'s posts and comments', () async {
+      final before = await repo.posts('l-1');
+      final u2 = before.firstWhere((p) => p.authorId == 'u2');
+      await repo.block('u2');
+      final after = await repo.posts('l-1');
+      expect(after.any((p) => p.authorId == 'u2'), isFalse);
+      expect(after.length, before.length - 1);
+      final other = before.firstWhere((p) => p.authorId == 'u4');
+      final cs = await repo.comments(other.id);
+      expect(cs.any((c) => c.authorId == 'u2'), isFalse);
+      expect(await repo.comments(u2.id), isNotEmpty); // others' still there
+    });
+
+    test('blocked words and rate limit refuse the post', () async {
+      await repo.createProfile('헬린이');
+      await expectLater(
+        repo.writePost('l-1', '이 시발', const []),
+        throwsA(isA<CommunityException>()),
+      );
+      for (var i = 0; i < 5; i++) {
+        await repo.writePost('l-4', '글 $i', const []);
+      }
+      await expectLater(
+        repo.writePost('l-4', '여섯 번째', const []),
+        throwsA(
+          isA<CommunityException>().having(
+            (e) => e.error,
+            'error',
+            CommunityError.rateLimited,
+          ),
+        ),
+      );
+    });
+
+    test('added gyms are searchable and marked as user-added', () async {
+      final g = await repo.addGym('우리동네 크로스핏', '서울 마포구 망원로 1');
+      expect(g.userAdded, isTrue);
+      expect((await repo.searchGyms('크로스핏')).single.id, g.id);
+    });
+
+    test('signed out: no profile, no gyms', () async {
+      final c = CommunityState(MemoryCommunity.demo());
+      await c.refresh();
+      expect(c.signedIn, isFalse);
+      expect(c.myGyms, isEmpty);
+    });
+  });
+}

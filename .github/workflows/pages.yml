@@ -44,7 +44,8 @@ jobs:
             --base-href "/${GITHUB_REPOSITORY#*/}/" \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
-            --dart-define=BUILD_ID="$GITHUB_SHA"
+            --dart-define=BUILD_ID="$GITHUB_SHA" \
+            --dart-define=COMMUNITY="${{ vars.COMMUNITY }}"
           # The app compares this with its BUILD_ID to offer a reload.
           echo "$GITHUB_SHA" > build/web/build.txt
           # Pages caches files for 10 minutes and a reload reuses them, so

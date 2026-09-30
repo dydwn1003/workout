@@ -57,12 +57,17 @@ class AppState extends ChangeNotifier {
   /// Reminder notifications; null where there are none (web, tests).
   final ReminderScheduler? reminderScheduler;
 
+  /// Runs before the account is deleted (community photos: rows go by
+  /// cascade, stored files don't).
+  final Future<void> Function()? beforeAccountDelete;
+
   AppState(
     this.repo, {
     DateTime Function()? clock,
     this.remoteSearch,
     this.auth,
     this.reminderScheduler,
+    this.beforeAccountDelete,
     Analytics? analytics,
   }) : clock = clock ?? DateTime.now,
        analytics = analytics ?? Analytics();
@@ -216,6 +221,11 @@ class AppState extends ChangeNotifier {
     analytics.log('account_delete');
     await analytics.flush();
     final sync = _sync;
+    try {
+      await beforeAccountDelete?.call();
+    } catch (e) {
+      debugPrint('before account delete: $e');
+    }
     await auth?.deleteAccount();
     if (sync != null) {
       await sync.detach();
@@ -259,7 +269,8 @@ class AppState extends ChangeNotifier {
     // rebuild of the search sheet.
     final custom = _data.customFoods;
     final cached = _allFoods;
-    if (cached != null && identical(cached.$1, custom) &&
+    if (cached != null &&
+        identical(cached.$1, custom) &&
         cached.$2 == custom.length) {
       return cached.$3;
     }

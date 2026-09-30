@@ -1071,7 +1071,7 @@ class LKo extends L {
   String get reviewSent => '의견 고마워요. 꼭 참고할게요';
 
   @override
-  String get reportTitle => '이번 주 코칭 리포트';
+  String get reportTitle => '신고 사유를 골라 주세요';
 
   @override
   String get reportAte => '먹은 양';
@@ -1542,4 +1542,200 @@ class LKo extends L {
 
   @override
   String get savedMealsManage => '내 식사 관리';
+
+  @override
+  String get navCommunity => '커뮤니티';
+
+  @override
+  String get communityTitle => '헬스장 커뮤니티';
+
+  @override
+  String get communityIntro => '같은 헬스장 사람들과 운동 메이트를 찾고 정보를 나눠요';
+
+  @override
+  String get myGyms => '내 헬스장';
+
+  @override
+  String get myGymsEmpty => '다니는 헬스장을 검색해서 내 헬스장에 추가해 보세요';
+
+  @override
+  String get gymSearchHint => '헬스장 이름이나 동네 (예: 강남 에이블짐)';
+
+  @override
+  String gymSearchEmpty(String q) {
+    return '\'$q\' 헬스장을 찾지 못했어요';
+  }
+
+  @override
+  String get addGym => '찾는 헬스장이 없나요? 직접 추가하기';
+
+  @override
+  String get addGymTitle => '헬스장 추가';
+
+  @override
+  String get gymName => '헬스장 이름';
+
+  @override
+  String get gymAddress => '주소 (예: 서울 강남구 테헤란로 152)';
+
+  @override
+  String get gymAdded => '헬스장을 추가했어요';
+
+  @override
+  String gymMembers(String n) {
+    return '멤버 $n';
+  }
+
+  @override
+  String gymPosts(String n) {
+    return '글 $n';
+  }
+
+  @override
+  String get joinGym => '내 헬스장에 추가';
+
+  @override
+  String get joinedGym => '내 헬스장';
+
+  @override
+  String get leaveGym => '내 헬스장에서 빼기';
+
+  @override
+  String get boardEmpty => '아직 글이 없어요. 첫 글을 남겨 보세요!';
+
+  @override
+  String get writePost => '글쓰기';
+
+  @override
+  String get postHint => '운동 메이트 찾기, 기구·붐비는 시간 정보, 궁금한 점을 자유롭게 남겨 주세요';
+
+  @override
+  String get postSubmit => '올리기';
+
+  @override
+  String photoLimit(String n) {
+    return '사진은 $n장까지 올릴 수 있어요';
+  }
+
+  @override
+  String commentsN(String n) {
+    return '댓글 $n';
+  }
+
+  @override
+  String get commentHint => '댓글을 남겨 주세요';
+
+  @override
+  String get noComments => '첫 댓글을 남겨 보세요';
+
+  @override
+  String get edited => '수정됨';
+
+  @override
+  String get justNow => '방금';
+
+  @override
+  String minutesAgo(String n) {
+    return '$n분 전';
+  }
+
+  @override
+  String hoursAgo(String n) {
+    return '$n시간 전';
+  }
+
+  @override
+  String daysAgo(String n) {
+    return '$n일 전';
+  }
+
+  @override
+  String get report => '신고';
+
+  @override
+  String get reasonSpam => '스팸·광고';
+
+  @override
+  String get reasonAbuse => '욕설·비하·괴롭힘';
+
+  @override
+  String get reasonSexual => '음란물·성적인 내용';
+
+  @override
+  String get reasonPrivacy => '개인정보 노출';
+
+  @override
+  String get reasonOther => '기타 부적절한 내용';
+
+  @override
+  String get reported => '신고했어요. 여러 명이 신고하면 바로 가려지고, 운영자가 24시간 안에 확인해요.';
+
+  @override
+  String get blockUser => '이 사람 차단';
+
+  @override
+  String blockConfirm(String name) {
+    return '$name 님을 차단할까요? 이 사람의 글과 댓글이 더 이상 보이지 않아요.';
+  }
+
+  @override
+  String get blockAction => '차단';
+
+  @override
+  String get blocked => '차단했어요';
+
+  @override
+  String get deletePostConfirm => '이 글을 삭제할까요? 사진과 댓글도 함께 지워져요.';
+
+  @override
+  String get deleteCommentConfirm => '댓글을 삭제할까요?';
+
+  @override
+  String get postDeleted => '글을 삭제했어요';
+
+  @override
+  String get editPost => '수정';
+
+  @override
+  String get communitySignIn => '글을 쓰고 댓글을 달려면 로그인해 주세요';
+
+  @override
+  String get communitySignInCta => '로그인하기';
+
+  @override
+  String get setupTitle => '커뮤니티에서 쓸 닉네임';
+
+  @override
+  String get nicknameHint => '2~12자, 한글·영문·숫자';
+
+  @override
+  String get nicknameInvalid => '2~12자의 한글, 영문, 숫자로 정해 주세요';
+
+  @override
+  String get nicknameTaken => '이미 쓰고 있는 닉네임이에요';
+
+  @override
+  String get rulesTitle => '커뮤니티 규칙';
+
+  @override
+  String get rulesBody =>
+      '· 욕설, 비하, 괴롭힘, 음란물, 불법·상업 광고는 허용되지 않아요.\n· 다른 사람의 연락처나 사진 같은 개인정보를 올리지 마세요.\n· 만남을 강요하거나 불쾌감을 주는 행동은 금지예요.\n· 규칙을 어긴 글은 신고로 가려지고, 이용이 제한될 수 있어요.';
+
+  @override
+  String get agreeRules => '규칙에 동의하고 시작하기';
+
+  @override
+  String get rateLimited => '조금 뒤에 다시 올려 주세요 (10분에 5개까지)';
+
+  @override
+  String get blockedWordsError => '허용되지 않는 표현이 있어요. 고쳐서 다시 올려 주세요.';
+
+  @override
+  String get badImage => 'JPG, PNG 사진만 올릴 수 있어요 (5MB 이하)';
+
+  @override
+  String get communityError => '연결하지 못했어요. 잠시 후 다시 시도해 주세요.';
+
+  @override
+  String get retry => '다시 시도';
 }
