@@ -2,6 +2,8 @@
 # publishes it as the "android-store" GitHub release:
 #   https://github.com/<owner>/<repo>/releases/download/android-store/alasfit.aab
 # Upload that file in Play Console (testing track or production).
+# Run with "커뮤니티 켜기" checked for the 1.1 community build (version 1.1.0,
+# release "android-store-community").
 #
 # Run it from the Actions tab ("Build Play Store bundle" → Run workflow), or
 # push a tag like v1.0.0. Needs the upload key secrets
@@ -16,6 +18,11 @@ name: Build Play Store bundle
 
 on:
   workflow_dispatch:
+    inputs:
+      community:
+        description: '커뮤니티 켜기 (1.1 테스트용, 버전 1.1.0 · release android-store-community)'
+        type: boolean
+        default: false
   push:
     tags: ['v*']
 
@@ -81,6 +88,7 @@ jobs:
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
           GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
+          COMMUNITY: ${{ inputs.community && 'true' || 'false' }}
         run: |
           if [ -z "$GOOGLE_WEB_CLIENT_ID" ]; then
             echo "::warning::GOOGLE_WEB_CLIENT_ID variable is empty: Google sign-in won't work in this build"
@@ -91,14 +99,25 @@ jobs:
               exit 1 ;;
           esac
           CODE=$(git rev-list --count HEAD)
+          NAME=$(grep '^version:' pubspec.yaml | sed 's/version: *//; s/+.*//')
+          EXTRA=()
+          TAG=android-store
+          # 커뮤니티 버전 (1.1): its own version name and release.
+          if [ "$COMMUNITY" = "true" ]; then
+            NAME=1.1.0
+            EXTRA=(--dart-define=COMMUNITY=true)
+            TAG=android-store-community
+          fi
           flutter build appbundle --release \
             --build-number="$CODE" \
+            --build-name="$NAME" \
+            "${EXTRA[@]}" \
             --dart-define=STORE_LISTED=true \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID"
           cp build/app/outputs/bundle/release/app-release.aab alasfit.aab
-          NAME=$(grep '^version:' pubspec.yaml | sed 's/version: *//; s/+.*//')
+          echo "RELEASE_TAG=$TAG" >> "$GITHUB_ENV"
           echo "VERSION_NAME=$NAME" >> "$GITHUB_ENV"
           echo "VERSION_CODE=$CODE" >> "$GITHUB_ENV"
 
@@ -106,8 +125,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete android-store --yes --cleanup-tag || true
-          gh release create android-store alasfit.aab \
+          gh release delete "$RELEASE_TAG" --yes --cleanup-tag || true
+          gh release create "$RELEASE_TAG" alasfit.aab \
             --target "$GITHUB_SHA" \
             --prerelease \
             --title "알아서핏 Play 스토어 업로드용 $VERSION_NAME ($VERSION_CODE)" \
