@@ -96,7 +96,9 @@ jobs:
           CODE=$(git rev-list --count HEAD)
           # Writes the build settings (version, --dart-define values) that
           # the Xcode archive below builds with.
-          flutter build ios --release --config-only \
+          # --no-codesign: signing happens in the archive below, with the
+          # API key (this machine has no certificate of its own).
+          flutter build ios --release --config-only --no-codesign \
             --build-number="$CODE" \
             --dart-define=STORE_LISTED=true \
             --dart-define=IOS_APP_ID="$IOS_APP_ID" \
@@ -104,8 +106,9 @@ jobs:
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID" \
             --dart-define=GOOGLE_IOS_CLIENT_ID="$(printf '%s' "$GOOGLE_IOS_CLIENT_ID" | tr -d '[:space:]')"
-          # The plugins' native code (flutter normally does this already).
-          (cd ios && pod install)
+          # Plugins still on CocoaPods (the rest come through Swift
+          # Package Manager, which Xcode fetches by itself).
+          if [ -f ios/Podfile ]; then (cd ios && pod install); fi
           xcodebuild archive \
             -workspace ios/Runner.xcworkspace \
             -scheme Runner \
