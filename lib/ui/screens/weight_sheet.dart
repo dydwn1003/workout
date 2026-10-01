@@ -30,6 +30,23 @@ class _WeightSheetState extends State<WeightSheet> {
   final _smm = TextEditingController();
   var _showComp = false;
 
+  // Body fat % and 골격근량 (kg) it takes, inclusive.
+  static const _bfRange = (3, 70);
+  static const _smmRange = (5, 100);
+
+  double? _read(TextEditingController c) =>
+      double.tryParse(c.text.replaceAll(',', '.'));
+
+  /// Typed but out of range (blank is fine: both are optional).
+  bool _bad(TextEditingController c, (int, int) r) {
+    if (c.text.trim().isEmpty) return false;
+    final v = _read(c);
+    return v == null || v < r.$1 || v > r.$2;
+  }
+
+  String? _error(TextEditingController c, (int, int) r) =>
+      _bad(c, r) ? L.of(context).numberRange('${r.$1}', '${r.$2}') : null;
+
   @override
   void initState() {
     super.initState();
@@ -43,6 +60,9 @@ class _WeightSheetState extends State<WeightSheet> {
     if (today?.skeletalMuscleKg != null) {
       _smm.text = today!.skeletalMuscleKg!.toString();
       _showComp = true;
+    }
+    for (final c in [_bf, _smm]) {
+      c.addListener(() => setState(() {}));
     }
   }
 
@@ -61,45 +81,55 @@ class _WeightSheetState extends State<WeightSheet> {
     final c = TextEditingController(text: fmt1(_kg));
     final v = await showDialog<double>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(L.of(ctx).weightKg),
-        content: TextField(
-          controller: c,
-          autofocus: true,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(L.of(ctx).cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(
-              ctx,
-              double.tryParse(c.text.replaceAll(',', '.')),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, redraw) {
+          final v = _read(c);
+          final ok = v != null && v >= 25 && v <= 300;
+          return AlertDialog(
+            title: Text(L.of(ctx).weightKg),
+            content: TextField(
+              controller: c,
+              autofocus: true,
+              onChanged: (_) => redraw(() {}),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+              ],
+              decoration: InputDecoration(
+                errorText: ok ? null : L.of(ctx).numberRange('25', '300'),
+              ),
             ),
-            child: Text(L.of(ctx).confirm),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(L.of(ctx).cancel),
+              ),
+              TextButton(
+                onPressed: ok ? () => Navigator.pop(ctx, v) : null,
+                child: Text(L.of(ctx).confirm),
+              ),
+            ],
+          );
+        },
       ),
     );
-    if (v != null && v > 25 && v < 300) setState(() => _kg = v);
+    if (v != null) setState(() => _kg = double.parse(v.toStringAsFixed(1)));
   }
 
   Future<void> _save() async {
     final s = AppScope.read(context);
     final t = L.of(context);
-    final bf = double.tryParse(_bf.text.replaceAll(',', '.'));
-    final smm = double.tryParse(_smm.text.replaceAll(',', '.'));
+    if (_bad(_bf, _bfRange) || _bad(_smm, _smmRange)) return;
+    final bf = _read(_bf);
+    final smm = _read(_smm);
     await s.upsertWeight(
       WeightEntry(
         date: dateKey(widget.date ?? s.today),
         kg: _kg,
-        bodyFatPct: bf != null && bf > 2 && bf < 70 ? bf : null,
-        skeletalMuscleKg: smm != null && smm > 5 && smm < 100 ? smm : null,
+        bodyFatPct: bf,
+        skeletalMuscleKg: smm,
       ),
     );
     if (!mounted) return;
@@ -191,7 +221,14 @@ class _WeightSheetState extends State<WeightSheet> {
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
-                      decoration: InputDecoration(labelText: t.bodyFatField),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                      ],
+                      decoration: InputDecoration(
+                        labelText: t.bodyFatField,
+                        errorText: _error(_bf, _bfRange),
+                        errorMaxLines: 2,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -201,7 +238,14 @@ class _WeightSheetState extends State<WeightSheet> {
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
-                      decoration: InputDecoration(labelText: t.smmField),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                      ],
+                      decoration: InputDecoration(
+                        labelText: t.smmField,
+                        errorText: _error(_smm, _smmRange),
+                        errorMaxLines: 2,
+                      ),
                     ),
                   ),
                 ],
@@ -216,7 +260,12 @@ class _WeightSheetState extends State<WeightSheet> {
               ),
             ],
             const SizedBox(height: 18),
-            FilledButton(onPressed: _save, child: Text(t.save)),
+            FilledButton(
+              onPressed: _bad(_bf, _bfRange) || _bad(_smm, _smmRange)
+                  ? null
+                  : _save,
+              child: Text(t.save),
+            ),
           ],
         ),
       ),

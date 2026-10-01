@@ -50,6 +50,7 @@ class _TrendScreenState extends State<TrendScreen> {
         title: Text(t.trendTitle),
         actions: [
           IconButton(
+            tooltip: t.logWeight,
             onPressed: () => showWeightSheet(context),
             icon: const Icon(
               Icons.add_circle_rounded,

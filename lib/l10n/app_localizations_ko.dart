@@ -218,6 +218,12 @@ class LKo extends L {
   }
 
   @override
+  String get stepResultTitleEdit => '새 목표가 나왔어요!';
+
+  @override
+  String get resultNoteLearned => '지금까지 기록으로 계산한 실제 소비량으로 맞췄어요. 앞으로도 매주 조정돼요.';
+
+  @override
   String get resultNote =>
       '첫 목표는 공식으로 계산한 추정치예요. 2~4주 기록이 쌓이면 내 몸에 맞게 매주 조정돼요.';
 
@@ -315,7 +321,7 @@ class LKo extends L {
   String get proteinField => '단백질 (g)';
 
   @override
-  String get carbsField => '탄수화물 (g)';
+  String get carbsField => '탄수 (g)';
 
   @override
   String get fatField => '지방 (g)';
@@ -828,7 +834,7 @@ class LKo extends L {
 
   @override
   String mealReplaced(String name) {
-    return '$name(으)로 바꿨어요';
+    return '$name 바꿨어요';
   }
 
   @override
@@ -1154,6 +1160,11 @@ class LKo extends L {
   }
 
   @override
+  String numberRange(String min, String max) {
+    return '$min~$max 사이';
+  }
+
+  @override
   String get swapsTitle => '가볍게 바꿔 볼까요?';
 
   @override
@@ -1474,7 +1485,7 @@ class LKo extends L {
 
   @override
   String customSaved(String name) {
-    return '\'$name\'을(를) 내 음식에 저장했어요';
+    return '$name 내 음식에 저장했어요';
   }
 
   @override
@@ -1931,7 +1942,7 @@ class LKo extends L {
 
   @override
   String gymLimitBody(String name) {
-    return '하나를 빼면 $name을(를) 추가할게요';
+    return '하나를 빼면 $name 추가할게요';
   }
 
   @override

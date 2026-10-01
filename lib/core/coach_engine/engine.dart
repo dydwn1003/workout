@@ -348,8 +348,11 @@ InitialPlan initialPlan({
   required double weightKg,
   required DateTime today,
   double? bodyFatPct,
+  // What check-ins already learned from the logs (a goal changed later),
+  // in place of the formula.
+  double? tdee,
 }) {
-  final tdee = formulaTdee(
+  tdee ??= formulaTdee(
     profile: profile,
     weightKg: weightKg,
     sessionsPerWeek: goal.sessionsPerWeek,

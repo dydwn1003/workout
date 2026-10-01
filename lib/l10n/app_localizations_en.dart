@@ -224,6 +224,13 @@ class LEn extends L {
   }
 
   @override
+  String get stepResultTitleEdit => 'Here\'s your new plan!';
+
+  @override
+  String get resultNoteLearned =>
+      'Based on the burn your logs have shown so far. It keeps adapting every week.';
+
+  @override
   String get resultNote =>
       'This first target is a formula estimate. After 2–4 weeks of logging it adapts to you every week.';
 
@@ -1180,6 +1187,11 @@ class LEn extends L {
   }
 
   @override
+  String numberRange(String min, String max) {
+    return 'Enter $min–$max';
+  }
+
+  @override
   String get swapsTitle => 'Lighter swaps';
 
   @override
@@ -1504,7 +1516,7 @@ class LEn extends L {
 
   @override
   String customSaved(String name) {
-    return 'Saved \'$name\' to your foods';
+    return 'Saved $name to your foods';
   }
 
   @override

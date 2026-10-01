@@ -785,6 +785,7 @@ class PostMenuButton extends StatelessWidget {
     final t = L.of(context);
     final c = CommunityScope.read(context);
     return IconButton(
+      tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
       visualDensity: VisualDensity.compact,
       icon: const Icon(
         Icons.more_vert_rounded,

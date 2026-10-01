@@ -446,6 +446,13 @@ class AppState extends ChangeNotifier {
 
   Plan? get currentPlan => _data.plans.isEmpty ? null : _data.plans.last;
 
+  /// The burn check-ins have learned from my logs, once there was one (a
+  /// new goal keeps it instead of going back to the formula).
+  double? get learnedTdee =>
+      _data.plans.any((p) => p.status != PlanStatus.initial)
+      ? _data.plans.last.tdeeEst
+      : null;
+
   /// The plan that was in effect on [d] (falls back to the first plan).
   Plan? planOn(DateTime d) {
     if (_data.plans.isEmpty) return null;
@@ -1226,25 +1233,36 @@ class AppState extends ChangeNotifier {
     required double weightKg,
     double? bodyFatPct,
     double? skeletalMuscleKg,
+    // 목표 다시 설정: the weight there is the current trend, only for the
+    // math. Today's weigh-in (if any) stays as it is, and so does what
+    // check-ins learned.
+    bool editing = false,
   }) async {
+    final learned = editing ? learnedTdee : null;
     _data.profile = profile;
     await repo.saveProfile(profile);
-    analytics.log('onboarding_complete', {'goal': profile.goalType.name});
-    await upsertWeight(
-      WeightEntry(
-        date: dateKey(today),
-        kg: weightKg,
-        bodyFatPct: bodyFatPct,
-        skeletalMuscleKg: skeletalMuscleKg,
-      ),
-      notify: false,
-    );
+    analytics.log('onboarding_complete', {
+      'goal': profile.goalType.name,
+      'editing': editing,
+    });
+    if (!editing) {
+      await upsertWeight(
+        WeightEntry(
+          date: dateKey(today),
+          kg: weightKg,
+          bodyFatPct: bodyFatPct,
+          skeletalMuscleKg: skeletalMuscleKg,
+        ),
+        notify: false,
+      );
+    }
     final init = initialPlan(
       profile: profile.coachProfile,
       goal: profile.coachGoal,
       weightKg: weightKg,
       today: today,
       bodyFatPct: bodyFatPct,
+      tdee: learned,
     );
     await _addPlan(
       Plan(
@@ -1257,8 +1275,10 @@ class AppState extends ChangeNotifier {
         status: PlanStatus.initial,
       ),
     );
-    _data.settings = settings.copyWith(consentedAt: clock());
-    await repo.saveSettings(_data.settings);
+    if (!editing || settings.consentedAt == null) {
+      _data.settings = settings.copyWith(consentedAt: clock());
+      await repo.saveSettings(_data.settings);
+    }
     notifyListeners();
   }
 

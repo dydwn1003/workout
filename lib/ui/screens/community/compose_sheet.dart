@@ -134,6 +134,7 @@ class _ComposeSheetState extends State<_ComposeSheet> {
           Row(
             children: [
               IconButton(
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                 icon: const Icon(Icons.close_rounded),
                 onPressed: () => Navigator.pop(context),
               ),

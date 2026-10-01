@@ -619,6 +619,7 @@ class SettingsScreen extends StatelessWidget {
                       title: Text(m.name),
                       subtitle: Text('${fmt0(m.kcal)} kcal'),
                       trailing: IconButton(
+                        tooltip: t.delete,
                         icon: const Icon(Icons.delete_outline_rounded),
                         onPressed: () => s.deleteSavedMeal(m.id),
                       ),

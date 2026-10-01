@@ -118,9 +118,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   double? _num(TextEditingController c) =>
       double.tryParse(c.text.replaceAll(',', '.'));
 
+  // What each number may be (inclusive); out of range says so under it.
+  static final _birthRange = (1900, DateTime.now().year);
+  static const _heightRange = (100, 250);
+  static const _weightRange = (25, 300);
+  static const _bfRange = (3, 70);
+  static const _smmRange = (5, 100);
+
+  bool _inRange(TextEditingController c, (int, int) r) {
+    final v = _num(c);
+    return v != null && v >= r.$1 && v <= r.$2;
+  }
+
   double? get _currentBf {
     final v = _num(_bf);
-    return v != null && v > 2 && v < 70 ? v : null;
+    return _inRange(_bf, _bfRange) ? v : null;
   }
 
   double? get _targetWeight {
@@ -129,7 +141,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       final w = _num(_weight);
       final t = _num(_targetBf);
       final cur = _currentBf;
-      if (w == null || t == null || cur == null || t <= 2 || t >= 70) {
+      if (w == null ||
+          t == null ||
+          cur == null ||
+          !_inRange(_targetBf, _bfRange)) {
         return null;
       }
       return targetWeightFromBodyFat(
@@ -139,7 +154,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       );
     }
     final t = _num(_targetW);
-    return t != null && t > 25 && t < 300 ? t : null;
+    return _inRange(_targetW, _weightRange) ? t : null;
   }
 
   bool get _canNext {
@@ -149,18 +164,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       case _Step.goal:
         return _goal != null;
       case _Step.body:
-        final y = _num(_birth);
-        final h = _num(_height);
-        final w = _num(_weight);
-        return y != null &&
-            y > 1900 &&
-            y <= DateTime.now().year &&
-            h != null &&
-            h > 100 &&
-            h < 250 &&
-            w != null &&
-            w > 25 &&
-            w < 300;
+        // The optional ones may be blank, but not wrong.
+        bool blankOr(TextEditingController c, (int, int) r) =>
+            c.text.trim().isEmpty || _inRange(c, r);
+        return _inRange(_birth, _birthRange) &&
+            _inRange(_height, _heightRange) &&
+            _inRange(_weight, _weightRange) &&
+            blankOr(_bf, _bfRange) &&
+            blankOr(_smm, _smmRange);
       case _Step.target:
         return _targetWeight != null;
       case _Step.pace:
@@ -297,12 +308,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (_step == _Step.result) {
       setState(() => _busy = true);
       final state = AppScope.read(context);
-      final smm = _num(_smm);
       await state.completeOnboarding(
         profile: _profile,
         weightKg: _num(_weight)!,
         bodyFatPct: _currentBf,
-        skeletalMuscleKg: smm != null && smm > 5 && smm < 100 ? smm : null,
+        skeletalMuscleKg: _inRange(_smm, _smmRange) ? _num(_smm) : null,
+        editing: widget.editing,
       );
       if (mounted && widget.editing) Navigator.of(context).pop();
       return;
@@ -338,6 +349,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: Row(
                       children: [
                         IconButton(
+                          tooltip: MaterialLocalizations.of(context)
+                              .backButtonTooltip,
                           icon: const Icon(Icons.arrow_back_rounded),
                           onPressed: () {
                             if (_index == 0) {
@@ -418,7 +431,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             _step == _Step.welcome
                                 ? t.getStarted
                                 : _step == _Step.result
-                                ? t.startApp
+                                ? (widget.editing ? t.save : t.startApp)
                                 : t.next,
                           ),
                         ),
@@ -633,15 +646,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _field(TextEditingController c, String label, {bool decimal = true}) =>
-      TextField(
-        controller: c,
-        keyboardType: TextInputType.numberWithOptions(decimal: decimal),
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-        ],
-        decoration: InputDecoration(labelText: label),
-      );
+  Widget _field(
+    TextEditingController c,
+    String label,
+    (int, int) range, {
+    bool decimal = true,
+  }) => TextField(
+    controller: c,
+    keyboardType: TextInputType.numberWithOptions(decimal: decimal),
+    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
+    decoration: InputDecoration(
+      labelText: label,
+      // Said only once something is typed, so a blank form isn't red.
+      errorText: c.text.trim().isEmpty || _inRange(c, range)
+          ? null
+          : L.of(context).numberRange('${range.$1}', '${range.$2}'),
+      errorMaxLines: 2,
+    ),
+  );
 
   Widget _bodyStep(L t) {
     return Column(
@@ -670,19 +692,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         const SizedBox(height: 14),
         Row(
           children: [
-            Expanded(child: _field(_birth, t.birthYear, decimal: false)),
+            Expanded(
+              child: _field(_birth, t.birthYear, _birthRange, decimal: false),
+            ),
             const SizedBox(width: 12),
-            Expanded(child: _field(_height, t.heightCm)),
+            Expanded(child: _field(_height, t.heightCm, _heightRange)),
           ],
         ),
         const SizedBox(height: 12),
-        _field(_weight, t.weightKg),
+        _field(_weight, t.weightKg, _weightRange),
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _field(_bf, t.bodyFatOptional)),
+            Expanded(child: _field(_bf, t.bodyFatOptional, _bfRange)),
             const SizedBox(width: 12),
-            Expanded(child: _field(_smm, t.smmOptional)),
+            Expanded(child: _field(_smm, t.smmOptional, _smmRange)),
           ],
         ),
         const SizedBox(height: 14),
@@ -742,7 +766,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ),
         const SizedBox(height: 16),
         if (_byBodyFat && _currentBf != null) ...[
-          _field(_targetBf, t.targetBodyFatField),
+          _field(_targetBf, t.targetBodyFatField, _bfRange),
           if (tw != null) ...[
             const SizedBox(height: 14),
             SoftCard(
@@ -759,7 +783,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ],
         ] else
-          _field(_targetW, t.targetWeightField),
+          _field(_targetW, t.targetWeightField, _weightRange),
         if (_currentBf == null) ...[
           const SizedBox(height: 12),
           Text(
@@ -896,12 +920,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final issues = _issues;
     final profile = _profile;
     final w = _num(_weight)!;
+    final learned = widget.editing ? AppScope.read(context).learnedTdee : null;
     final plan = initialPlan(
       profile: profile.coachProfile,
       goal: profile.coachGoal,
       weightKg: w,
       today: DateTime.now(),
       bodyFatPct: _currentBf,
+      tdee: learned,
     );
     final eta = profile.targetWeightKg == null
         ? null
@@ -918,7 +944,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _title(t.stepResultTitle),
+        _title(widget.editing ? t.stepResultTitleEdit : t.stepResultTitle),
         if (issues.isNotEmpty) ...[
           MascotSays(
             text: issues.map((i) => issueLabel(t, i)).join('\n'),
@@ -997,7 +1023,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ],
           const SizedBox(height: 16),
           Text(
-            t.resultNote,
+            learned != null ? t.resultNoteLearned : t.resultNote,
             style: const TextStyle(
               fontSize: 13.5,
               color: AppColors.inkSoft,

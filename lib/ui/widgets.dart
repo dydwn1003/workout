@@ -17,6 +17,33 @@ String fmt0(num v) {
 
 String fmt1(num v) => v.toStringAsFixed(1);
 
+/// [word] with the Korean particle that fits it (을/를, 이/가, 은/는, and
+/// (으)로 with [ro]); in other languages [word] as it is.
+String josa(
+  String locale,
+  String word,
+  String afterFinal,
+  String afterVowel, {
+  bool ro = false,
+}) {
+  // The sound that matters is the last letter, past quotes and brackets.
+  final core = word.replaceAll(RegExp(r'''[\s'"’”)\]]+$'''), '');
+  if (!locale.startsWith('ko') || core.isEmpty) return word;
+  final last = core.runes.last;
+  int? jong;
+  if (last >= 0xAC00 && last <= 0xD7A3) {
+    jong = (last - 0xAC00) % 28;
+  } else if (last >= 0x30 && last <= 0x39) {
+    // 영 일 이 삼 사 오 육 칠 팔 구: does the number end in a consonant?
+    jong = const [21, 8, 0, 16, 0, 0, 1, 8, 8, 0][last - 0x30];
+  }
+  // Not a Hangul syllable or digit (an English name): say both.
+  if (jong == null) return '$word$afterFinal($afterVowel)';
+  // (으)로: a final ㄹ (8) takes 로 like a vowel.
+  final plain = jong == 0 || (ro && jong == 8);
+  return '$word${plain ? afterVowel : afterFinal}';
+}
+
 String signed1(num v) => '${v > 0 ? '+' : ''}${v.toStringAsFixed(1)}';
 
 /// White rounded card with a soft shadow.

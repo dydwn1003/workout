@@ -493,6 +493,18 @@ abstract class L {
   /// **'안전 하한({kcal} kcal)에 맞췄어요. 속도를 한 단계 낮추는 걸 추천해요.'**
   String floorNotice(String kcal);
 
+  /// No description provided for @stepResultTitleEdit.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 목표가 나왔어요!'**
+  String get stepResultTitleEdit;
+
+  /// No description provided for @resultNoteLearned.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금까지 기록으로 계산한 실제 소비량으로 맞췄어요. 앞으로도 매주 조정돼요.'**
+  String get resultNoteLearned;
+
   /// No description provided for @resultNote.
   ///
   /// In ko, this message translates to:
@@ -676,7 +688,7 @@ abstract class L {
   /// No description provided for @carbsField.
   ///
   /// In ko, this message translates to:
-  /// **'탄수화물 (g)'**
+  /// **'탄수 (g)'**
   String get carbsField;
 
   /// No description provided for @fatField.
@@ -1565,7 +1577,7 @@ abstract class L {
   /// No description provided for @mealReplaced.
   ///
   /// In ko, this message translates to:
-  /// **'{name}(으)로 바꿨어요'**
+  /// **'{name} 바꿨어요'**
   String mealReplaced(String name);
 
   /// No description provided for @recentMeals.
@@ -2125,6 +2137,12 @@ abstract class L {
   /// **'아직 기록이 2주가 안 돼서 공식으로 소비량을 {formula} kcal로 추정했어요. 기록이 쌓이면 실제 데이터로 바뀌어요.'**
   String reportNoObserved(String formula);
 
+  /// No description provided for @numberRange.
+  ///
+  /// In ko, this message translates to:
+  /// **'{min}~{max} 사이'**
+  String numberRange(String min, String max);
+
   /// No description provided for @swapsTitle.
   ///
   /// In ko, this message translates to:
@@ -2620,7 +2638,7 @@ abstract class L {
   /// No description provided for @customSaved.
   ///
   /// In ko, this message translates to:
-  /// **'\'{name}\'을(를) 내 음식에 저장했어요'**
+  /// **'{name} 내 음식에 저장했어요'**
   String customSaved(String name);
 
   /// No description provided for @photoSoonShort.
@@ -3448,7 +3466,7 @@ abstract class L {
   /// No description provided for @gymLimitBody.
   ///
   /// In ko, this message translates to:
-  /// **'하나를 빼면 {name}을(를) 추가할게요'**
+  /// **'하나를 빼면 {name} 추가할게요'**
   String gymLimitBody(String name);
 
   /// No description provided for @gymLimitError.

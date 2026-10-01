@@ -603,36 +603,41 @@ class _PostScreenState extends State<PostScreen> {
                     listenable: _input,
                     builder: (context, _) {
                       final ready = !_sending && _input.text.trim().isNotEmpty;
-                      return GestureDetector(
-                        onTap: ready ? _send : null,
-                        child: AnimatedContainer(
-                          duration: Motion.fast,
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            gradient: ready
-                                ? const LinearGradient(
-                                    colors: [
-                                      AppColors.peach,
-                                      Color(0xFFFFA98F),
-                                    ],
+                      return Semantics(
+                        button: true,
+                        enabled: ready,
+                        label: t.reviewSend,
+                        child: GestureDetector(
+                          onTap: ready ? _send : null,
+                          child: AnimatedContainer(
+                            duration: Motion.fast,
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              gradient: ready
+                                  ? const LinearGradient(
+                                      colors: [
+                                        AppColors.peach,
+                                        Color(0xFFFFA98F),
+                                      ],
+                                    )
+                                  : null,
+                              color: ready ? null : AppColors.line,
+                              shape: BoxShape.circle,
+                            ),
+                            child: _sending
+                                ? const Padding(
+                                    padding: EdgeInsets.all(12),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
                                   )
-                                : null,
-                            color: ready ? null : AppColors.line,
-                            shape: BoxShape.circle,
-                          ),
-                          child: _sending
-                              ? const Padding(
-                                  padding: EdgeInsets.all(12),
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
+                                : const Icon(
+                                    Icons.arrow_upward_rounded,
                                     color: Colors.white,
                                   ),
-                                )
-                              : const Icon(
-                                  Icons.arrow_upward_rounded,
-                                  color: Colors.white,
-                                ),
+                          ),
                         ),
                       );
                     },
@@ -759,6 +764,8 @@ class _CommentBubble extends StatelessWidget {
                         width: 28,
                         height: 22,
                         child: IconButton(
+                          tooltip: MaterialLocalizations.of(context)
+                              .moreButtonTooltip,
                           padding: EdgeInsets.zero,
                           iconSize: 18,
                           icon: const Icon(

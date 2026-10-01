@@ -216,6 +216,38 @@ void main() {
       expect(s.checkinDue, isFalse);
     });
 
+    test(
+      'changing the goal keeps today\'s weigh-in and the learned burn',
+      () async {
+        final s = AppState(MemoryCoachRepository(), clock: () => now);
+        await s.load();
+        await s.loadDemoData(korean: true);
+        final learned = s.learnedTdee;
+        expect(learned, isNotNull);
+        final weighIn = s.weightOn(s.today);
+        final weights = s.weights.length;
+        await s.completeOnboarding(
+          profile: UserProfile(
+            sex: s.profile!.sex,
+            birthYear: s.profile!.birthYear,
+            heightCm: s.profile!.heightCm,
+            goalType: GoalType.maintain,
+            pace: s.profile!.pace,
+            strengthPerWeek: s.profile!.strengthPerWeek,
+            cardioPerWeek: s.profile!.cardioPerWeek,
+            createdAt: s.profile!.createdAt,
+          ),
+          weightKg: s.trendWeight!,
+          editing: true,
+        );
+        expect(s.weights.length, weights);
+        expect(s.weightOn(s.today)?.kg, weighIn?.kg);
+        expect(s.currentPlan!.tdeeEst, learned);
+        // Maintaining: the target is that burn.
+        expect(s.currentPlan!.targetKcal, closeTo(learned!, 1));
+      },
+    );
+
     test('too little logged: the target stays exactly as it is', () async {
       final s = AppState(MemoryCoachRepository(), clock: () => now);
       await s.load();

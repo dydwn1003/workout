@@ -100,6 +100,8 @@
       }
     }
   },
+  "stepResultTitleEdit": "새 목표가 나왔어요!",
+  "resultNoteLearned": "지금까지 기록으로 계산한 실제 소비량으로 맞췄어요. 앞으로도 매주 조정돼요.",
   "resultNote": "첫 목표는 공식으로 계산한 추정치예요. 2~4주 기록이 쌓이면 내 몸에 맞게 매주 조정돼요.",
   "issueUnderage": "만 18세 미만은 사용할 수 없어요.",
   "issueBmiLow": "현재 체중에서는 감량 목표를 만들 수 없어요. 유지를 선택해 주세요.",
@@ -154,7 +156,7 @@
   "mealName": "이름",
   "kcalField": "칼로리 (kcal)",
   "proteinField": "단백질 (g)",
-  "carbsField": "탄수화물 (g)",
+  "carbsField": "탄수 (g)",
   "fatField": "지방 (g)",
   "saveAsMyMeal": "'내 식사'에도 저장하기",
   "addToToday": "추가하기",
@@ -524,7 +526,7 @@
   "updateStoreAction": "업데이트",
   "pressBackAgainToExit": "한 번 더 누르면 앱이 닫혀요",
   "replaceMeal": "다른 음식으로 바꾸기",
-  "mealReplaced": "{name}(으)로 바꿨어요",
+  "mealReplaced": "{name} 바꿨어요",
   "@mealReplaced": {
     "placeholders": {
       "name": {
@@ -790,6 +792,17 @@
   "@reportNoObserved": {
     "placeholders": {
       "formula": {
+        "type": "String"
+      }
+    }
+  },
+  "numberRange": "{min}~{max} 사이",
+  "@numberRange": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
         "type": "String"
       }
     }
@@ -1157,7 +1170,7 @@
   "servingLabel": "1회 제공 단위",
   "servingGrams": "중량 g (선택)",
   "perServing": "1회 제공량 기준 영양정보",
-  "customSaved": "'{name}'을(를) 내 음식에 저장했어요",
+  "customSaved": "{name} 내 음식에 저장했어요",
   "@customSaved": {
     "placeholders": {
       "name": {
@@ -1444,7 +1457,7 @@
       }
     }
   },
-  "gymLimitBody": "하나를 빼면 {name}을(를) 추가할게요",
+  "gymLimitBody": "하나를 빼면 {name} 추가할게요",
   "@gymLimitBody": {
     "placeholders": {
       "name": {

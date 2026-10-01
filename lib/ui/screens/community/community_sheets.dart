@@ -283,7 +283,9 @@ class _GymLimitSheet extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        t.gymLimitBody(adding.name),
+                        t.gymLimitBody(
+                          josa(t.localeName, adding.name, '을', '를'),
+                        ),
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.inkSoft,

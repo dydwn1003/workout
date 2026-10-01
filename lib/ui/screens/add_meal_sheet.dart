@@ -236,8 +236,13 @@ class _AddMealSheetState extends State<AddMealSheet>
     if (widget.replacing case final old?) {
       AppScope.read(context).deleteMeal(old.id);
       Navigator.pop(context);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(t.mealReplaced(name))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            t.mealReplaced(josa(t.localeName, name, '으로', '로', ro: true)),
+          ),
+        ),
+      );
       return;
     }
     if (close) {
@@ -643,6 +648,8 @@ class _SearchTabState extends State<_SearchTab>
             prefixIcon: const Icon(Icons.search_rounded),
             suffixIcon: q.isNotEmpty
                 ? IconButton(
+                    tooltip: MaterialLocalizations.of(context)
+                        .clearButtonTooltip,
                     icon: const Icon(Icons.close_rounded),
                     onPressed: () => _query.clear(),
                   )
@@ -1052,6 +1059,7 @@ class _FoodDetailState extends State<_FoodDetail> {
         Row(
           children: [
             IconButton(
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
               onPressed: widget.onBack,
               icon: const Icon(Icons.arrow_back_rounded),
             ),
@@ -1328,8 +1336,13 @@ class _CustomFoodFormState extends State<_CustomFoodForm> {
       fatG: _v(_f) ?? 0,
     );
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(t.customSaved(food.name))));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          t.customSaved(josa(t.localeName, "'${food.name}'", '을', '를')),
+        ),
+      ),
+    );
     widget.onCreated(food);
   }
 
@@ -1354,6 +1367,7 @@ class _CustomFoodFormState extends State<_CustomFoodForm> {
         Row(
           children: [
             IconButton(
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
               onPressed: widget.onBack,
               icon: const Icon(Icons.arrow_back_rounded),
             ),
@@ -1879,6 +1893,7 @@ class _SavedListState extends State<_SavedList>
                 ),
                 if (onRemove != null)
                   IconButton(
+                    tooltip: L.of(context).delete,
                     icon: const Icon(
                       Icons.close_rounded,
                       size: 18,

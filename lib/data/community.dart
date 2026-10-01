@@ -1466,7 +1466,8 @@ class MemoryCommunity implements CommunityRepository {
       editedAt: clock(),
     );
     _posts[i] = edited;
-    return _withLikes(edited);
+    return _withLikes(edited)
+        .copyWith(gymName: gyms[edited.gymId]?.name, avatarUrl: avatars[myId]);
   }
 
   @override

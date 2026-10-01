@@ -505,6 +505,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           prefixIcon: const Icon(Icons.search_rounded, color: AppColors.peach),
           suffixIcon: searching
               ? IconButton(
+                  tooltip: MaterialLocalizations.of(context).clearButtonTooltip,
                   icon: const Icon(Icons.close_rounded),
                   onPressed: _clearSearch,
                 )
