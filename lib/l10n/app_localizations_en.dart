@@ -31,6 +31,22 @@ class LEn extends L {
   String get confirm => 'OK';
 
   @override
+  String likeLabel(String n) {
+    return 'Like, $n';
+  }
+
+  @override
+  String addPhotos(String n, String max) {
+    return 'Add photos ($n/$max)';
+  }
+
+  @override
+  String get prevDay => 'Previous day';
+
+  @override
+  String get nextDay => 'Next day';
+
+  @override
   String get undo => 'Undo';
 
   @override
@@ -1190,6 +1206,21 @@ class LEn extends L {
   }
 
   @override
+  String bigEntryTitle(String kcal) {
+    return '$kcal kcal, right?';
+  }
+
+  @override
+  String get bigEntryBody =>
+      'That\'s a lot for one entry. Check for an extra digit.';
+
+  @override
+  String get bigEntryFix => 'Fix it';
+
+  @override
+  String get bigEntryOk => 'Yes, log it';
+
+  @override
   String numberRange(String min, String max) {
     return 'Enter $min–$max';
   }
@@ -1662,6 +1693,11 @@ class LEn extends L {
 
   @override
   String get joinedGym => 'My gym';
+
+  @override
+  String leftGym(String name) {
+    return 'Removed $name from my gyms';
+  }
 
   @override
   String get leaveGym => 'Remove from my gyms';

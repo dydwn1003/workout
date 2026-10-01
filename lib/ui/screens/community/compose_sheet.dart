@@ -376,42 +376,47 @@ class _AddPhoto extends StatelessWidget {
   const _AddPhoto({required this.count, required this.busy, this.onTap});
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      width: 78,
-      height: 78,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: AppColors.line, width: 1.6),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: busy
-          ? const Center(
-              child: SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            )
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.add_photo_alternate_rounded,
-                  color: AppColors.peach,
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: L.of(context).addPhotos('$count', '${CommunityLimits.photos}'),
+    excludeSemantics: true,
+    child: GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 78,
+        height: 78,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: AppColors.line, width: 1.6),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: busy
+            ? const Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  '$count/${CommunityLimits.photos}',
-                  style: const TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.inkSoft,
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.add_photo_alternate_rounded,
+                    color: AppColors.peach,
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '$count/${CommunityLimits.photos}',
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.inkSoft,
+                    ),
+                  ),
+                ],
+              ),
+      ),
     ),
   );
 }

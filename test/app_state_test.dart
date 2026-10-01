@@ -630,6 +630,18 @@ void main() {
       );
       expect(c.forPortion(c.units.first, 2).kcal, closeTo(840, 0.01));
       expect(c.allUnits.length, 1); // no gram unit without a real weight
+      final w = Food.customPerServing(
+        id: 'c2',
+        name: '우리집 김치볶음',
+        unitLabel: '1인분',
+        grams: 300,
+        kcal: 480,
+        proteinG: 20,
+        carbsG: 60,
+        fatG: 18,
+      );
+      expect(w.allUnits.last.isGram, isTrue);
+      expect(w.forPortion(w.allUnits.last, 150).kcal, closeTo(240, 0.01));
     });
   });
 }

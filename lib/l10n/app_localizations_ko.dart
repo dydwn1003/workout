@@ -31,6 +31,22 @@ class LKo extends L {
   String get confirm => '확인';
 
   @override
+  String likeLabel(String n) {
+    return '좋아요 $n';
+  }
+
+  @override
+  String addPhotos(String n, String max) {
+    return '사진 추가 ($n/$max)';
+  }
+
+  @override
+  String get prevDay => '전날';
+
+  @override
+  String get nextDay => '다음 날';
+
+  @override
   String get undo => '되돌리기';
 
   @override
@@ -1163,6 +1179,21 @@ class LKo extends L {
   }
 
   @override
+  String bigEntryTitle(String kcal) {
+    return '$kcal kcal이 맞나요?';
+  }
+
+  @override
+  String get bigEntryBody =>
+      '한 번에 기록하기엔 아주 많은 양이에요. 숫자를 한 자리 더 누르지 않았는지 확인해 주세요.';
+
+  @override
+  String get bigEntryFix => '고치기';
+
+  @override
+  String get bigEntryOk => '맞아요';
+
+  @override
   String numberRange(String min, String max) {
     return '$min~$max 사이';
   }
@@ -1629,6 +1660,11 @@ class LKo extends L {
 
   @override
   String get joinedGym => '내 헬스장';
+
+  @override
+  String leftGym(String name) {
+    return '$name 내 헬스장에서 뺐어요';
+  }
 
   @override
   String get leaveGym => '내 헬스장에서 빼기';

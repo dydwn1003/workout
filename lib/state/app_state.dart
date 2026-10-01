@@ -1504,6 +1504,15 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Puts a deleted workout back (되돌리기).
+  Future<void> restoreWorkout(Workout w) async {
+    if (_data.workouts.any((x) => x.id == w.id)) return;
+    _data.workouts.add(w);
+    _sort();
+    await repo.saveWorkouts(_data.workouts);
+    notifyListeners();
+  }
+
   Future<void> deleteWorkout(String id) async {
     _data.workouts.removeWhere((w) => w.id == id);
     await repo.saveWorkouts(_data.workouts);

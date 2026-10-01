@@ -914,63 +914,71 @@ class _LikePillState extends State<LikePill>
   Widget build(BuildContext context) {
     final liked = widget.post.likedByMe;
     final big = widget.large;
-    return GestureDetector(
-      onTap: _toggle,
-      child: AnimatedContainer(
-        duration: Motion.fast,
-        padding: EdgeInsets.symmetric(
-          horizontal: big ? 16 : 9,
-          vertical: big ? 9 : 4,
-        ),
-        decoration: BoxDecoration(
-          color: liked ? AppColors.peachSoft : const Color(0xFFF7F1EC),
-          borderRadius: BorderRadius.circular(22),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ScaleTransition(
-              scale: TweenSequence([
-                TweenSequenceItem(
-                  tween: Tween(begin: 1.0, end: 1.4),
-                  weight: 40,
-                ),
-                TweenSequenceItem(
-                  tween: Tween(begin: 1.4, end: 1.0),
-                  weight: 60,
-                ),
-              ]).animate(CurvedAnimation(parent: _pop, curve: Curves.easeOut)),
-              child: Icon(
-                liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                size: big ? 20 : 15,
-                color: liked ? AppColors.peach : AppColors.inkSoft,
-              ),
-            ),
-            SizedBox(width: big ? 6 : 4),
-            AnimatedSwitcher(
-              duration: Motion.fast,
-              transitionBuilder: (child, a) => FadeTransition(
-                opacity: a,
-                child: SlideTransition(
-                  position: Tween(
-                    begin: const Offset(0, 0.4),
-                    end: Offset.zero,
-                  ).animate(a),
-                  child: child,
-                ),
-              ),
-              child: Text(
-                '${widget.post.likeCount}',
-                key: ValueKey(widget.post.likeCount),
-                style: TextStyle(
-                  fontFamily: headingFont,
-                  fontWeight: FontWeight.w800,
-                  fontSize: big ? 15 : 12.5,
+    return Semantics(
+      button: true,
+      label: L.of(context).likeLabel('${widget.post.likeCount}'),
+      child: GestureDetector(
+        onTap: _toggle,
+        child: AnimatedContainer(
+          duration: Motion.fast,
+          padding: EdgeInsets.symmetric(
+            horizontal: big ? 16 : 9,
+            vertical: big ? 9 : 4,
+          ),
+          decoration: BoxDecoration(
+            color: liked ? AppColors.peachSoft : const Color(0xFFF7F1EC),
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ScaleTransition(
+                scale: TweenSequence(
+                  [
+                    TweenSequenceItem(
+                      tween: Tween(begin: 1.0, end: 1.4),
+                      weight: 40,
+                    ),
+                    TweenSequenceItem(
+                      tween: Tween(begin: 1.4, end: 1.0),
+                      weight: 60,
+                    ),
+                  ],
+                ).animate(CurvedAnimation(parent: _pop, curve: Curves.easeOut)),
+                child: Icon(
+                  liked
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  size: big ? 20 : 15,
                   color: liked ? AppColors.peach : AppColors.inkSoft,
                 ),
               ),
-            ),
-          ],
+              SizedBox(width: big ? 6 : 4),
+              AnimatedSwitcher(
+                duration: Motion.fast,
+                transitionBuilder: (child, a) => FadeTransition(
+                  opacity: a,
+                  child: SlideTransition(
+                    position: Tween(
+                      begin: const Offset(0, 0.4),
+                      end: Offset.zero,
+                    ).animate(a),
+                    child: child,
+                  ),
+                ),
+                child: Text(
+                  '${widget.post.likeCount}',
+                  key: ValueKey(widget.post.likeCount),
+                  style: TextStyle(
+                    fontFamily: headingFont,
+                    fontWeight: FontWeight.w800,
+                    fontSize: big ? 15 : 12.5,
+                    color: liked ? AppColors.peach : AppColors.inkSoft,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

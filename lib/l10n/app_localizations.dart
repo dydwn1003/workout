@@ -139,6 +139,30 @@ abstract class L {
   /// **'확인'**
   String get confirm;
 
+  /// No description provided for @likeLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'좋아요 {n}'**
+  String likeLabel(String n);
+
+  /// No description provided for @addPhotos.
+  ///
+  /// In ko, this message translates to:
+  /// **'사진 추가 ({n}/{max})'**
+  String addPhotos(String n, String max);
+
+  /// No description provided for @prevDay.
+  ///
+  /// In ko, this message translates to:
+  /// **'전날'**
+  String get prevDay;
+
+  /// No description provided for @nextDay.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음 날'**
+  String get nextDay;
+
   /// No description provided for @undo.
   ///
   /// In ko, this message translates to:
@@ -2143,6 +2167,30 @@ abstract class L {
   /// **'아직 기록이 2주가 안 돼서 공식으로 소비량을 {formula} kcal로 추정했어요. 기록이 쌓이면 실제 데이터로 바뀌어요.'**
   String reportNoObserved(String formula);
 
+  /// No description provided for @bigEntryTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'{kcal} kcal이 맞나요?'**
+  String bigEntryTitle(String kcal);
+
+  /// No description provided for @bigEntryBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'한 번에 기록하기엔 아주 많은 양이에요. 숫자를 한 자리 더 누르지 않았는지 확인해 주세요.'**
+  String get bigEntryBody;
+
+  /// No description provided for @bigEntryFix.
+  ///
+  /// In ko, this message translates to:
+  /// **'고치기'**
+  String get bigEntryFix;
+
+  /// No description provided for @bigEntryOk.
+  ///
+  /// In ko, this message translates to:
+  /// **'맞아요'**
+  String get bigEntryOk;
+
   /// No description provided for @numberRange.
   ///
   /// In ko, this message translates to:
@@ -2892,6 +2940,12 @@ abstract class L {
   /// In ko, this message translates to:
   /// **'내 헬스장'**
   String get joinedGym;
+
+  /// No description provided for @leftGym.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name} 내 헬스장에서 뺐어요'**
+  String leftGym(String name);
 
   /// No description provided for @leaveGym.
   ///

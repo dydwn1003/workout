@@ -133,8 +133,24 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
       await joinGym(context, widget.gym);
       return;
     }
+    final t = L.of(context);
+    final messenger = ScaffoldMessenger.of(context);
     try {
       await c.leave(widget.gym.id);
+      // One tap took it out: one tap puts it back.
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              t.leftGym(josa(t.localeName, widget.gym.name, '을', '를')),
+            ),
+            action: SnackBarAction(
+              label: t.undo,
+              onPressed: () => c.join(widget.gym).catchError((_) {}),
+            ),
+          ),
+        );
     } catch (e) {
       if (mounted) showCommunityError(context, e);
     }

@@ -843,38 +843,42 @@ class _CommentLike extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-    behavior: HitTestBehavior.opaque,
-    onTap: onTap,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedSwitcher(
-            duration: Motion.fast,
-            transitionBuilder: (child, a) =>
-                ScaleTransition(scale: a, child: child),
-            child: Icon(
-              liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-              key: ValueKey(liked),
-              size: 15,
-              color: liked ? AppColors.peach : AppColors.inkSoft,
-            ),
-          ),
-          if (count > 0) ...[
-            const SizedBox(width: 3),
-            Text(
-              '$count',
-              style: TextStyle(
-                fontFamily: headingFont,
-                fontWeight: FontWeight.w800,
-                fontSize: 12.5,
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: L.of(context).likeLabel('$count'),
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedSwitcher(
+              duration: Motion.fast,
+              transitionBuilder: (child, a) =>
+                  ScaleTransition(scale: a, child: child),
+              child: Icon(
+                liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                key: ValueKey(liked),
+                size: 15,
                 color: liked ? AppColors.peach : AppColors.inkSoft,
               ),
             ),
+            if (count > 0) ...[
+              const SizedBox(width: 3),
+              Text(
+                '$count',
+                style: TextStyle(
+                  fontFamily: headingFont,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 12.5,
+                  color: liked ? AppColors.peach : AppColors.inkSoft,
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     ),
   );

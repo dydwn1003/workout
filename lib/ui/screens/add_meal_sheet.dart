@@ -940,6 +940,31 @@ class _FoodRow extends StatelessWidget {
   }
 }
 
+/// One entry this big is more often a typo (2500 for 250 g) than a meal:
+/// asks before logging it. True to go on.
+Future<bool> confirmBigEntry(BuildContext context, double kcal) async {
+  if (kcal < 3000) return true;
+  final t = L.of(context);
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(t.bigEntryTitle(fmt0(kcal))),
+      content: Text(t.bigEntryBody),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text(t.bigEntryFix),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text(t.bigEntryOk),
+        ),
+      ],
+    ),
+  );
+  return ok ?? false;
+}
+
 class _FoodDetail extends StatefulWidget {
   final Food food;
   final MealSlot slot;
@@ -1244,6 +1269,8 @@ class _FoodDetailState extends State<_FoodDetail> {
                 child: FilledButton.icon(
                   onPressed: _qty > 0 && !_busy
                       ? () async {
+                          final kcal = widget.food.forPortion(_unit, _qty).kcal;
+                          if (!await confirmBigEntry(context, kcal)) return;
                           setState(() => _busy = true);
                           await widget.onChange(_unit, _qty);
                         }
@@ -1261,6 +1288,8 @@ class _FoodDetailState extends State<_FoodDetail> {
           FilledButton.icon(
             onPressed: _qty > 0 && !_busy
                 ? () async {
+                    final kcal = widget.food.forPortion(_unit, _qty).kcal;
+                    if (!await confirmBigEntry(context, kcal)) return;
                     setState(() => _busy = true);
                     await widget.onAdd(_unit, _qty);
                   }
@@ -1346,12 +1375,16 @@ class _CustomFoodFormState extends State<_CustomFoodForm> {
     widget.onCreated(food);
   }
 
-  Widget _num(TextEditingController c, String label) => TextField(
-    controller: c,
-    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
-    decoration: InputDecoration(labelText: label),
-  );
+  // Grams go inside the field ([suffix]) so a third-width label fits.
+  Widget _num(TextEditingController c, String label, {String? suffix}) =>
+      TextField(
+        controller: c,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+        ],
+        decoration: InputDecoration(labelText: label, suffixText: suffix),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -1402,11 +1435,11 @@ class _CustomFoodFormState extends State<_CustomFoodForm> {
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _num(_p, t.proteinField)),
+            Expanded(child: _num(_p, t.protein, suffix: 'g')),
             const SizedBox(width: 8),
-            Expanded(child: _num(_c, t.carbsField)),
+            Expanded(child: _num(_c, t.carbs, suffix: 'g')),
             const SizedBox(width: 8),
-            Expanded(child: _num(_f, t.fatField)),
+            Expanded(child: _num(_f, t.fat, suffix: 'g')),
           ],
         ),
         const SizedBox(height: 18),
@@ -1502,6 +1535,8 @@ class _MealFormState extends State<_MealForm>
   bool get _valid => _name.text.trim().isNotEmpty && _v(_kcal) > 0;
 
   Future<void> _add() async {
+    if (!await confirmBigEntry(context, _v(_kcal))) return;
+    if (!mounted) return;
     final s = AppScope.read(context);
     final t = L.of(context);
     final name = _name.text.trim();
@@ -1565,13 +1600,16 @@ class _MealFormState extends State<_MealForm>
     widget.onAdded(name);
   }
 
-  Widget _num(TextEditingController c, String label) => TextField(
-    controller: c,
-    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
-    onChanged: (_) => _edited = true,
-    decoration: InputDecoration(labelText: label),
-  );
+  Widget _num(TextEditingController c, String label, {String? suffix}) =>
+      TextField(
+        controller: c,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+        ],
+        onChanged: (_) => _edited = true,
+        decoration: InputDecoration(labelText: label, suffixText: suffix),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -1693,11 +1731,11 @@ class _MealFormState extends State<_MealForm>
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: _num(_p, t.proteinField)),
+              Expanded(child: _num(_p, t.protein, suffix: 'g')),
               const SizedBox(width: 8),
-              Expanded(child: _num(_c, t.carbsField)),
+              Expanded(child: _num(_c, t.carbs, suffix: 'g')),
               const SizedBox(width: 8),
-              Expanded(child: _num(_f, t.fatField)),
+              Expanded(child: _num(_f, t.fat, suffix: 'g')),
             ],
           ),
           const SizedBox(height: 6),

@@ -167,6 +167,7 @@ class TodayScreenState extends State<TodayScreen> {
                   _navBtn(
                     Icons.chevron_left_rounded,
                     () => _shift(-1, s.today),
+                    t.prevDay,
                   ),
                   Tooltip(
                     message: t.pickDate,
@@ -210,6 +211,7 @@ class TodayScreenState extends State<TodayScreen> {
                     child: _navBtn(
                       Icons.chevron_right_rounded,
                       canForward ? () => _shift(1, s.today) : null,
+                      t.nextDay,
                     ),
                   ),
                   AnimatedSize(
@@ -252,12 +254,15 @@ class TodayScreenState extends State<TodayScreen> {
     );
   }
 
-  Widget _navBtn(IconData icon, VoidCallback? onTap) => InkResponse(
-    onTap: onTap,
-    radius: 20,
-    child: Padding(
-      padding: const EdgeInsets.all(4),
-      child: Icon(icon, color: AppColors.inkSoft, size: 22),
+  Widget _navBtn(IconData icon, VoidCallback? onTap, String label) => Tooltip(
+    message: label,
+    child: InkResponse(
+      onTap: onTap,
+      radius: 20,
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Icon(icon, color: AppColors.inkSoft, size: 22),
+      ),
     ),
   );
 }
@@ -1037,9 +1042,17 @@ class _WorkoutCard extends StatelessWidget {
                           workout: w,
                           onDelete: () {
                             s.deleteWorkout(w.id);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(t.workoutDeleted)),
-                            );
+                            ScaffoldMessenger.of(context)
+                              ..hideCurrentSnackBar()
+                              ..showSnackBar(
+                                SnackBar(
+                                  content: Text(t.workoutDeleted),
+                                  action: SnackBarAction(
+                                    label: t.undo,
+                                    onPressed: () => s.restoreWorkout(w),
+                                  ),
+                                ),
+                              );
                           },
                         ),
                     ],
@@ -1068,7 +1081,7 @@ class _WorkoutChip extends StatelessWidget {
     return FadeSlideIn(
       dy: 6,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 6, 4, 6),
+        padding: const EdgeInsets.fromLTRB(12, 0, 0, 0),
         decoration: BoxDecoration(
           color: strength ? AppColors.mintSoft : AppColors.skySoft,
           borderRadius: BorderRadius.circular(20),
@@ -1093,12 +1106,18 @@ class _WorkoutChip extends StatelessWidget {
                 color: c,
               ),
             ),
-            InkResponse(
-              onTap: onDelete,
-              radius: 16,
-              child: Padding(
-                padding: const EdgeInsets.all(4),
-                child: Icon(Icons.close_rounded, size: 14, color: c),
+            // A finger-sized target around the small ×.
+            Semantics(
+              button: true,
+              label: t.delete,
+              excludeSemantics: true,
+              child: InkResponse(
+                onTap: onDelete,
+                radius: 18,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(6, 6, 8, 6),
+                  child: Icon(Icons.close_rounded, size: 14, color: c),
+                ),
               ),
             ),
           ],

@@ -124,7 +124,8 @@ class Food {
       proteinG * k,
       carbsG * k,
       fatG * k,
-      [FoodUnit(unitLabel, g)],
+      // Grams too, once the serving's weight is known.
+      [FoodUnit(unitLabel, g), if (grams != null) const FoodUnit('g', 1)],
       custom: true,
     );
   }
