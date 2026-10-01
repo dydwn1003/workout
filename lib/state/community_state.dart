@@ -111,14 +111,20 @@ class CommunityState extends ChangeNotifier {
         signedIn ? repo.unreadNotifications() : Future.value(0),
         repo.hot(boards, days: 2, limit: 5),
       ]);
-      unread = r[0] as int;
-      hotPosts = [
+      final count = r[0] as int;
+      final hot = [
         for (final p in r[1] as List<Post>)
           if (p.likeCount >= CommunityLimits.hotLikes &&
               p.authorId != repo.myId)
             p,
       ];
-      notifyListeners();
+      // Checked every minute: only redraw when something changed.
+      String ids(List<Post> l) => l.map((p) => p.id).join(',');
+      if (count != unread || ids(hot) != ids(hotPosts)) {
+        unread = count;
+        hotPosts = hot;
+        notifyListeners();
+      }
     } catch (e) {
       debugPrint('notifications check failed: $e');
     } finally {

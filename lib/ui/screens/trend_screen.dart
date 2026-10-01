@@ -178,15 +178,23 @@ class _TrendScreenState extends State<TrendScreen> {
                     children: [
                       const Icon(Icons.flag_rounded, color: AppColors.mint),
                       const SizedBox(width: 10),
-                      Text(
-                        '${t.goalWeight} ${fmt1(goal)}kg',
-                        style: const TextStyle(
-                          fontFamily: headingFont,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
+                      // Shrinks a little on a narrow phone rather than
+                      // pushing the ETA pill off the card.
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '${t.goalWeight} ${fmt1(goal)}kg',
+                            style: const TextStyle(
+                              fontFamily: headingFont,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                            ),
+                          ),
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 8),
                       Pill(
                         text: etaText(t, s.eta),
                         color: AppColors.mint,

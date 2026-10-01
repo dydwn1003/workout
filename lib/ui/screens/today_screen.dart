@@ -863,12 +863,17 @@ class _SlotCardState extends State<_SlotCard> {
                     child: Icon(slotIcon(slot), size: 18, color: color),
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    slotLabel(t, slot),
-                    style: const TextStyle(
-                      fontFamily: headingFont,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
+                  // The slot's name gives way first on a narrow phone.
+                  Flexible(
+                    child: Text(
+                      slotLabel(t, slot),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: headingFont,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                   if (meals.isNotEmpty) ...[
@@ -891,6 +896,7 @@ class _SlotCardState extends State<_SlotCard> {
                       ),
                     ),
                   ],
+                  const SizedBox(width: 6),
                   const Spacer(),
                   AnimatedSwitcher(
                     duration: Motion.medium,
