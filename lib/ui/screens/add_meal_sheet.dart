@@ -1270,7 +1270,10 @@ class _FoodDetailState extends State<_FoodDetail> {
                   onPressed: _qty > 0 && !_busy
                       ? () async {
                           final kcal = widget.food.forPortion(_unit, _qty).kcal;
-                          if (!await confirmBigEntry(context, kcal)) return;
+                          if (!await confirmBigEntry(context, kcal) ||
+                              !mounted) {
+                            return;
+                          }
                           setState(() => _busy = true);
                           await widget.onChange(_unit, _qty);
                         }
@@ -1289,7 +1292,9 @@ class _FoodDetailState extends State<_FoodDetail> {
             onPressed: _qty > 0 && !_busy
                 ? () async {
                     final kcal = widget.food.forPortion(_unit, _qty).kcal;
-                    if (!await confirmBigEntry(context, kcal)) return;
+                    if (!await confirmBigEntry(context, kcal) || !mounted) {
+                      return;
+                    }
                     setState(() => _busy = true);
                     await widget.onAdd(_unit, _qty);
                   }
