@@ -164,22 +164,58 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       case _Step.goal:
         return _goal != null;
       case _Step.body:
-        // The optional ones may be blank, but not wrong.
-        bool blankOr(TextEditingController c, (int, int) r) =>
-            c.text.trim().isEmpty || _inRange(c, r);
-        return _inRange(_birth, _birthRange) &&
-            _inRange(_height, _heightRange) &&
-            _inRange(_weight, _weightRange) &&
-            blankOr(_bf, _bfRange) &&
-            blankOr(_smm, _smmRange);
+        return _bodyValid && _stepIssues.isEmpty;
       case _Step.target:
-        return _targetWeight != null;
+        return _targetWeight != null && _stepIssues.isEmpty;
       case _Step.pace:
       case _Step.activity:
         return true;
       case _Step.result:
         return _issues.isEmpty;
     }
+  }
+
+  bool get _bodyValid {
+    // The optional ones may be blank, but not wrong.
+    bool blankOr(TextEditingController c, (int, int) r) =>
+        c.text.trim().isEmpty || _inRange(c, r);
+    return _inRange(_birth, _birthRange) &&
+        _inRange(_height, _heightRange) &&
+        _inRange(_weight, _weightRange) &&
+        blankOr(_bf, _bfRange) &&
+        blankOr(_smm, _smmRange);
+  }
+
+  /// Problems this step already shows (age, a weight too low to lose
+  /// from, a target the wrong way or too low): said here and holding the
+  /// step, not only on the last page.
+  List<GoalIssue> get _stepIssues {
+    if (_goal == null || !_bodyValid) return const [];
+    final mine = switch (_step) {
+      _Step.body => const {GoalIssue.underage, GoalIssue.bmiTooLowForLoss},
+      _Step.target when _targetWeight != null => const {
+        GoalIssue.targetBmiTooLow,
+        GoalIssue.targetDirection,
+      },
+      _ => const <GoalIssue>{},
+    };
+    if (mine.isEmpty) return const [];
+    return [
+      for (final i in _issues)
+        if (mine.contains(i)) i,
+    ];
+  }
+
+  Widget _issueNote(L t) {
+    final issues = _stepIssues;
+    if (issues.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: MascotSays(
+        text: issues.map((i) => issueLabel(t, i)).join('\n'),
+        mood: MascotMood.thinking,
+      ),
+    );
   }
 
   UserProfile get _profile => UserProfile(
@@ -731,6 +767,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ],
         ),
+        _issueNote(t),
       ],
     );
   }
@@ -791,6 +828,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             style: const TextStyle(fontSize: 13, color: AppColors.inkSoft),
           ),
         ],
+        _issueNote(t),
       ],
     );
   }
@@ -944,7 +982,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _title(widget.editing ? t.stepResultTitleEdit : t.stepResultTitle),
+        _title(
+          issues.isNotEmpty
+              ? t.stepResultIssues
+              : widget.editing
+              ? t.stepResultTitleEdit
+              : t.stepResultTitle,
+        ),
         if (issues.isNotEmpty) ...[
           MascotSays(
             text: issues.map((i) => issueLabel(t, i)).join('\n'),

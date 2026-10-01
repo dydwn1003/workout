@@ -224,6 +224,9 @@ class LEn extends L {
   }
 
   @override
+  String get stepResultIssues => 'Let\'s check the goal again';
+
+  @override
   String get stepResultTitleEdit => 'Here\'s your new plan!';
 
   @override

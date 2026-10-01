@@ -100,6 +100,7 @@
       }
     }
   },
+  "stepResultIssues": "목표를 다시 확인해 주세요",
   "stepResultTitleEdit": "새 목표가 나왔어요!",
   "resultNoteLearned": "지금까지 기록으로 계산한 실제 소비량으로 맞췄어요. 앞으로도 매주 조정돼요.",
   "resultNote": "첫 목표는 공식으로 계산한 추정치예요. 2~4주 기록이 쌓이면 내 몸에 맞게 매주 조정돼요.",

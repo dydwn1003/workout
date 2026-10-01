@@ -66,6 +66,7 @@
   "etaReached": "Almost there!",
   "etaUnknown": "Not predictable yet",
   "floorNotice": "Raised to the safety floor ({kcal} kcal). Consider a slower pace.",
+  "stepResultIssues": "Let's check the goal again",
   "stepResultTitleEdit": "Here's your new plan!",
   "resultNoteLearned": "Based on the burn your logs have shown so far. It keeps adapting every week.",
   "resultNote": "This first target is a formula estimate. After 2–4 weeks of logging it adapts to you every week.",

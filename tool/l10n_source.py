@@ -84,6 +84,7 @@ S = {
  "etaUnknown": ("아직 예측하기 어려워요", "Not predictable yet"),
  "floorNotice": ("안전 하한({kcal} kcal)에 맞췄어요. 속도를 한 단계 낮추는 걸 추천해요.",
                  "Raised to the safety floor ({kcal} kcal). Consider a slower pace."),
+ "stepResultIssues": ("목표를 다시 확인해 주세요", "Let's check the goal again"),
  "stepResultTitleEdit": ("새 목표가 나왔어요!", "Here's your new plan!"),
  "resultNoteLearned": ("지금까지 기록으로 계산한 실제 소비량으로 맞췄어요. 앞으로도 매주 조정돼요.",
                 "Based on the burn your logs have shown so far. It keeps adapting every week."),

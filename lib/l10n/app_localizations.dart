@@ -493,6 +493,12 @@ abstract class L {
   /// **'안전 하한({kcal} kcal)에 맞췄어요. 속도를 한 단계 낮추는 걸 추천해요.'**
   String floorNotice(String kcal);
 
+  /// No description provided for @stepResultIssues.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표를 다시 확인해 주세요'**
+  String get stepResultIssues;
+
   /// No description provided for @stepResultTitleEdit.
   ///
   /// In ko, this message translates to:

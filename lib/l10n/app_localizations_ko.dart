@@ -218,6 +218,9 @@ class LKo extends L {
   }
 
   @override
+  String get stepResultIssues => '목표를 다시 확인해 주세요';
+
+  @override
   String get stepResultTitleEdit => '새 목표가 나왔어요!';
 
   @override
