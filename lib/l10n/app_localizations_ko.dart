@@ -546,6 +546,9 @@ class LKo extends L {
   String get newTarget => '새 목표 제안';
 
   @override
+  String get noChange => '변경 없음';
+
+  @override
   String reasonLowConfidence(String logged, String weighs) {
     return '이번 주는 기록이 조금 부족해요 (식사 $logged/7일, 체중 $weighs회). 목표는 그대로 둘게요. 식사 5일, 체중 3회 이상이면 조정할 수 있어요.';
   }
@@ -1087,7 +1090,7 @@ class LKo extends L {
   String get reviewSent => '의견 고마워요. 꼭 참고할게요';
 
   @override
-  String get reportTitle => '신고 사유를 골라 주세요';
+  String get reportTitle => '이번 주 코칭 리포트';
 
   @override
   String get reportAte => '먹은 양';
@@ -1667,6 +1670,9 @@ class LKo extends L {
 
   @override
   String get report => '신고';
+
+  @override
+  String get reportContentTitle => '신고 사유를 골라 주세요';
 
   @override
   String get reasonSpam => '스팸·광고';

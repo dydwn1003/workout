@@ -312,6 +312,7 @@
   "confLow": "낮음",
   "currentTarget": "현재 목표",
   "newTarget": "새 목표 제안",
+  "noChange": "변경 없음",
   "reasonLowConfidence": "이번 주는 기록이 조금 부족해요 (식사 {logged}/7일, 체중 {weighs}회). 목표는 그대로 둘게요. 식사 5일, 체중 3회 이상이면 조정할 수 있어요.",
   "@reasonLowConfidence": {
     "placeholders": {
@@ -687,7 +688,7 @@
   "reviewBadHint": "불편했던 점을 알려 주시면 고쳐 볼게요",
   "reviewSend": "보내기",
   "reviewSent": "의견 고마워요. 꼭 참고할게요",
-  "reportTitle": "신고 사유를 골라 주세요",
+  "reportTitle": "이번 주 코칭 리포트",
   "reportAte": "먹은 양",
   "reportAteValue": "최근 {days}일 평균 {kcal} kcal",
   "@reportAteValue": {
@@ -1313,6 +1314,7 @@
     }
   },
   "report": "신고",
+  "reportContentTitle": "신고 사유를 골라 주세요",
   "reasonSpam": "스팸·광고",
   "reasonAbuse": "욕설·비하·괴롭힘",
   "reasonSexual": "음란물·성적인 내용",

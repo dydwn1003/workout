@@ -150,4 +150,21 @@ class CheckinResult {
     required this.loggedDaysLastWeek,
     required this.weighInsLastWeek,
   });
+
+  CheckinResult copyWith({Macros? proposal, bool? floorHit}) => CheckinResult(
+    avgIntake: avgIntake,
+    trendChangeKg: trendChangeKg,
+    tdeeFormula: tdeeFormula,
+    observed: observed,
+    previousTdee: previousTdee,
+    tdeeEstimate: tdeeEstimate,
+    proposal: proposal ?? this.proposal,
+    confidence: confidence,
+    reason: reason,
+    floorHit: floorHit ?? this.floorHit,
+    adjusted: adjusted,
+    trendWeightKg: trendWeightKg,
+    loggedDaysLastWeek: loggedDaysLastWeek,
+    weighInsLastWeek: weighInsLastWeek,
+  );
 }

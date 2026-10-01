@@ -231,36 +231,45 @@ class _CheckinScreenState extends State<CheckinScreen> {
                   ),
                 ],
                 const SizedBox(height: 14),
-                if (r.adjusted) ...[
-                  FilledButton.icon(
-                    onPressed: () => _apply(r, PlanStatus.accepted),
-                    icon: const Icon(Icons.check_rounded),
-                    label: Text(t.accept),
-                  ),
-                  const SizedBox(height: 10),
-                ],
-                Row(
-                  children: [
-                    Expanded(
-                      child: r.adjusted
-                          ? OutlinedButton(
-                              onPressed: () => _apply(r, PlanStatus.kept),
-                              child: Text(t.keep),
-                            )
-                          : FilledButton(
-                              onPressed: () => _apply(r, PlanStatus.kept),
-                              child: Text(t.keep),
-                            ),
+                // Before check-in day with nothing to change there's nothing
+                // to confirm: only a manual change.
+                if (!due && !r.adjusted)
+                  OutlinedButton(
+                    onPressed: () => _manual(r),
+                    child: Text(t.adjust),
+                  )
+                else ...[
+                  if (r.adjusted) ...[
+                    FilledButton.icon(
+                      onPressed: () => _apply(r, PlanStatus.accepted),
+                      icon: const Icon(Icons.check_rounded),
+                      label: Text(t.accept),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => _manual(r),
-                        child: Text(t.adjust),
-                      ),
-                    ),
+                    const SizedBox(height: 10),
                   ],
-                ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: r.adjusted
+                            ? OutlinedButton(
+                                onPressed: () => _apply(r, PlanStatus.kept),
+                                child: Text(t.keep),
+                              )
+                            : FilledButton(
+                                onPressed: () => _apply(r, PlanStatus.kept),
+                                child: Text(t.keep),
+                              ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _manual(r),
+                          child: Text(t.adjust),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 14),
                 _report(t, plan, r),
               ],
@@ -438,6 +447,37 @@ class _CheckinScreenState extends State<CheckinScreen> {
   Widget _proposalCard(L t, Plan current, CheckinResult r) {
     final m = r.proposal;
     final diff = m.kcal - current.targetKcal;
+    if (diff.abs() < 1) {
+      // Nothing changes: the target as it stays, no arrow.
+      return SoftCard(
+        child: Column(
+          children: [
+            Text(
+              t.currentTarget,
+              style: const TextStyle(color: AppColors.inkSoft, fontSize: 13),
+            ),
+            Text(
+              fmt0(current.targetKcal),
+              style: const TextStyle(
+                fontFamily: headingFont,
+                fontWeight: FontWeight.w800,
+                fontSize: 34,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Pill(
+              text: t.noChange,
+              color: AppColors.inkSoft,
+              soft: AppColors.line,
+            ),
+            const SizedBox(height: 14),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            _targetSummary(t, current),
+          ],
+        ),
+      );
+    }
     return SoftCard(
       child: Column(
         children: [
@@ -770,7 +810,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
           const SizedBox(height: 12),
           if (o == null) ...[
             Text(
-              t.reportNoObserved(fmt0(r.tdeeFormula)),
+              t.reportNoObserved(fmt0(r.tdeeEstimate)),
               style: const TextStyle(fontSize: 13.5, height: 1.5),
             ),
             const SizedBox(height: 10),

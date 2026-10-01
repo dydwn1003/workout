@@ -216,6 +216,38 @@ void main() {
       expect(s.checkinDue, isFalse);
     });
 
+    test('too little logged: the target stays exactly as it is', () async {
+      final s = AppState(MemoryCoachRepository(), clock: () => now);
+      await s.load();
+      await s.completeOnboarding(
+        profile: UserProfile(
+          sex: Sex.male,
+          birthYear: 1990,
+          heightCm: 180,
+          goalType: GoalType.lose,
+          pace: Pace.normal,
+          strengthPerWeek: 3,
+          cardioPerWeek: 1,
+          targetWeightKg: 75,
+          createdAt: now,
+        ),
+        weightKg: 85,
+      );
+      // Weighed in a few times (the trend moves a little), no meals logged.
+      for (final (d, kg) in [(1, 84.6), (2, 84.9), (3, 84.4)]) {
+        await s.upsertWeight(
+          WeightEntry(
+            date: dateKey(now.subtract(Duration(days: d))),
+            kg: kg,
+          ),
+        );
+      }
+      final r = s.runCheckin()!;
+      expect(r.adjusted, isFalse);
+      expect(r.proposal.kcal, s.currentPlan!.targetKcal);
+      expect(r.proposal.proteinG, s.currentPlan!.proteinG);
+    });
+
     test('demo data leaves a check-in due and accept adds a plan', () async {
       final repo = MemoryCoachRepository();
       final s = AppState(repo, clock: () => now);

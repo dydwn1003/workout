@@ -1195,13 +1195,25 @@ class AppState extends ChangeNotifier {
         d.date == today ? DayLog(date: d.date, weightKg: d.weightKg) : d,
     ];
     if (logs.isEmpty) return null;
-    return weeklyCheckin(
+    final r = weeklyCheckin(
       profile: p.coachProfile,
       goal: p.coachGoal,
       days: logs,
       today: today,
       previousTdee: plan.tdeeEst,
       bodyFatPct: latestBodyFat,
+    );
+    // Too little logged to adjust: the target stays exactly as it is
+    // (recomputing it from today's trend weight drifted it by a few kcal).
+    if (r.adjusted) return r;
+    return r.copyWith(
+      floorHit: false,
+      proposal: Macros(
+        kcal: plan.targetKcal,
+        proteinG: plan.proteinG,
+        carbsG: plan.carbsG,
+        fatG: plan.fatG,
+      ),
     );
   }
 

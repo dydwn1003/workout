@@ -193,6 +193,7 @@ S = {
  "confLow": ("낮음", "Low"),
  "currentTarget": ("현재 목표", "Current"),
  "newTarget": ("새 목표 제안", "Proposed"),
+ "noChange": ("변경 없음", "No change"),
  "reasonLowConfidence": ("이번 주는 기록이 조금 부족해요 (식사 {logged}/7일, 체중 {weighs}회). 목표는 그대로 둘게요. 식사 5일, 체중 3회 이상이면 조정할 수 있어요.",
                          "Not quite enough data this week (meals {logged}/7 days, {weighs} weigh-ins), so your target stays. Log meals 5+ days and weight 3+ times to adjust."),
  "reasonPlateau": ("체중 추세가 2주째 거의 그대로예요. 계산해 보니 소비량이 약 {tdee} kcal로 낮아진 것 같아요. 목표를 살짝 낮춰볼까요?",
@@ -519,7 +520,7 @@ S = {
  "hoursAgo": ("{n}시간 전", "{n}h ago"),
  "daysAgo": ("{n}일 전", "{n}d ago"),
  "report": ("신고", "Report"),
- "reportTitle": ("신고 사유를 골라 주세요", "Why are you reporting this?"),
+ "reportContentTitle": ("신고 사유를 골라 주세요", "Why are you reporting this?"),
  "reasonSpam": ("스팸·광고", "Spam or ads"),
  "reasonAbuse": ("욕설·비하·괴롭힘", "Abuse or harassment"),
  "reasonSexual": ("음란물·성적인 내용", "Sexual content"),
@@ -649,6 +650,13 @@ S = {
  "hotBadge": ("HOT", "HOT"),
  "notificationsSignIn": ("로그인하면 내 글과 댓글 소식을 알려 드려요", "Sign in to get news about your posts and comments"),
 }
+
+# A key written twice silently keeps only the last one (this once turned
+# the coaching report's title into the report-a-post title): refuse.
+_keys = re.findall(r'^ "(\w+)":', open(__file__, encoding="utf-8").read(), re.M)
+_dups = sorted({k for k in _keys if _keys.count(k) > 1})
+if _dups:
+    raise SystemExit("duplicate l10n keys: " + ", ".join(_dups))
 
 def placeholders(s):
     # Keep order of first appearance; generated method args follow it.

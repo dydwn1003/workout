@@ -1081,6 +1081,12 @@ abstract class L {
   /// **'새 목표 제안'**
   String get newTarget;
 
+  /// No description provided for @noChange.
+  ///
+  /// In ko, this message translates to:
+  /// **'변경 없음'**
+  String get noChange;
+
   /// No description provided for @reasonLowConfidence.
   ///
   /// In ko, this message translates to:
@@ -2027,7 +2033,7 @@ abstract class L {
   /// No description provided for @reportTitle.
   ///
   /// In ko, this message translates to:
-  /// **'신고 사유를 골라 주세요'**
+  /// **'이번 주 코칭 리포트'**
   String get reportTitle;
 
   /// No description provided for @reportAte.
@@ -2952,6 +2958,12 @@ abstract class L {
   /// In ko, this message translates to:
   /// **'신고'**
   String get report;
+
+  /// No description provided for @reportContentTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'신고 사유를 골라 주세요'**
+  String get reportContentTitle;
 
   /// No description provided for @reasonSpam.
   ///

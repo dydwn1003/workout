@@ -421,7 +421,7 @@ Future<void> showContentMenu(
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
                 child: Text(
-                  t.reportTitle,
+                  t.reportContentTitle,
                   style: Theme.of(ctx).textTheme.titleMedium,
                 ),
               ),

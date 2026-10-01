@@ -558,6 +558,9 @@ class LEn extends L {
   String get newTarget => 'Proposed';
 
   @override
+  String get noChange => 'No change';
+
+  @override
   String reasonLowConfidence(String logged, String weighs) {
     return 'Not quite enough data this week (meals $logged/7 days, $weighs weigh-ins), so your target stays. Log meals 5+ days and weight 3+ times to adjust.';
   }
@@ -1113,7 +1116,7 @@ class LEn extends L {
   String get reviewSent => 'Thanks, we\'ll take it to heart';
 
   @override
-  String get reportTitle => 'Why are you reporting this?';
+  String get reportTitle => 'This week\'s report';
 
   @override
   String get reportAte => 'Eaten';
@@ -1700,6 +1703,9 @@ class LEn extends L {
 
   @override
   String get report => 'Report';
+
+  @override
+  String get reportContentTitle => 'Why are you reporting this?';
 
   @override
   String get reasonSpam => 'Spam or ads';
