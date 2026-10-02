@@ -1889,6 +1889,43 @@ class LKo extends L {
   String get bannedError => '커뮤니티 규칙 위반으로 글쓰기가 중단된 계정이에요. 설정 → 문의하기로 알려 주세요.';
 
   @override
+  String get discardDraftTitle => '작성 중인 글을 버릴까요?';
+
+  @override
+  String get discardDraftBody => '지금 닫으면 쓴 내용과 고른 사진이 사라져요.';
+
+  @override
+  String get keepWriting => '계속 쓰기';
+
+  @override
+  String get discardDraft => '버리기';
+
+  @override
+  String get searchPosts => '글 검색';
+
+  @override
+  String get searchPostsHint => '이 게시판에서 찾을 말';
+
+  @override
+  String searchPostsCount(String n) {
+    return '검색 결과 $n개';
+  }
+
+  @override
+  String searchPostsEmpty(String q) {
+    return '$q 들어간 글이 없어요';
+  }
+
+  @override
+  String get sortNewest => '최신순';
+
+  @override
+  String get sortPopular => '인기순';
+
+  @override
+  String get popularEmpty => '최근 30일 동안 좋아요를 받은 글이 아직 없어요';
+
+  @override
   String get termsOfUse => '이용약관';
 
   @override

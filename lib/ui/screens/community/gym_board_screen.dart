@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -27,6 +29,15 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
   static const _page = 20;
   final _posts = <Post>[];
   PostTag? _tag;
+
+  /// 인기순: the month's most liked (one page) instead of the newest.
+  var _popular = false;
+
+  /// Board search: open, and what's typed (applied after a short pause).
+  var _searchOpen = false;
+  var _query = '';
+  final _queryCtrl = TextEditingController();
+  Timer? _queryDebounce;
   var _loading = true;
   var _failed = false;
   var _hasMore = true;
@@ -44,6 +55,8 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
 
   @override
   void dispose() {
+    _queryDebounce?.cancel();
+    _queryCtrl.dispose();
     _scroll.dispose();
     super.dispose();
   }
@@ -51,19 +64,38 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
   CommunityRepository get _repo => CommunityScope.read(context).repo;
 
   Future<void> _load() async {
-    final tag = _tag;
+    final (tag, popular, query) = (_tag, _popular, _query);
     setState(() {
       _loading = _posts.isEmpty;
       _failed = false;
     });
     try {
-      final list = await _repo.posts(widget.gym.id, limit: _page, tag: tag);
-      if (!mounted || tag != _tag) return;
+      final q = query.trim().toLowerCase();
+      final list = popular
+          ? [
+              for (final p in await _repo.hot(
+                [widget.gym.id],
+                days: 30,
+                limit: 40,
+              ))
+                if ((tag == null || p.tag == tag) &&
+                    (q.isEmpty || p.body.toLowerCase().contains(q)))
+                  p,
+            ]
+          : await _repo.posts(
+              widget.gym.id,
+              limit: _page,
+              tag: tag,
+              query: q.isEmpty ? null : query,
+            );
+      if (!mounted || tag != _tag || popular != _popular || query != _query) {
+        return;
+      }
       setState(() {
         _posts
           ..clear()
           ..addAll(list);
-        _hasMore = list.length == _page;
+        _hasMore = !popular && list.length == _page;
       });
     } catch (e) {
       debugPrint('board load failed: $e');
@@ -83,8 +115,40 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
     _load();
   }
 
+  void _setPopular(bool on) {
+    if (on == _popular) return;
+    HapticFeedback.selectionClick();
+    setState(() {
+      _popular = on;
+      _posts.clear();
+      _loading = true;
+    });
+    _load();
+  }
+
+  void _onQuery(String v) {
+    _queryDebounce?.cancel();
+    _queryDebounce = Timer(const Duration(milliseconds: 350), () {
+      if (!mounted || v == _query) return;
+      setState(() {
+        _query = v;
+        _posts.clear();
+        _loading = true;
+      });
+      _load();
+    });
+  }
+
+  void _toggleSearch() {
+    setState(() => _searchOpen = !_searchOpen);
+    if (!_searchOpen && _query.isNotEmpty) {
+      _queryCtrl.clear();
+      _onQuery('');
+    }
+  }
+
   Future<void> _more() async {
-    if (_loadingMore || !_hasMore || _posts.isEmpty) return;
+    if (_loadingMore || !_hasMore || _popular || _posts.isEmpty) return;
     _loadingMore = true;
     try {
       final list = await _repo.posts(
@@ -92,6 +156,7 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
         before: _posts.last.createdAt,
         limit: _page,
         tag: _tag,
+        query: _query.trim().isEmpty ? null : _query,
       );
       if (!mounted) return;
       setState(() {
@@ -103,6 +168,88 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
     } finally {
       _loadingMore = false;
     }
+  }
+
+  /// Board search (when open) and 최신순 · 인기순.
+  Widget _toolsRow(L t) {
+    Widget sort(String label, bool on, VoidCallback onTap) => GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (on) ...[
+              const Icon(Icons.check_rounded, size: 15, color: AppColors.ink),
+              const SizedBox(width: 2),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: headingFont,
+                fontWeight: on ? FontWeight.w800 : FontWeight.w600,
+                fontSize: 13,
+                color: on ? AppColors.ink : AppColors.inkSoft,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 2, 10, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AnimatedSize(
+            duration: Motion.fast,
+            curve: Motion.ease,
+            child: !_searchOpen
+                ? const SizedBox(width: double.infinity)
+                : Padding(
+                    padding: const EdgeInsets.only(right: 6, bottom: 6),
+                    child: TextField(
+                      controller: _queryCtrl,
+                      autofocus: true,
+                      onChanged: _onQuery,
+                      textInputAction: TextInputAction.search,
+                      decoration: InputDecoration(
+                        hintText: t.searchPostsHint,
+                        isDense: true,
+                        prefixIcon: const Icon(
+                          Icons.search_rounded,
+                          color: AppColors.inkSoft,
+                        ),
+                        suffixIcon: IconButton(
+                          tooltip: MaterialLocalizations.of(context)
+                              .closeButtonTooltip,
+                          icon: const Icon(Icons.close_rounded),
+                          onPressed: _toggleSearch,
+                        ),
+                      ),
+                    ),
+                  ),
+          ),
+          Row(
+            children: [
+              if (_query.trim().isNotEmpty && !_loading)
+                Text(
+                  t.searchPostsCount('${_posts.length}${_hasMore ? '+' : ''}'),
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.inkSoft,
+                  ),
+                ),
+              const Spacer(),
+              sort(t.sortNewest, !_popular, () => _setPopular(false)),
+              const Text('·', style: TextStyle(color: AppColors.inkSoft)),
+              sort(t.sortPopular, _popular, () => _setPopular(true)),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _write() async {
@@ -250,6 +397,15 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
                     ),
                   ),
                 IconButton(
+                  tooltip: t.searchPosts,
+                  onPressed: _toggleSearch,
+                  icon: Icon(
+                    _searchOpen
+                        ? Icons.search_off_rounded
+                        : Icons.search_rounded,
+                  ),
+                ),
+                IconButton(
                   tooltip: t.shareBoard,
                   onPressed: () => shareBoard(context, g),
                   icon: const Icon(Icons.ios_share_rounded),
@@ -288,6 +444,7 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
                 child: TagFilterBar(selected: _tag, onChanged: _setTag),
               ),
             ),
+            SliverToBoxAdapter(child: _toolsRow(t)),
             if (_loading)
               const SliverToBoxAdapter(
                 child: Padding(
@@ -310,7 +467,18 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
                       const Mascot(size: 88, mood: MascotMood.sleepy),
                       const SizedBox(height: 12),
                       Text(
-                        t.boardEmpty,
+                        _query.trim().isNotEmpty
+                            ? t.searchPostsEmpty(
+                                josa(
+                                  t.localeName,
+                                  "'${_query.trim()}'",
+                                  '이',
+                                  '가',
+                                ),
+                              )
+                            : _popular
+                            ? t.popularEmpty
+                            : t.boardEmpty,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: AppColors.inkSoft,

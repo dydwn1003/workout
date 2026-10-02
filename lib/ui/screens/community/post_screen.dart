@@ -703,7 +703,7 @@ class _CommentBubble extends StatelessWidget {
                 color: highlighted
                     ? AppColors.butterSoft
                     : mine
-                    ? AppColors.peachSoft.withValues(alpha: 0.6)
+                    ? const Color(0xFFFFF5F1)
                     : Colors.white,
                 border: Border.all(
                   color: highlighted

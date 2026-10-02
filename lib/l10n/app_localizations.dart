@@ -3312,6 +3312,72 @@ abstract class L {
   /// **'커뮤니티 규칙 위반으로 글쓰기가 중단된 계정이에요. 설정 → 문의하기로 알려 주세요.'**
   String get bannedError;
 
+  /// No description provided for @discardDraftTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'작성 중인 글을 버릴까요?'**
+  String get discardDraftTitle;
+
+  /// No description provided for @discardDraftBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 닫으면 쓴 내용과 고른 사진이 사라져요.'**
+  String get discardDraftBody;
+
+  /// No description provided for @keepWriting.
+  ///
+  /// In ko, this message translates to:
+  /// **'계속 쓰기'**
+  String get keepWriting;
+
+  /// No description provided for @discardDraft.
+  ///
+  /// In ko, this message translates to:
+  /// **'버리기'**
+  String get discardDraft;
+
+  /// No description provided for @searchPosts.
+  ///
+  /// In ko, this message translates to:
+  /// **'글 검색'**
+  String get searchPosts;
+
+  /// No description provided for @searchPostsHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 게시판에서 찾을 말'**
+  String get searchPostsHint;
+
+  /// No description provided for @searchPostsCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색 결과 {n}개'**
+  String searchPostsCount(String n);
+
+  /// No description provided for @searchPostsEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'{q} 들어간 글이 없어요'**
+  String searchPostsEmpty(String q);
+
+  /// No description provided for @sortNewest.
+  ///
+  /// In ko, this message translates to:
+  /// **'최신순'**
+  String get sortNewest;
+
+  /// No description provided for @sortPopular.
+  ///
+  /// In ko, this message translates to:
+  /// **'인기순'**
+  String get sortPopular;
+
+  /// No description provided for @popularEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 30일 동안 좋아요를 받은 글이 아직 없어요'**
+  String get popularEmpty;
+
   /// No description provided for @termsOfUse.
   ///
   /// In ko, this message translates to:

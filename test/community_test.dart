@@ -63,6 +63,18 @@ void main() {
       repo = MemoryCommunity.demo(me: 'me', clock: () => now);
     });
 
+    test('board search finds words in posts, case-insensitive', () async {
+      final all = await repo.feed(topicIds, limit: 200);
+      final word = all.first.body.split(' ').first;
+      final found = await repo.feed(topicIds, limit: 200, query: word);
+      expect(found, isNotEmpty);
+      expect(found.every((p) => p.body.contains(word)), isTrue);
+      expect(
+        await repo.feed(topicIds, limit: 200, query: 'zzz-not-there'),
+        isEmpty,
+      );
+    });
+
     test('search matches every word, spaces ignored', () async {
       expect((await repo.searchGyms('강남 에이블')).map((g) => g.id), ['l-1']);
       expect((await repo.searchGyms('에이블짐강남')).map((g) => g.id), ['l-1']);

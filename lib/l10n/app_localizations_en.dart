@@ -1926,6 +1926,44 @@ class LEn extends L {
       'This account can no longer post for breaking the community rules. Reach us via Settings → Contact us.';
 
   @override
+  String get discardDraftTitle => 'Discard this post?';
+
+  @override
+  String get discardDraftBody =>
+      'Closing now loses what you wrote and the photos you picked.';
+
+  @override
+  String get keepWriting => 'Keep writing';
+
+  @override
+  String get discardDraft => 'Discard';
+
+  @override
+  String get searchPosts => 'Search posts';
+
+  @override
+  String get searchPostsHint => 'Search this board';
+
+  @override
+  String searchPostsCount(String n) {
+    return '$n found';
+  }
+
+  @override
+  String searchPostsEmpty(String q) {
+    return 'No posts with $q';
+  }
+
+  @override
+  String get sortNewest => 'Newest';
+
+  @override
+  String get sortPopular => 'Popular';
+
+  @override
+  String get popularEmpty => 'No liked posts in the last 30 days yet';
+
+  @override
   String get termsOfUse => 'Terms of use';
 
   @override

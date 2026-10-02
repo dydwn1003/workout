@@ -433,11 +433,13 @@ abstract class CommunityRepository {
 
   /// Newest first; [before] pages back from the oldest one shown, [tag]
   /// keeps one kind.
+  /// [query] keeps only posts whose text contains it (board search).
   Future<List<Post>> posts(
     String gymId, {
     DateTime? before,
     int limit = 20,
     PostTag? tag,
+    String? query,
   });
 
   /// Newest posts of several gyms (my gyms' news), with their gym names.
@@ -446,6 +448,7 @@ abstract class CommunityRepository {
     DateTime? before,
     int limit = 20,
     PostTag? tag,
+    String? query,
   });
 
   /// The most liked posts of the last [days] days in these boards.
@@ -736,7 +739,8 @@ class SupabaseCommunity implements CommunityRepository {
     DateTime? before,
     int limit = 20,
     PostTag? tag,
-  }) => feed([gymId], before: before, limit: limit, tag: tag);
+    String? query,
+  }) => feed([gymId], before: before, limit: limit, tag: tag, query: query);
 
   @override
   Future<List<Post>> feed(
@@ -744,6 +748,7 @@ class SupabaseCommunity implements CommunityRepository {
     DateTime? before,
     int limit = 20,
     PostTag? tag,
+    String? query,
   }) async {
     if (gymIds.isEmpty) return const [];
     var q = client
@@ -751,6 +756,15 @@ class SupabaseCommunity implements CommunityRepository {
         .select(_postColumns)
         .inFilter('gym_id', gymIds);
     if (tag != null) q = q.eq('tag', tag.name);
+    final words = query?.trim() ?? '';
+    if (words.isNotEmpty) {
+      // % and _ are wildcards in LIKE: searched for as they are.
+      final escaped = words.replaceAllMapped(
+        RegExp(r'[%_\\]'),
+        (m) => '\\${m[0]}',
+      );
+      q = q.ilike('body', '%$escaped%');
+    }
     if (before != null) {
       q = q.lt('created_at', before.toUtc().toIso8601String());
     }
@@ -1277,7 +1291,8 @@ class MemoryCommunity implements CommunityRepository {
     DateTime? before,
     int limit = 20,
     PostTag? tag,
-  }) => feed([gymId], before: before, limit: limit, tag: tag);
+    String? query,
+  }) => feed([gymId], before: before, limit: limit, tag: tag, query: query);
 
   @override
   Future<List<Post>> feed(
@@ -1285,11 +1300,14 @@ class MemoryCommunity implements CommunityRepository {
     DateTime? before,
     int limit = 20,
     PostTag? tag,
+    String? query,
   }) async {
     final list = [
       for (final p in _posts.reversed)
         if (gymIds.contains(p.gymId) &&
             (tag == null || p.tag == tag) &&
+            (query == null ||
+                p.body.toLowerCase().contains(query.trim().toLowerCase())) &&
             _visible(p.authorId) &&
             (before == null || p.createdAt.isBefore(before)))
           _withLikes(p).copyWith(gymName: gyms[p.gymId]?.name),

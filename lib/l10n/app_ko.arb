@@ -1506,6 +1506,31 @@
   "nicknameInvalid": "2~12자의 한글, 영문, 숫자로 정해 주세요",
   "nicknameTaken": "이미 쓰고 있는 닉네임이에요",
   "bannedError": "커뮤니티 규칙 위반으로 글쓰기가 중단된 계정이에요. 설정 → 문의하기로 알려 주세요.",
+  "discardDraftTitle": "작성 중인 글을 버릴까요?",
+  "discardDraftBody": "지금 닫으면 쓴 내용과 고른 사진이 사라져요.",
+  "keepWriting": "계속 쓰기",
+  "discardDraft": "버리기",
+  "searchPosts": "글 검색",
+  "searchPostsHint": "이 게시판에서 찾을 말",
+  "searchPostsCount": "검색 결과 {n}개",
+  "@searchPostsCount": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "searchPostsEmpty": "{q} 들어간 글이 없어요",
+  "@searchPostsEmpty": {
+    "placeholders": {
+      "q": {
+        "type": "String"
+      }
+    }
+  },
+  "sortNewest": "최신순",
+  "sortPopular": "인기순",
+  "popularEmpty": "최근 30일 동안 좋아요를 받은 글이 아직 없어요",
   "termsOfUse": "이용약관",
   "readTerms": "이용약관 전체 보기",
   "contactUs": "문의하기",
