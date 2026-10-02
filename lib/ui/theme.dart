@@ -11,6 +11,9 @@ class AppColors {
   static const inkSoft = Color(0xFF766C7D);
   static const line = Color(0xFFF1E6DC);
 
+  /// Plain warm grey for quiet surfaces (community icons, chips).
+  static const neutralSoft = Color(0xFFF3EDE7);
+
   static const peach = Color(0xFFFF8E7F); // primary / kcal
   static const peachSoft = Color(0xFFFFE3DC);
   static const mint = Color(0xFF4CC9A4); // protein

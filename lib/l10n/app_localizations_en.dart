@@ -1305,11 +1305,47 @@ class LEn extends L {
 
   @override
   String get infoSwaps =>
-      'Same kind as foods you ate often in the last 4 weeks, with fewer calories per serving and similar protein.';
+      'Same kind as foods you ate often in the last 4 weeks, compared on make-up, protein, sugars and saturated fat, not just calories.';
+
+  @override
+  String get workoutTapHint => 'Tap a bar to see that week';
+
+  @override
+  String workoutWeekReadout(String date, String s, String c, String min) {
+    return 'Week of $date · strength $s · cardio $c · $min min';
+  }
+
+  @override
+  String get infoCkIntake =>
+      'Average calories on the days you logged. Days without logs are left out, so the more complete the logs, the more accurate.';
+
+  @override
+  String get infoCkTrend =>
+      'How much your weight trend moved over the same days, with water and food swings filtered out.';
+
+  @override
+  String get infoCkTdee =>
+      'Your estimated daily burn. It starts from a height/weight/age formula and is corrected weekly from what you ate and how your weight moved, by at most 150 kcal a week.';
+
+  @override
+  String get infoCkConfidence =>
+      'How far the estimate can be trusted: high with 6+ logged days and 5+ weigh-ins a week, low under 5 days or 3 weigh-ins. When low, the target isn\'t changed.';
+
+  @override
+  String get infoCkTarget =>
+      'The new target is your estimated burn minus (or plus) your chosen pace. Protein, carbs and fat are split again for your weight and goal.';
+
+  @override
+  String get infoCkReport =>
+      'Step by step, which logs and calculations led to this target.';
+
+  @override
+  String get infoCkHistory =>
+      'The target and estimated burn set at each check-in so far.';
 
   @override
   String get infoWorkout =>
-      'Strength and cardio sessions and minutes. Workout calories aren\'t added to the target: the energy shows up in your weight change and the weekly burn estimate.';
+      'Strength and cardio sessions and minutes; tap a bar for that week. Workout calories aren\'t added to the target: the energy shows up in your weight change and the weekly burn estimate.';
 
   @override
   String get infoBodyComp =>

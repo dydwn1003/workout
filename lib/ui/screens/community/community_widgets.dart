@@ -115,57 +115,44 @@ LinearGradient gymGradient(String id) {
   ),
 };
 
-/// A post's kind as a quiet colored word (feed cards).
+/// A post's kind as a small grey word (feed cards).
 class TagLabel extends StatelessWidget {
   final PostTag tag;
   const TagLabel(this.tag, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    final (label, icon, fg, _) = tagStyle(L.of(context), tag);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: fg),
-        const SizedBox(width: 3),
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: headingFont,
-            fontWeight: FontWeight.w800,
-            fontSize: 12.5,
-            color: fg,
-          ),
+    final (label, _, _, _) = tagStyle(L.of(context), tag);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.neutralSoft,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 11.5,
+          color: AppColors.inkSoft,
         ),
-      ],
+      ),
     );
   }
 }
 
-/// 🔥 인기, next to [TagLabel].
+/// 인기, next to [TagLabel].
 class HotLabel extends StatelessWidget {
   const HotLabel({super.key});
 
   @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      const Icon(
-        Icons.local_fire_department_rounded,
-        size: 14,
-        color: Color(0xFFF2643A),
-      ),
-      const SizedBox(width: 2),
-      Text(
-        L.of(context).hotBadge,
-        style: const TextStyle(
-          fontFamily: headingFont,
-          fontWeight: FontWeight.w800,
-          fontSize: 12.5,
-          color: Color(0xFFF2643A),
-        ),
-      ),
-    ],
+  Widget build(BuildContext context) => Text(
+    L.of(context).hotBadge,
+    style: const TextStyle(
+      fontWeight: FontWeight.w800,
+      fontSize: 11.5,
+      color: AppColors.peach,
+    ),
   );
 }
 
@@ -194,11 +181,9 @@ class TagFilterBar extends StatelessWidget {
     final t = L.of(context);
     Widget chip(PostTag? tag) {
       final on = selected == tag;
-      final (label, icon, fg, _) = tag == null
-          ? (t.tagAll, Icons.apps_rounded, AppColors.ink, AppColors.line)
-          : tagStyle(t, tag);
+      final label = tag == null ? t.tagAll : tagStyle(t, tag).$1;
       return Padding(
-        padding: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.only(right: 6),
         child: GestureDetector(
           onTap: () {
             HapticFeedback.selectionClick();
@@ -207,41 +192,18 @@ class TagFilterBar extends StatelessWidget {
           child: AnimatedContainer(
             duration: Motion.fast,
             curve: Motion.ease,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
             decoration: BoxDecoration(
-              color: on ? (tag == null ? AppColors.ink : fg) : Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                color: on ? Colors.transparent : AppColors.line,
-                width: 1.4,
-              ),
-              boxShadow: on
-                  ? [
-                      BoxShadow(
-                        color: (tag == null ? AppColors.ink : fg).withValues(
-                          alpha: 0.25,
-                        ),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : null,
+              color: on ? AppColors.ink : AppColors.neutralSoft,
+              borderRadius: BorderRadius.circular(18),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 15, color: on ? Colors.white : fg),
-                const SizedBox(width: 5),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontFamily: headingFont,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
-                    color: on ? Colors.white : AppColors.ink,
-                  ),
-                ),
-              ],
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                color: on ? Colors.white : AppColors.inkSoft,
+              ),
             ),
           ),
         ),
@@ -266,7 +228,6 @@ class GymCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = L.of(context);
-    final (c, soft) = gymColors(gym.id);
     final last = gym.lastPostAt;
     final fresh = last != null && DateTime.now().difference(last).inHours < 24;
     return Squish(
@@ -277,14 +238,8 @@ class GymCard extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x14B98B6E),
-                blurRadius: 18,
-                offset: Offset(0, 6),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.line),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -292,17 +247,17 @@ class GymCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    width: 36,
-                    height: 36,
+                    width: 34,
+                    height: 34,
                     decoration: BoxDecoration(
-                      color: soft,
-                      borderRadius: BorderRadius.circular(12),
+                      color: AppColors.neutralSoft,
+                      borderRadius: BorderRadius.circular(11),
                     ),
                     alignment: Alignment.center,
-                    child: Icon(
+                    child: const Icon(
                       Icons.fitness_center_rounded,
-                      color: c,
-                      size: 19,
+                      color: AppColors.ink,
+                      size: 18,
                     ),
                   ),
                   const Spacer(),
@@ -564,18 +519,12 @@ class PostCard extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x10B98B6E),
-            blurRadius: 16,
-            offset: Offset(0, 5),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.line),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
@@ -590,9 +539,9 @@ class PostCard extends StatelessWidget {
                       userId: post.authorId,
                       nickname: post.nickname,
                       photoUrl: post.avatarUrl,
-                      size: 34,
+                      size: 30,
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 9),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -602,9 +551,8 @@ class PostCard extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              fontFamily: headingFont,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13.5,
                               color: AppColors.ink,
                             ),
                           ),
@@ -641,12 +589,12 @@ class PostCard extends StatelessWidget {
                         children: [
                           TagLabel(post.tag),
                           if (hot) ...[
-                            const SizedBox(width: 10),
+                            const SizedBox(width: 8),
                             const HotLabel(),
                           ],
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       Text(
                         post.body,
                         maxLines: 3,

@@ -351,9 +351,9 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
             SliverAppBar(
               pinned: true,
               stretch: true,
-              expandedHeight: 210,
-              backgroundColor: gymDeep(g.id),
-              foregroundColor: Colors.white,
+              expandedHeight: 112,
+              backgroundColor: AppColors.bg,
+              foregroundColor: AppColors.ink,
               surfaceTintColor: Colors.transparent,
               title: Text(
                 boardName(t, g),
@@ -361,7 +361,7 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
                 style: const TextStyle(
                   fontFamily: headingFont,
                   fontWeight: FontWeight.w800,
-                  color: Colors.white,
+                  color: AppColors.ink,
                   fontSize: 18,
                 ),
               ),
@@ -391,8 +391,8 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
                             : Icons.star_outline_rounded,
                         key: ValueKey(c.isFavorite(g.id)),
                         color: c.isFavorite(g.id)
-                            ? const Color(0xFFFFD34D)
-                            : Colors.white,
+                            ? const Color(0xFFF5B400)
+                            : AppColors.ink,
                       ),
                     ),
                   ),
@@ -423,7 +423,7 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
                             ? Icons.bookmark_rounded
                             : Icons.bookmark_add_outlined,
                         key: ValueKey(mine),
-                        color: Colors.white,
+                        color: AppColors.ink,
                       ),
                     ),
                   ),
@@ -533,168 +533,63 @@ class _BoardHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = L.of(context);
-    final (color, _) = gymColors(gym.id);
-    return Container(
-      decoration: BoxDecoration(gradient: gymGradient(gym.id)),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -20,
-            bottom: -30,
-            // The board's own mark, faint: the sport, or a dumbbell for gyms.
-            child: Icon(
-              gym.isTopic
-                  ? topicStyle(gym.id).$1
-                  : Icons.fitness_center_rounded,
-              size: 170,
-              color: Colors.white.withValues(alpha: 0.12),
-            ),
-          ),
-          SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 60, 20, 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (gym.isTopic)
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.public_rounded,
-                          size: 15,
-                          color: Colors.white,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          t.loungeBoardBadge,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white.withValues(alpha: 0.92),
-                          ),
-                        ),
-                      ],
-                    )
-                  else if (gym.address.isNotEmpty)
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.place_rounded,
-                          size: 15,
-                          color: Colors.white,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            gym.shortAddress,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white.withValues(alpha: 0.92),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      if (!gym.isTopic) ...[
-                        _StatBubble(
-                          Icons.people_alt_rounded,
-                          t.gymMembers('${gym.memberCount}'),
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      _StatBubble(
-                        Icons.article_rounded,
-                        t.gymPosts('${gym.postCount}'),
-                      ),
-                      const Spacer(),
-                      if (!gym.isTopic)
-                        GestureDetector(
-                          onTap: onJoin,
-                          child: AnimatedContainer(
-                            duration: Motion.fast,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: mine
-                                  ? Colors.white.withValues(alpha: 0.25)
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  mine
-                                      ? Icons.check_rounded
-                                      : Icons.bookmark_add_rounded,
-                                  size: 16,
-                                  color: mine ? Colors.white : color,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  mine ? t.joinedGym : t.joinGym,
-                                  style: TextStyle(
-                                    fontFamily: headingFont,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 13,
-                                    color: mine ? Colors.white : color,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
+    const soft = TextStyle(fontSize: 13, color: AppColors.inkSoft);
+    final meta = [
+      if (gym.isTopic)
+        t.loungeBoardBadge
+      else if (gym.address.isNotEmpty)
+        gym.shortAddress,
+      if (!gym.isTopic) t.gymMembers('${gym.memberCount}'),
+      t.gymPosts('${gym.postCount}'),
+    ].join(' · ');
+    return ColoredBox(
+      color: AppColors.bg,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 56, 16, 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Text(
+                  meta,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: soft,
+                ),
               ),
-            ),
+              if (!gym.isTopic) ...[
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: onJoin,
+                  child: AnimatedContainer(
+                    duration: Motion.fast,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: mine ? AppColors.neutralSoft : AppColors.ink,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Text(
+                      mine ? t.joinedGym : t.joinGym,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        color: mine ? AppColors.inkSoft : Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
-}
-
-class _StatBubble extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  const _StatBubble(this.icon, this.text);
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-    decoration: BoxDecoration(
-      color: Colors.white.withValues(alpha: 0.22),
-      borderRadius: BorderRadius.circular(14),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: Colors.white),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: const TextStyle(
-            fontFamily: headingFont,
-            fontWeight: FontWeight.w800,
-            fontSize: 12.5,
-            color: Colors.white,
-          ),
-        ),
-      ],
-    ),
-  );
 }
 
 class _TagBarDelegate extends SliverPersistentHeaderDelegate {
@@ -725,24 +620,22 @@ class WriteButton extends StatelessWidget {
     child: GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.peach, Color(0xFFFFA98F)],
-          ),
-          borderRadius: BorderRadius.circular(30),
+          color: AppColors.peach,
+          borderRadius: BorderRadius.circular(26),
           boxShadow: [
             BoxShadow(
-              color: AppColors.peach.withValues(alpha: 0.45),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
+              color: AppColors.peach.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.edit_rounded, color: Colors.white, size: 20),
+            const Icon(Icons.edit_rounded, color: Colors.white, size: 18),
             const SizedBox(width: 6),
             Text(
               label,

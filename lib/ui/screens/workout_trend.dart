@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' show DateFormat;
 
 import '../../l10n/app_localizations.dart';
@@ -153,23 +154,7 @@ class WorkoutTrendCard extends StatelessWidget {
                   const SizedBox(height: 8),
                 ],
                 const SizedBox(height: 6),
-                SizedBox(
-                  height: 150,
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0, end: 1),
-                    duration: Motion.slow,
-                    curve: Motion.emphasized,
-                    builder: (context, v, _) => CustomPaint(
-                      size: Size.infinite,
-                      painter: _WorkoutBarsPainter(
-                        weeks,
-                        planned,
-                        v,
-                        DateFormat.Md(locale),
-                      ),
-                    ),
-                  ),
-                ),
+                _WorkoutBars(weeks: weeks, planned: planned, locale: locale),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 14,
@@ -183,6 +168,105 @@ class WorkoutTrendCard extends StatelessWidget {
                 ),
               ],
             ),
+    );
+  }
+}
+
+/// The weekly bars. Tap or drag to read a week.
+class _WorkoutBars extends StatefulWidget {
+  final List<WorkoutWeek> weeks;
+  final int planned;
+  final String locale;
+  const _WorkoutBars({
+    required this.weeks,
+    required this.planned,
+    required this.locale,
+  });
+
+  @override
+  State<_WorkoutBars> createState() => _WorkoutBarsState();
+}
+
+class _WorkoutBarsState extends State<_WorkoutBars> {
+  int? _sel;
+
+  int _indexAt(double dx, double width) {
+    final n = widget.weeks.length;
+    final left = _WorkoutBarsPainter.leftPad;
+    return ((dx - left) / (width - left) * n).floor().clamp(0, n - 1);
+  }
+
+  void _pick(int i, {bool toggle = false}) {
+    if (toggle && i == _sel) return setState(() => _sel = null);
+    if (i == _sel) return;
+    HapticFeedback.selectionClick();
+    setState(() => _sel = i);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L.of(context);
+    final weeks = widget.weeks;
+    final sel = _sel != null && _sel! < weeks.length ? _sel : null;
+    final w = sel == null ? null : weeks[sel];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AnimatedSwitcher(
+          duration: Motion.fast,
+          child: Text(
+            w == null
+                ? t.workoutTapHint
+                : t.workoutWeekReadout(
+                    DateFormat.MMMd(widget.locale).format(w.start),
+                    '${w.strength}',
+                    '${w.cardio}',
+                    '${w.minutes}',
+                  ),
+            key: ValueKey(sel),
+            style: TextStyle(
+              fontSize: 12.5,
+              color: w == null ? AppColors.inkSoft : AppColors.ink,
+              fontWeight: w == null ? null : FontWeight.w700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        LayoutBuilder(
+          builder: (context, box) => TapRegion(
+            onTapOutside: (_) {
+              if (_sel != null) setState(() => _sel = null);
+            },
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapUp: (e) => _pick(
+                _indexAt(e.localPosition.dx, box.maxWidth),
+                toggle: true,
+              ),
+              onHorizontalDragUpdate: (e) =>
+                  _pick(_indexAt(e.localPosition.dx, box.maxWidth)),
+              child: SizedBox(
+                height: 150,
+                width: box.maxWidth,
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: 1),
+                  duration: Motion.slow,
+                  curve: Motion.emphasized,
+                  builder: (context, v, _) => CustomPaint(
+                    painter: _WorkoutBarsPainter(
+                      weeks,
+                      widget.planned,
+                      v,
+                      DateFormat.Md(widget.locale),
+                      selected: sel,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -261,12 +345,21 @@ class _WorkoutBarsPainter extends CustomPainter {
   final int planned;
   final double progress;
   final DateFormat fmt;
+  final int? selected;
 
-  _WorkoutBarsPainter(this.weeks, this.planned, this.progress, this.fmt);
+  static const leftPad = 22.0;
+
+  _WorkoutBarsPainter(
+    this.weeks,
+    this.planned,
+    this.progress,
+    this.fmt, {
+    this.selected,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    const leftPad = 22.0, bottomPad = 20.0, topPad = 6.0;
+    const bottomPad = 20.0, topPad = 6.0;
     final chart = Rect.fromLTRB(
       leftPad,
       topPad,
@@ -309,7 +402,8 @@ class _WorkoutBarsPainter extends CustomPainter {
       final sH = chart.height * w.strength / top * local;
       final cH = chart.height * w.cardio / top * local;
       final r = const Radius.circular(7);
-      final latest = i == weeks.length - 1;
+      // The picked week (or this week) stands out; the rest are softer.
+      final latest = selected == null ? i == weeks.length - 1 : i == selected;
       // Faint full-height track behind every bar.
       canvas.drawRRect(
         RRect.fromRectAndRadius(
@@ -408,5 +502,8 @@ class _WorkoutBarsPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_WorkoutBarsPainter old) =>
-      old.progress != progress || old.weeks != weeks || old.planned != planned;
+      old.progress != progress ||
+      old.weeks != weeks ||
+      old.planned != planned ||
+      old.selected != selected;
 }

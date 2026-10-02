@@ -274,7 +274,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
                 _report(t, plan, r),
               ],
               const SizedBox(height: 8),
-              SectionTitle(t.planHistory),
+              SectionTitle(t.planHistory, info: t.infoCkHistory),
               SoftCard(
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Column(
@@ -366,48 +366,61 @@ class _CheckinScreenState extends State<CheckinScreen> {
       Confidence.medium => (const Color(0xFFD49B1F), AppColors.butterSoft),
       Confidence.low => (AppColors.inkSoft, AppColors.line),
     };
-    Widget tile(String label, String value, {String? sub, Widget? trailing}) =>
-        Expanded(
-          child: SoftCard(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    Widget tile(
+      String label,
+      String value, {
+      String? sub,
+      Widget? trailing,
+      String? info,
+    }) => Expanded(
+      child: SoftCard(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: AppColors.inkSoft,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                trailing ??
-                    Text(
-                      value,
-                      style: const TextStyle(
-                        fontFamily: headingFont,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 20,
-                      ),
-                    ),
-                if (sub != null)
-                  Text(
-                    sub,
+                Flexible(
+                  child: Text(
+                    label,
                     style: const TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 12.5,
                       color: AppColors.inkSoft,
                     ),
                   ),
+                ),
+                if (info != null) InfoTip(info, size: 15),
               ],
             ),
-          ),
-        );
+            const SizedBox(height: 4),
+            trailing ??
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontFamily: headingFont,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 20,
+                  ),
+                ),
+            if (sub != null)
+              Text(
+                sub,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  color: AppColors.inkSoft,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
     return Column(
       children: [
         Row(
           children: [
             tile(
               t.avgIntake,
+              info: t.infoCkIntake,
               r.avgIntake == null ? '—' : '${fmt0(r.avgIntake!)} kcal',
               sub: r.observed == null
                   ? null
@@ -416,6 +429,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
             const SizedBox(width: 10),
             tile(
               t.trendChange,
+              info: t.infoCkTrend,
               r.trendChangeKg == null ? '—' : '${signed1(r.trendChangeKg!)} kg',
               sub: r.observed == null
                   ? null
@@ -426,10 +440,11 @@ class _CheckinScreenState extends State<CheckinScreen> {
         const SizedBox(height: 10),
         Row(
           children: [
-            tile(t.estTdee, '${fmt0(r.tdeeEstimate)} kcal'),
+            tile(t.estTdee, '${fmt0(r.tdeeEstimate)} kcal', info: t.infoCkTdee),
             const SizedBox(width: 10),
             tile(
               t.confidence,
+              info: t.infoCkConfidence,
               '',
               trailing: Pill(
                 text: confidenceLabel(t, conf),
@@ -452,9 +467,18 @@ class _CheckinScreenState extends State<CheckinScreen> {
       return SoftCard(
         child: Column(
           children: [
-            Text(
-              t.currentTarget,
-              style: const TextStyle(color: AppColors.inkSoft, fontSize: 13),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  t.currentTarget,
+                  style: const TextStyle(
+                    color: AppColors.inkSoft,
+                    fontSize: 13,
+                  ),
+                ),
+                InfoTip(t.infoCkTarget, size: 15),
+              ],
             ),
             Text(
               fmt0(current.targetKcal),
@@ -509,12 +533,18 @@ class _CheckinScreenState extends State<CheckinScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    Text(
-                      t.newTarget,
-                      style: const TextStyle(
-                        color: AppColors.peach,
-                        fontSize: 13,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          t.newTarget,
+                          style: const TextStyle(
+                            color: AppColors.peach,
+                            fontSize: 13,
+                          ),
+                        ),
+                        InfoTip(t.infoCkTarget, size: 15),
+                      ],
                     ),
                     CountUp(
                       value: m.kcal,
@@ -836,14 +866,17 @@ class _CheckinScreenState extends State<CheckinScreen> {
             children: [
               const Icon(Icons.calculate_rounded, color: AppColors.lilac),
               const SizedBox(width: 8),
-              Text(
-                t.reportTitle,
-                style: const TextStyle(
-                  fontFamily: headingFont,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
+              Flexible(
+                child: Text(
+                  t.reportTitle,
+                  style: const TextStyle(
+                    fontFamily: headingFont,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
                 ),
               ),
+              InfoTip(t.infoCkReport),
             ],
           ),
           const SizedBox(height: 12),

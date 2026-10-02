@@ -2313,13 +2313,67 @@ abstract class L {
   /// No description provided for @infoSwaps.
   ///
   /// In ko, this message translates to:
-  /// **'최근 4주에 자주 드신 음식과 같은 종류 중, 1회분 칼로리는 낮고 단백질은 비슷한 음식이에요.'**
+  /// **'최근 4주에 자주 드신 음식과 같은 종류 중, 칼로리만이 아니라 탄단지 구성·단백질·당류·포화지방까지 비교해서 더 가벼운 음식만 골라요.'**
   String get infoSwaps;
+
+  /// No description provided for @workoutTapHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'막대를 누르면 그 주 운동 기록이 보여요'**
+  String get workoutTapHint;
+
+  /// No description provided for @workoutWeekReadout.
+  ///
+  /// In ko, this message translates to:
+  /// **'{date} 주 · 근력 {s}회 · 유산소 {c}회 · {min}분'**
+  String workoutWeekReadout(String date, String s, String c, String min);
+
+  /// No description provided for @infoCkIntake.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록한 날들의 하루 평균 섭취 칼로리예요. 기록이 빠진 날은 평균에서 빠지니, 빠짐없이 기록할수록 정확해져요.'**
+  String get infoCkIntake;
+
+  /// No description provided for @infoCkTrend.
+  ///
+  /// In ko, this message translates to:
+  /// **'같은 기간 체중 추세가 얼마나 변했는지예요. 하루 체중이 아니라 수분·음식으로 출렁이는 값을 걸러 낸 추세로 계산해요.'**
+  String get infoCkTrend;
+
+  /// No description provided for @infoCkTdee.
+  ///
+  /// In ko, this message translates to:
+  /// **'하루에 쓰는 총 칼로리 추정치예요. 처음엔 키·체중·나이 공식으로 시작하고, 실제 섭취와 체중 변화로 매주 보정해요. 한 주에 최대 150 kcal까지만 움직여요.'**
+  String get infoCkTdee;
+
+  /// No description provided for @infoCkConfidence.
+  ///
+  /// In ko, this message translates to:
+  /// **'추정을 얼마나 믿을 수 있는지예요. 일주일에 식단 기록 6일·체중 5번 이상이면 높음, 기록 5일·체중 3번 미만이면 낮음이에요. 낮을 때는 목표를 바꾸지 않아요.'**
+  String get infoCkConfidence;
+
+  /// No description provided for @infoCkTarget.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 목표는 추정 소비량에서 정한 감량·증량 속도만큼 빼거나 더한 값이에요. 탄단지는 체중과 목표에 맞춰 다시 나눠요.'**
+  String get infoCkTarget;
+
+  /// No description provided for @infoCkReport.
+  ///
+  /// In ko, this message translates to:
+  /// **'이번 목표가 어떤 기록과 계산을 거쳐 나왔는지 순서대로 보여 줘요.'**
+  String get infoCkReport;
+
+  /// No description provided for @infoCkHistory.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금까지 체크인마다 정한 목표 칼로리와 그때의 소비량 추정이에요.'**
+  String get infoCkHistory;
 
   /// No description provided for @infoWorkout.
   ///
   /// In ko, this message translates to:
-  /// **'근력운동·유산소 횟수와 시간이에요. 운동 칼로리는 목표에 따로 더하지 않아요. 쓴 에너지는 체중 변화에 이미 담겨서 매주 소비량 계산에 들어가요.'**
+  /// **'근력운동·유산소 횟수와 시간이에요. 막대를 누르면 그 주 기록이 보여요. 운동 칼로리는 목표에 따로 더하지 않아요. 쓴 에너지는 체중 변화에 이미 담겨서 매주 소비량 계산에 들어가요.'**
   String get infoWorkout;
 
   /// No description provided for @infoBodyComp.

@@ -322,7 +322,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
               tooltip: t.inviteFriends,
               onTap: () => showInviteSheet(context),
             ),
-            const SizedBox(width: 6),
             _BellButton(
               count: c.badge,
               onTap: () => Navigator.of(context).push(
@@ -331,23 +330,17 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: 6),
-            if (c.signedIn || app.auth != null) ...[
+            if (c.signedIn || app.auth != null)
               _MeButton(profile: c.profile, onTap: _openMe),
-              const SizedBox(width: 8),
-            ],
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 6),
         _Segments(
           index: _tab,
           onChanged: _setTab,
           labels: [
-            (Icons.public_rounded, t.tabLounge),
-            (
-              Icons.bookmark_rounded,
-              '${t.tabMyGyms} ${c.myGyms.length}/${CommunityLimits.myGyms}',
-            ),
+            t.tabLounge,
+            '${t.tabMyGyms} ${c.myGyms.length}/${CommunityLimits.myGyms}',
           ],
         ),
       ],
@@ -747,29 +740,20 @@ class _BellButton extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: SizedBox(
-          width: 38,
-          height: 38,
+          width: 40,
+          height: 40,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
               Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFFF0E6DD),
-                      width: 1.5,
-                    ),
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(icon, size: 21, color: AppColors.ink),
+                child: Center(
+                  child: Icon(icon, size: 24, color: AppColors.ink),
                 ),
               ),
               if (count > 0)
                 Positioned(
-                  top: -3,
-                  right: -3,
+                  top: 1,
+                  right: 0,
                   child: Container(
                     constraints: const BoxConstraints(minWidth: 17),
                     height: 17,
@@ -814,29 +798,15 @@ class _MeButton extends StatelessWidget {
       child: Squish(
         child: GestureDetector(
           onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.all(2),
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [AppColors.peach, Color(0xFFFFB38A)],
-              ),
-            ),
-            child: Container(
-              padding: const EdgeInsets.all(2),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
+          child: SizedBox(
+            width: 40,
+            height: 40,
+            child: Center(
               child: p == null
-                  ? const SizedBox(
-                      width: 30,
-                      height: 30,
-                      child: Icon(
-                        Icons.person_rounded,
-                        size: 20,
-                        color: AppColors.peach,
-                      ),
+                  ? const Icon(
+                      Icons.account_circle_outlined,
+                      size: 26,
+                      color: AppColors.ink,
                     )
                   : NickAvatar(
                       userId: p.userId,
@@ -852,11 +822,11 @@ class _MeButton extends StatelessWidget {
   }
 }
 
-/// 내 헬스장 | 운동 라운지, with a sliding highlight.
+/// 운동 라운지 | 내 헬스장: plain text tabs with a sliding underline.
 class _Segments extends StatelessWidget {
   final int index;
   final ValueChanged<int> onChanged;
-  final List<(IconData, String)> labels;
+  final List<String> labels;
   const _Segments({
     required this.index,
     required this.onChanged,
@@ -864,70 +834,56 @@ class _Segments extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Container(
-    height: 48,
-    padding: const EdgeInsets.all(4),
-    decoration: BoxDecoration(
-      color: const Color(0xFFF3ECE6),
-      borderRadius: BorderRadius.circular(24),
-    ),
+  Widget build(BuildContext context) => SizedBox(
+    height: 44,
     child: Stack(
       children: [
+        const Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: Divider(height: 1, thickness: 1, color: AppColors.line),
+        ),
         AnimatedAlign(
           duration: Motion.medium,
           curve: Motion.ease,
-          alignment: index == 0 ? Alignment.centerLeft : Alignment.centerRight,
+          alignment: Alignment(
+            labels.length == 1 ? 0 : -1 + 2 * index / (labels.length - 1),
+            1,
+          ),
           child: FractionallySizedBox(
             widthFactor: 1 / labels.length,
-            heightFactor: 1,
             child: Container(
+              height: 2.5,
+              margin: const EdgeInsets.symmetric(horizontal: 28),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x1A8B6E5A),
-                    blurRadius: 10,
-                    offset: Offset(0, 3),
-                  ),
-                ],
+                color: AppColors.ink,
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
         ),
         Row(
           children: [
-            for (final (i, (icon, label)) in labels.indexed)
+            for (final (i, label) in labels.indexed)
               Expanded(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => onChanged(i),
-                  child: Center(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          icon,
-                          size: 17,
-                          color: i == index
-                              ? (i == 0
-                                    ? AppColors.peach
-                                    : const Color(0xFF6A7FE0))
-                              : AppColors.inkSoft,
+                child: Semantics(
+                  selected: i == index,
+                  button: true,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => onChanged(i),
+                    child: Center(
+                      child: AnimatedDefaultTextStyle(
+                        duration: Motion.fast,
+                        style: TextStyle(
+                          fontFamily: headingFont,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                          color: i == index ? AppColors.ink : AppColors.inkSoft,
                         ),
-                        const SizedBox(width: 5),
-                        Text(
-                          label,
-                          style: TextStyle(
-                            fontFamily: headingFont,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
-                            color: i == index
-                                ? AppColors.ink
-                                : AppColors.inkSoft,
-                          ),
-                        ),
-                      ],
+                        child: Text(label),
+                      ),
                     ),
                   ),
                 ),
