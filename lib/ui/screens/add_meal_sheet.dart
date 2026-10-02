@@ -11,6 +11,7 @@ import '../../state/app_state.dart';
 import '../motion.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import '../app_dialog.dart';
 
 String slotLabel(L t, MealSlot s) => switch (s) {
   MealSlot.breakfast => t.slotBreakfast,
@@ -945,24 +946,14 @@ class _FoodRow extends StatelessWidget {
 Future<bool> confirmBigEntry(BuildContext context, double kcal) async {
   if (kcal < 3000) return true;
   final t = L.of(context);
-  final ok = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(t.bigEntryTitle(fmt0(kcal))),
-      content: Text(t.bigEntryBody),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
-          child: Text(t.bigEntryFix),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, true),
-          child: Text(t.bigEntryOk),
-        ),
-      ],
-    ),
+  return showConfirm(
+    context,
+    icon: Icons.local_fire_department_rounded,
+    title: t.bigEntryTitle(fmt0(kcal)),
+    message: t.bigEntryBody,
+    cancel: t.bigEntryFix,
+    confirm: t.bigEntryOk,
   );
-  return ok ?? false;
 }
 
 class _FoodDetail extends StatefulWidget {

@@ -7,6 +7,7 @@ import '../../state/app_state.dart';
 import '../motion.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import '../app_dialog.dart';
 import 'trend_sections.dart' show BodyCompGuide;
 
 Future<void> showWeightSheet(BuildContext context, {DateTime? date}) =>
@@ -80,14 +81,18 @@ class _WeightSheetState extends State<WeightSheet> {
 
   Future<void> _editDirect() async {
     final c = TextEditingController(text: fmt1(_kg));
-    final v = await showDialog<double>(
-      context: context,
+    final v = await showAppDialog<double>(
+      context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, redraw) {
           final v = _read(c);
           final ok = v != null && v >= 25 && v <= 300;
-          return AlertDialog(
-            title: Text(L.of(ctx).weightKg),
+          return AppDialog(
+            icon: Icons.monitor_weight_rounded,
+            title: L.of(ctx).weightKg,
+            cancelLabel: L.of(ctx).cancel,
+            confirmLabel: L.of(ctx).confirm,
+            onConfirm: ok ? () => Navigator.pop(ctx, v) : null,
             content: TextField(
               controller: c,
               autofocus: true,
@@ -98,20 +103,17 @@ class _WeightSheetState extends State<WeightSheet> {
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontFamily: headingFont,
+                fontWeight: FontWeight.w800,
+                fontSize: 22,
+              ),
               decoration: InputDecoration(
+                suffixText: 'kg',
                 errorText: ok ? null : L.of(ctx).numberRange('25', '300'),
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(L.of(ctx).cancel),
-              ),
-              TextButton(
-                onPressed: ok ? () => Navigator.pop(ctx, v) : null,
-                child: Text(L.of(ctx).confirm),
-              ),
-            ],
           );
         },
       ),

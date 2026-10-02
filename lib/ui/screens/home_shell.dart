@@ -37,6 +37,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   var _tab = 0;
   var _updateShown = false;
   final _today = GlobalKey<TodayScreenState>();
+  final _communityKey = GlobalKey<CommunityScreenState>();
   DateTime? _lastBack;
 
   @override
@@ -140,21 +141,37 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     'settings',
   ];
 
-  void _select(int i) {
+  /// Tabs visited before the current one, oldest first (no repeats), so
+  /// back retraces them.
+  final _history = <int>[];
+
+  void _select(int i, {bool fromBack = false}) {
     if (i != _tab) {
       AppScope.read(context).analytics.log('tab', {'tab': _tabNames[i]});
+      if (!fromBack) {
+        _history
+          ..remove(_tab)
+          ..remove(i)
+          ..add(_tab);
+      }
     }
     setState(() => _tab = i);
   }
 
-  /// Back button (Android, or the browser's on the web; open sheets close
-  /// first on their own): other tab -> 오늘, another day -> today, then a
-  /// second press within 2 s leaves the app.
+  /// Back button (Android, or the browser's on the web; open screens and
+  /// sheets close first on their own): the tab before this one, then 오늘,
+  /// another day -> today, then a second press within 2 s leaves the app.
   void _onBack() {
-    if (_tab != 0) {
-      _select(0);
+    if (_communityKey.currentState?.mounted == true &&
+        _tabNames[_tab] == 'community' &&
+        _communityKey.currentState!.handleBack()) {
       return;
     }
+    if (_tab != 0) {
+      _select(_history.isEmpty ? 0 : _history.removeLast(), fromBack: true);
+      return;
+    }
+    _history.clear();
     if (_today.currentState?.handleBack() ?? false) return;
     final now = DateTime.now();
     if (_lastBack != null &&
@@ -192,7 +209,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         children: [
           TodayScreen(key: _today),
           const TrendScreen(),
-          if (_community) const CommunityScreen(),
+          if (_community) CommunityScreen(key: _communityKey),
           const CheckinScreen(),
           const SettingsScreen(),
         ],

@@ -12,6 +12,7 @@ import '../motion.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'labels.dart';
+import '../app_dialog.dart';
 
 class CheckinScreen extends StatefulWidget {
   const CheckinScreen({super.key});
@@ -68,20 +69,30 @@ class _CheckinScreenState extends State<CheckinScreen> {
     final t = L.of(context);
     final floor = kcalFloor(AppScope.read(context).profile!.sex);
     final c = TextEditingController(text: r.proposal.kcal.round().toString());
-    final v = await showDialog<double>(
-      context: context,
+    final v = await showAppDialog<double>(
+      context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setD) {
           final val = double.tryParse(c.text);
           final ok = val != null && val >= floor && val < 8000;
-          return AlertDialog(
-            title: Text(t.manualKcalTitle),
+          return AppDialog(
+            icon: Icons.tune_rounded,
+            title: t.manualKcalTitle,
+            cancelLabel: t.cancel,
+            confirmLabel: t.confirm,
+            onConfirm: ok ? () => Navigator.pop(ctx, val) : null,
             content: TextField(
               controller: c,
               autofocus: true,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               onChanged: (_) => setD(() {}),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontFamily: headingFont,
+                fontWeight: FontWeight.w800,
+                fontSize: 22,
+              ),
               decoration: InputDecoration(
                 suffixText: 'kcal',
                 helperText: t.manualKcalFloor(fmt0(floor)),
@@ -90,16 +101,6 @@ class _CheckinScreenState extends State<CheckinScreen> {
                     : null,
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(t.cancel),
-              ),
-              TextButton(
-                onPressed: ok ? () => Navigator.pop(ctx, val) : null,
-                child: Text(t.confirm),
-              ),
-            ],
           );
         },
       ),

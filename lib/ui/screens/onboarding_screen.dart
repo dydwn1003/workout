@@ -11,6 +11,7 @@ import '../theme.dart';
 import '../widgets.dart';
 import 'labels.dart';
 import 'sign_in_sheet.dart';
+import '../app_dialog.dart';
 
 enum _Step { welcome, goal, body, target, pace, activity, result }
 
@@ -299,36 +300,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           .showSnackBar(SnackBar(content: Text(t.restoreFailed)));
       return;
     }
-    final go = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(t.noSavedDataTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(t.noSavedDataBody, style: const TextStyle(height: 1.45)),
-            const SizedBox(height: 12),
-            Text(
-              t.consentLabel,
-              style: const TextStyle(
-                fontSize: 12.5,
-                height: 1.4,
-                color: AppColors.inkSoft,
-              ),
-            ),
-          ],
+    final go = await showAppDialog<bool>(
+      context,
+      builder: (context) => AppDialog(
+        icon: Icons.cloud_off_rounded,
+        title: t.noSavedDataTitle,
+        message: t.noSavedDataBody,
+        content: Text(
+          t.consentLabel,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 12.5,
+            height: 1.4,
+            color: AppColors.inkSoft,
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(t.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(t.agreeAndStart),
-          ),
-        ],
+        cancelLabel: t.cancel,
+        confirmLabel: t.agreeAndStart,
+        onCancel: () => Navigator.pop(context, false),
+        onConfirm: () => Navigator.pop(context, true),
       ),
     );
     if (go != true || !mounted) return;

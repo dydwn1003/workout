@@ -12,6 +12,7 @@ import '../widgets.dart';
 import 'labels.dart';
 import 'onboarding_screen.dart';
 import 'sign_in_sheet.dart';
+import '../app_dialog.dart';
 import 'today_screen.dart' show showReminderResult;
 
 /// Where the privacy policy is published (web/privacy.html on GitHub Pages).
@@ -204,26 +205,13 @@ class SettingsScreen extends StatelessWidget {
     bool destructive = false,
   }) async {
     final t = L.of(context);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        content: Text(msg, style: const TextStyle(height: 1.5)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(t.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: destructive
-                ? TextButton.styleFrom(foregroundColor: const Color(0xFFE5484D))
-                : null,
-            child: Text(destructive ? t.delete : t.confirm),
-          ),
-        ],
-      ),
+    return showConfirm(
+      context,
+      icon: destructive ? Icons.delete_outline_rounded : null,
+      message: msg,
+      confirm: destructive ? t.delete : t.confirm,
+      danger: destructive,
     );
-    return ok ?? false;
   }
 
   @override

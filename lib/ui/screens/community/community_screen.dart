@@ -27,10 +27,10 @@ class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
 
   @override
-  State<CommunityScreen> createState() => _CommunityScreenState();
+  State<CommunityScreen> createState() => CommunityScreenState();
 }
 
-class _CommunityScreenState extends State<CommunityScreen> {
+class CommunityScreenState extends State<CommunityScreen> {
   // 0: 운동 라운지 (opens first), 1: 내 헬스장
   var _tab = 0;
   final _query = TextEditingController();
@@ -74,6 +74,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
     } catch (e) {
       debugPrint('invite board failed: $e');
     }
+  }
+
+  /// Back button: 내 헬스장 -> 운동 라운지 (the tab it opens on). False when
+  /// there's nothing to go back to here.
+  bool handleBack() {
+    if (_tab == 0) return false;
+    _setTab(0);
+    return true;
   }
 
   void _setTab(int i) {

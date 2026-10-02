@@ -10,6 +10,7 @@ import '../../motion.dart';
 import '../../theme.dart';
 import 'community_common.dart';
 import 'community_widgets.dart';
+import '../../app_dialog.dart';
 
 /// Write a post (or edit one's text and tag): returns the saved post.
 Future<Post?> showComposeSheet(
@@ -61,27 +62,16 @@ class _ComposeSheetState extends State<_ComposeSheet> {
       return;
     }
     final t = L.of(context);
-    final discard = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(t.discardDraftTitle),
-        content: Text(t.discardDraftBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(t.keepWriting),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              t.discardDraft,
-              style: const TextStyle(color: AppColors.over),
-            ),
-          ),
-        ],
-      ),
+    final discard = await showConfirm(
+      context,
+      icon: Icons.edit_note_rounded,
+      title: t.discardDraftTitle,
+      message: t.discardDraftBody,
+      cancel: t.keepWriting,
+      confirm: t.discardDraft,
+      danger: true,
     );
-    if (discard == true && mounted) Navigator.pop(context);
+    if (discard && mounted) Navigator.pop(context);
   }
 
   String _hint(L t) => switch (_tag) {

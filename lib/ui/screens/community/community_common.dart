@@ -12,6 +12,7 @@ import '../../widgets.dart';
 import '../settings_screen.dart' show termsUrl;
 import '../sign_in_sheet.dart';
 import 'community_sheets.dart';
+import '../../app_dialog.dart';
 
 /// "방금", "5분 전", "3시간 전", "2일 전", then the date.
 String timeAgo(L t, DateTime at, {DateTime? now}) {
@@ -363,51 +364,28 @@ Future<void> showContentMenu(
   required VoidCallback onBlocked,
 }) async {
   final t = L.of(context);
-  final choice = await showModalBottomSheet<String>(
-    context: context,
-    sheetAnimationStyle: Motion.sheet,
-    builder: (ctx) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 8),
-          if (mine) ...[
-            if (onEdit != null)
-              ListTile(
-                leading: const Icon(Icons.edit_outlined),
-                title: Text(t.editPost),
-                onTap: () => Navigator.pop(ctx, 'edit'),
-              ),
-            ListTile(
-              leading: const Icon(
-                Icons.delete_outline_rounded,
-                color: AppColors.over,
-              ),
-              title: Text(
-                t.delete,
-                style: const TextStyle(color: AppColors.over),
-              ),
-              onTap: () => Navigator.pop(ctx, 'delete'),
-            ),
-          ] else ...[
-            ListTile(
-              leading: const Icon(Icons.flag_outlined),
-              title: Text(t.report),
-              onTap: () => Navigator.pop(ctx, 'report'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.block_rounded, color: AppColors.over),
-              title: Text(
-                t.blockUser,
-                style: const TextStyle(color: AppColors.over),
-              ),
-              onTap: () => Navigator.pop(ctx, 'block'),
-            ),
-          ],
-          const SizedBox(height: 8),
-        ],
-      ),
-    ),
+  final choice = await showActionSheet<String>(
+    context,
+    actions: [
+      if (mine) ...[
+        if (onEdit != null)
+          SheetAction('edit', t.editPost, icon: Icons.edit_rounded),
+        SheetAction(
+          'delete',
+          t.delete,
+          icon: Icons.delete_outline_rounded,
+          danger: true,
+        ),
+      ] else ...[
+        SheetAction('report', t.report, icon: Icons.flag_rounded),
+        SheetAction(
+          'block',
+          t.blockUser,
+          icon: Icons.block_rounded,
+          danger: true,
+        ),
+      ],
+    ],
   );
   if (!context.mounted || choice == null) return;
   final c = CommunityScope.read(context);
@@ -428,36 +406,36 @@ Future<void> showContentMenu(
       }
     case 'report':
       if (!await ensureCommunityMember(context) || !context.mounted) return;
-      final reason = await showModalBottomSheet<ReportReason>(
-        context: context,
-        sheetAnimationStyle: Motion.sheet,
-        builder: (ctx) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-                child: Text(
-                  t.reportContentTitle,
-                  style: Theme.of(ctx).textTheme.titleMedium,
-                ),
-              ),
-              for (final (r, label) in [
-                (ReportReason.spam, t.reasonSpam),
-                (ReportReason.abuse, t.reasonAbuse),
-                (ReportReason.sexual, t.reasonSexual),
-                (ReportReason.privacy, t.reasonPrivacy),
-                (ReportReason.other, t.reasonOther),
-              ])
-                ListTile(
-                  title: Text(label),
-                  onTap: () => Navigator.pop(ctx, r),
-                ),
-              const SizedBox(height: 8),
-            ],
+      final reason = await showActionSheet<ReportReason>(
+        context,
+        title: t.reportContentTitle,
+        actions: [
+          SheetAction(
+            ReportReason.spam,
+            t.reasonSpam,
+            icon: Icons.campaign_rounded,
           ),
-        ),
+          SheetAction(
+            ReportReason.abuse,
+            t.reasonAbuse,
+            icon: Icons.sentiment_very_dissatisfied_rounded,
+          ),
+          SheetAction(
+            ReportReason.sexual,
+            t.reasonSexual,
+            icon: Icons.no_adult_content_rounded,
+          ),
+          SheetAction(
+            ReportReason.privacy,
+            t.reasonPrivacy,
+            icon: Icons.privacy_tip_rounded,
+          ),
+          SheetAction(
+            ReportReason.other,
+            t.reasonOther,
+            icon: Icons.more_horiz_rounded,
+          ),
+        ],
       );
       if (reason == null || !context.mounted) return;
       try {
@@ -490,24 +468,11 @@ Future<void> showContentMenu(
   }
 }
 
-Future<bool> _confirm(BuildContext context, String msg, String action) async {
-  final t = L.of(context);
-  final ok = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      content: Text(msg, style: const TextStyle(height: 1.5)),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
-          child: Text(t.cancel),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, true),
-          style: TextButton.styleFrom(foregroundColor: AppColors.over),
-          child: Text(action),
-        ),
-      ],
-    ),
-  );
-  return ok ?? false;
-}
+Future<bool> _confirm(BuildContext context, String msg, String action) =>
+    showConfirm(
+      context,
+      icon: Icons.warning_amber_rounded,
+      message: msg,
+      confirm: action,
+      danger: true,
+    );

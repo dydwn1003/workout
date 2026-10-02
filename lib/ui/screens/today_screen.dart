@@ -14,6 +14,7 @@ import 'log_calendar_sheet.dart';
 import 'weight_sheet.dart';
 import 'workout_sheet.dart';
 import 'workout_tips.dart';
+import '../app_dialog.dart';
 
 class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
@@ -62,12 +63,11 @@ class TodayScreenState extends State<TodayScreen> {
     // (the ◀ arrow already goes there).
     final start = DateTime(today.year - 2, today.month, today.day);
     final cur = _date ?? today;
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: cur.isBefore(start) ? start : cur,
-      firstDate: start,
-      lastDate: today,
-      helpText: L.of(context).pickDate,
+    final picked = await showDateSheet(
+      context,
+      initial: cur.isBefore(start) ? start : cur,
+      first: start,
+      last: today,
     );
     if (picked != null) _goTo(picked, s.today);
   }

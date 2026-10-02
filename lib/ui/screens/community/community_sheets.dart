@@ -12,6 +12,7 @@ import '../../theme.dart';
 import '../../widgets.dart';
 import 'community_common.dart';
 import 'community_widgets.dart';
+import '../../app_dialog.dart';
 
 /// The web app. Invite links go through its go.html, which sends phones
 /// to their store (Play; App Store once the iPhone app is out) and
@@ -41,16 +42,13 @@ Future<void> shareText(BuildContext context, String text) async {
     // No clipboard either: show the text to copy by hand.
     debugPrint('copy failed: $e');
     if (!context.mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        content: SelectableText(text),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(L.of(context).confirm),
-          ),
-        ],
+    await showAppDialog<void>(
+      context,
+      builder: (context) => AppDialog(
+        icon: Icons.link_rounded,
+        content: SelectableText(text, textAlign: TextAlign.center),
+        confirmLabel: L.of(context).confirm,
+        onConfirm: () => Navigator.pop(context),
       ),
     );
     return;
@@ -442,29 +440,17 @@ class _AvatarPickerState extends State<AvatarPicker> {
   Future<void> _menu() async {
     if (!_hasPhoto) return _pick();
     final t = L.of(context);
-    final remove = await showModalBottomSheet<bool>(
-      context: context,
-      sheetAnimationStyle: Motion.sheet,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library_rounded),
-              title: Text(t.choosePhoto),
-              onTap: () => Navigator.pop(context, false),
-            ),
-            ListTile(
-              leading: const Icon(
-                Icons.delete_outline_rounded,
-                color: AppColors.peach,
-              ),
-              title: Text(t.removePhoto),
-              onTap: () => Navigator.pop(context, true),
-            ),
-          ],
+    final remove = await showActionSheet<bool>(
+      context,
+      actions: [
+        SheetAction(false, t.choosePhoto, icon: Icons.photo_library_rounded),
+        SheetAction(
+          true,
+          t.removePhoto,
+          icon: Icons.delete_outline_rounded,
+          danger: true,
         ),
-      ),
+      ],
     );
     if (remove == null || !mounted) return;
     remove ? _remove() : await _pick();
