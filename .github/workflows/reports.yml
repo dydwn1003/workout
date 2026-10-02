@@ -37,8 +37,21 @@ jobs:
           AUTH=()
           # Legacy JWT keys also go as a bearer token; new sb_secret_ keys don't.
           case "$KEY" in sb_*) ;; *) AUTH=(-H "Authorization: Bearer $KEY") ;; esac
-          N=$(curl -sS --fail -X POST "${URL%/}/rest/v1/rpc/community_open_reports" \
+          CODE=$(curl -sS -o body.txt -w '%{http_code}' -X POST "${URL%/}/rest/v1/rpc/community_open_reports" \
             -H "apikey: $KEY" "${AUTH[@]}" -H 'Content-Type: application/json' -d '{}')
+          if [ "$CODE" = 404 ]; then
+            # The function comes with supabase/community.sql; until that SQL
+            # is run there is nothing to check (and no reason to fail).
+            echo "::warning::community_open_reports not found: run supabase/community.sql (see docs/community-ops.md)"
+            echo "n=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$CODE" != 200 ]; then
+            echo "::error::Supabase answered $CODE"
+            cat body.txt
+            exit 1
+          fi
+          N=$(cat body.txt)
           echo "open reports: $N"
           echo "n=$N" >> "$GITHUB_OUTPUT"
 
