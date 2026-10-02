@@ -383,10 +383,10 @@ class LEn extends L {
   String get weightTitle => 'Log weight';
 
   @override
-  String get bodyFatField => 'Body fat (%)';
+  String get bodyFatField => 'Body fat';
 
   @override
-  String get smmField => 'Skeletal muscle (kg)';
+  String get smmField => 'Skeletal muscle';
 
   @override
   String get moreBodyComp => 'Add body composition';

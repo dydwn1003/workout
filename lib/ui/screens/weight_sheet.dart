@@ -206,13 +206,16 @@ class _WeightSheetState extends State<WeightSheet> {
               ],
             ),
             const SizedBox(height: 12),
-            if (!_showComp)
+            if (!_showComp) ...[
               TextButton.icon(
                 onPressed: () => setState(() => _showComp = true),
                 icon: const Icon(Icons.add_rounded),
                 label: Text(t.moreBodyComp),
-              )
-            else ...[
+              ),
+              // Why it's worth it, before it's opened.
+              const SizedBox(height: 4),
+              const BodyCompGuide(compact: true),
+            ] else ...[
               const SizedBox(height: 4),
               Row(
                 children: [
@@ -227,6 +230,7 @@ class _WeightSheetState extends State<WeightSheet> {
                       ],
                       decoration: InputDecoration(
                         labelText: t.bodyFatField,
+                        suffixText: '%',
                         errorText: _error(_bf, _bfRange),
                         errorMaxLines: 2,
                       ),
@@ -244,6 +248,7 @@ class _WeightSheetState extends State<WeightSheet> {
                       ],
                       decoration: InputDecoration(
                         labelText: t.smmField,
+                        suffixText: 'kg',
                         errorText: _error(_smm, _smmRange),
                         errorMaxLines: 2,
                       ),

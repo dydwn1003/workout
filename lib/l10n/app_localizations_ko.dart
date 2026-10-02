@@ -371,10 +371,10 @@ class LKo extends L {
   String get weightTitle => '체중 기록';
 
   @override
-  String get bodyFatField => '체지방률 (%)';
+  String get bodyFatField => '체지방률';
 
   @override
-  String get smmField => '골격근량 (kg)';
+  String get smmField => '골격근량';
 
   @override
   String get moreBodyComp => '체성분도 입력하기';

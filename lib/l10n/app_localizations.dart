@@ -772,13 +772,13 @@ abstract class L {
   /// No description provided for @bodyFatField.
   ///
   /// In ko, this message translates to:
-  /// **'체지방률 (%)'**
+  /// **'체지방률'**
   String get bodyFatField;
 
   /// No description provided for @smmField.
   ///
   /// In ko, this message translates to:
-  /// **'골격근량 (kg)'**
+  /// **'골격근량'**
   String get smmField;
 
   /// No description provided for @moreBodyComp.

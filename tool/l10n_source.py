@@ -138,8 +138,8 @@ S = {
                    "Once the server is connected, one photo will estimate your meal. (Free: 3 per day. Photos are discarded after analysis.)"),
 
  "weightTitle": ("체중 기록", "Log weight"),
- "bodyFatField": ("체지방률 (%)", "Body fat (%)"),
- "smmField": ("골격근량 (kg)", "Skeletal muscle (kg)"),
+ "bodyFatField": ("체지방률", "Body fat"),
+ "smmField": ("골격근량", "Skeletal muscle"),
  "moreBodyComp": ("체성분도 입력하기", "Add body composition"),
  "weightSaved": ("체중을 기록했어요", "Weight saved"),
 
