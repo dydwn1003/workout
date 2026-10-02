@@ -90,6 +90,9 @@ def find(tables, names, kcal, of):
     return None
 
 
+MILK_DRINK = re.compile(r"라떼|카푸치노")
+
+
 def main():
     if not os.path.exists(NTR):
         sys.exit(f"missing {NTR}: run tool/fetch_mfds_ntr.py first")
@@ -120,8 +123,14 @@ def main():
         report.append([cols[0], sugar[1] if sugar else "kept", ratio[1] if ratio else None])
 
     all_ratios = [r for rs in ratios.values() for r in rs]
+    latte = next((c for _, c, _ in foods if c[0] == "카페라떼"), None)
+    milk_ratio = float(latte[10]) / float(latte[6]) if latte and latte[10] else None
     for (i, cols, _), rep in zip(foods, report):
-        if rep[2] is None:
+        if rep[2] is None and MILK_DRINK.search(cols[0]) and milk_ratio:
+            # Its fat is mostly milk fat, not the drinks' median (juices, tea).
+            cols[10] = f"{float(cols[6]) * milk_ratio:.1f}"
+            rep[2] = "estimated (카페라떼 포화지방/지방)"
+        elif rep[2] is None:
             rs = ratios.get(cols[2]) if len(ratios.get(cols[2], [])) >= 3 else all_ratios
             cols[10] = f"{float(cols[6]) * statistics.median(rs):.1f}"
             rep[2] = f"estimated ({cols[2]} 포화지방/지방)"

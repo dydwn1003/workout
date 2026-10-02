@@ -1,4 +1,5 @@
 import 'package:adapt_coach/data/entities.dart';
+import 'package:adapt_coach/data/food.dart';
 import 'package:adapt_coach/data/food_db.g.dart';
 import 'package:adapt_coach/state/coach_tips.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -135,8 +136,8 @@ void main() {
   group('food swaps', () {
     final today = DateTime(2026, 9, 29);
     final byId = {for (final f in builtInFoods) f.id: f};
-    List<FoodSwap> swapsFor(String name, {int times = 3}) {
-      final f = builtInFoods.firstWhere((f) => f.name == name);
+    List<FoodSwap> swapsFor(String name, {int times = 3, Food? food}) {
+      final f = food ?? builtInFoods.firstWhere((f) => f.name == name);
       return findFoodSwaps(
         meals: [
           for (var i = 1; i <= times; i++)
@@ -155,7 +156,7 @@ void main() {
             ),
         ],
         today: today,
-        foodById: (id) => byId[id],
+        foodById: (id) => id == f.id ? f : byId[id],
         foods: builtInFoods,
       );
     }
@@ -168,6 +169,29 @@ void main() {
       final s = swapsFor('커피 카페 라떼 핫(HOT) (Tall) (스타벅스)').single;
       expect(s.to.name, endsWith('(스타벅스)'));
       expect(s.kcalSaved, greaterThan(0));
+    });
+    test('a protein drink is not swapped for a sugary one', () {
+      // From the online search: kind 액상음료, like the ades in the table.
+      const shake = Food(
+        'mtest-shake',
+        '더단백 드링크 초코',
+        ['액상음료'],
+        '음료',
+        54,
+        8,
+        3.6,
+        1,
+        [FoodUnit('1개(포장)', 250)],
+        sugarG: 0.8,
+        satFatG: 0.4,
+      );
+      expect(swapsFor('', food: shake), isEmpty);
+    });
+    test('swaps keep the protein and add no sugar', () {
+      final s = swapsFor('삼겹살').single;
+      expect(s.toProteinG, greaterThanOrEqualTo(s.fromProteinG * 0.9));
+      final v = swapsFor('바닐라라떼').single;
+      expect(v.toSugarG, lessThan(v.fromSugarG!));
     });
     test('not for foods eaten fewer than 3 times', () {
       expect(swapsFor('삼겹살', times: 2), isEmpty);

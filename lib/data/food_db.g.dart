@@ -2419,7 +2419,7 @@ const builtInFoods = <Food>[
     2.3,
     [FoodUnit('1잔', 350)],
     sugarG: 8,
-    satFatG: 0.6,
+    satFatG: 1.5,
   ),
   Food(
     'f4551e6dd',
@@ -2432,7 +2432,7 @@ const builtInFoods = <Food>[
     2,
     [FoodUnit('1잔', 300)],
     sugarG: 3.3,
-    satFatG: 0.5,
+    satFatG: 1.3,
   ),
   Food(
     'f53c25576',
@@ -2458,7 +2458,7 @@ const builtInFoods = <Food>[
     2,
     [FoodUnit('1잔', 350)],
     sugarG: 9,
-    satFatG: 0.5,
+    satFatG: 1.3,
   ),
   Food(
     'fa8c07907',
@@ -2471,7 +2471,7 @@ const builtInFoods = <Food>[
     2.5,
     [FoodUnit('1잔', 350)],
     sugarG: 10,
-    satFatG: 0.6,
+    satFatG: 1.6,
   ),
   Food(
     'fbf73fe97',

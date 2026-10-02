@@ -1302,7 +1302,17 @@ class LKo extends L {
 
   @override
   String get swapsDesc =>
-      '최근 4주에 자주 드신 음식과 같은 종류 중에서, 1회분 칼로리가 적고 단백질은 비슷한 음식이에요.';
+      '최근 4주에 자주 드신 음식과 같은 종류 중에서, 칼로리만이 아니라 탄단지 구성까지 비슷하고, 단백질은 지키면서 당류·포화지방은 늘지 않는 음식만 골랐어요.';
+
+  @override
+  String swapCompare(String from, String to) {
+    return '단백질 $from→${to}g';
+  }
+
+  @override
+  String swapCompareSugar(String from, String to, String sFrom, String sTo) {
+    return '단백질 $from→${to}g · 당류 $sFrom→${sTo}g';
+  }
 
   @override
   String swapTimes(String n) {

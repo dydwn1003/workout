@@ -388,6 +388,23 @@ class FoodSwapsCard extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
+                        Text(
+                          w.fromSugarG != null && w.toSugarG != null
+                              ? t.swapCompareSugar(
+                                  fmt0(w.fromProteinG),
+                                  fmt0(w.toProteinG),
+                                  fmt0(w.fromSugarG!),
+                                  fmt0(w.toSugarG!),
+                                )
+                              : t.swapCompare(
+                                  fmt0(w.fromProteinG),
+                                  fmt0(w.toProteinG),
+                                ),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.inkSoft,
+                          ),
+                        ),
                       ],
                     ),
                   ),

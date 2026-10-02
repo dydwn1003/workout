@@ -1329,7 +1329,17 @@ class LEn extends L {
 
   @override
   String get swapsDesc =>
-      'Same kind as foods you ate often in the last 4 weeks, with fewer kcal per serving and similar protein.';
+      'Same kind as foods you ate often in the last 4 weeks, compared on everything, not just kcal: a similar carb/protein/fat make-up, protein kept, and no more sugars or saturated fat.';
+
+  @override
+  String swapCompare(String from, String to) {
+    return 'Protein $from→${to}g';
+  }
+
+  @override
+  String swapCompareSugar(String from, String to, String sFrom, String sTo) {
+    return 'Protein $from→${to}g · sugars $sFrom→${sTo}g';
+  }
 
   @override
   String swapTimes(String n) {

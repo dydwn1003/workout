@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../data/entities.dart';
 import '../data/food.dart';
 
@@ -267,21 +269,38 @@ class FoodSwap {
   final double kcalSaved;
   final double? sugarSaved;
   final int timesEaten;
+
+  /// Per serving, before → after, for showing the whole picture.
+  final double fromProteinG;
+  final double toProteinG;
+  final double? fromSugarG;
+  final double? toSugarG;
   const FoodSwap(
     this.from,
     this.to, {
     required this.kcalSaved,
     required this.sugarSaved,
     required this.timesEaten,
+    this.fromProteinG = 0,
+    this.toProteinG = 0,
+    this.fromSugarG,
+    this.toSugarG,
   });
 }
 
 /// Foods eaten 3+ times in the 28 days before [today] that have a clearly
-/// lighter food of the same kind: 20%+ fewer kcal per serving and per
-/// 100 g, a similar serving size, not much less protein (for protein
-/// foods), and a published (not estimated) kcal. Same kind = same 대표식품명 for MFDS foods, or a shared alias
-/// word in the same category for the hand-made ones; a brand's item only
-/// swaps within that brand. Biggest saving (× times eaten) first.
+/// lighter food of the same kind, compared on everything, not just kcal:
+/// - same kind (same 대표식품명 for MFDS foods, a shared alias word in the
+///   same category for the hand-made ones; a brand's item only within that
+///   brand), a published kcal and a similar serving size
+/// - 20%+ fewer kcal per serving and fewer per 100 g
+/// - a similar make-up: the shares of kcal from protein, carbs and fat
+///   close to the original's (a protein shake doesn't become a juice)
+/// - protein kept for protein foods (90%+ of it), drinks included
+/// - no more 당류 than before and about as much 포화지방 at most (a
+///   known value either way)
+/// Closest in make-up and nearest to 60% of the kcal first; biggest saving
+/// (× times eaten) first across foods.
 List<FoodSwap> findFoodSwaps({
   required List<Meal> meals,
   required DateTime today,
@@ -315,20 +334,37 @@ List<FoodSwap> findFoodSwaps({
   double serving(Food f) => f.units.isEmpty ? 100 : f.units.first.grams;
   double per(Food f, double v) => v * serving(f) / 100;
 
+  /// Shares of kcal from protein, carbs and fat (per 100 g).
+  (double, double, double) shape(Food f) {
+    final p = f.proteinG * 4, c = f.carbsG * 4, fat = f.fatG * 9;
+    final sum = p + c + fat;
+    return sum <= 0 ? (0, 0, 0) : (p / sum, c / sum, fat / sum);
+  }
+
+  double distance(Food a, Food b) {
+    final (ap, ac, af) = shape(a);
+    final (bp, bc, bf) = shape(b);
+    return math.sqrt(
+      (ap - bp) * (ap - bp) + (ac - bc) * (ac - bc) + (af - bf) * (af - bf),
+    );
+  }
+
   final out = <FoodSwap>[];
   for (final f in frequent) {
     final fk = kinds(f);
     if (fk.isEmpty || f.kcal <= 0) continue;
     final fKcal = per(f, f.kcal), fProtein = per(f, f.proteinG);
-    // Protein only matters for protein foods (a latte's milk doesn't count).
-    final keepProtein = fProtein >= 10 && f.category != '음료';
+    // A protein food: much of its kcal is protein, or a real serving of it.
+    final proteinFood = shape(f).$1 >= 0.25 || fProtein >= 10;
+    final fSugar = f.sugarG == null ? null : per(f, f.sugarG!);
+    final fSat = f.satFatG == null ? null : per(f, f.satFatG!);
     final candidates = [
       for (final g in foods)
         if (g.id != f.id &&
             curated(g) == curated(f) &&
             g.category == f.category &&
             !g.kcalEstimated &&
-            !(keepProtein && g.unknown.contains('p')) &&
+            !g.unknown.contains('p') &&
             kinds(g).intersection(fk).isNotEmpty &&
             per(g, g.kcal) <= fKcal * 0.8 &&
             // Lighter food, not just a smaller portion of it.
@@ -336,7 +372,17 @@ List<FoodSwap> findFoodSwaps({
             per(g, g.kcal) > 0 &&
             serving(g) >= serving(f) * 0.4 &&
             serving(g) <= serving(f) * 1.6 &&
-            (!keepProtein || per(g, g.proteinG) >= fProtein * 0.9))
+            // Made of the same things.
+            distance(f, g) <= 0.35 &&
+            (!proteinFood ||
+                (per(g, g.proteinG) >= fProtein * 0.9 &&
+                    shape(g).$1 >= shape(f).$1 * 0.85)) &&
+            // Not sweeter or fattier in the bad way.
+            (fSugar == null ||
+                (g.sugarG != null && per(g, g.sugarG!) <= fSugar + 0.5)) &&
+            (fSat == null ||
+                (g.satFatG != null &&
+                    per(g, g.satFatG!) <= math.max(fSat * 1.3, fSat + 0.5))))
           g,
     ];
     if (candidates.isEmpty) continue;
@@ -347,23 +393,24 @@ List<FoodSwap> findFoodSwaps({
         if (b == null || brand(g) == b) g,
     ];
     if (pool.isEmpty) continue;
-    // A realistic swap rather than the emptiest one: nearest to 60% of the
-    // original's kcal.
-    pool.sort(
-      (a, c) => (per(a, a.kcal) - fKcal * 0.6).abs().compareTo(
-        (per(c, c.kcal) - fKcal * 0.6).abs(),
-      ),
-    );
+    // Closest in make-up, then a realistic cut (nearest 60% of the kcal)
+    // rather than the emptiest food.
+    double score(Food g) =>
+        distance(f, g) * 2 + (per(g, g.kcal) / fKcal - 0.6).abs();
+    pool.sort((a, c) => score(a).compareTo(score(c)));
     final g = pool.first;
+    final gSugar = g.sugarG == null ? null : per(g, g.sugarG!);
     out.add(
       FoodSwap(
         f,
         g,
         kcalSaved: fKcal - per(g, g.kcal),
-        sugarSaved: f.sugarG == null || g.sugarG == null
-            ? null
-            : per(f, f.sugarG!) - per(g, g.sugarG!),
+        sugarSaved: fSugar == null || gSugar == null ? null : fSugar - gSugar,
         timesEaten: counts[f.id]!,
+        fromProteinG: fProtein,
+        toProteinG: per(g, g.proteinG),
+        fromSugarG: fSugar,
+        toSugarG: gSugar,
       ),
     );
   }

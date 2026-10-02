@@ -2349,8 +2349,20 @@ abstract class L {
   /// No description provided for @swapsDesc.
   ///
   /// In ko, this message translates to:
-  /// **'최근 4주에 자주 드신 음식과 같은 종류 중에서, 1회분 칼로리가 적고 단백질은 비슷한 음식이에요.'**
+  /// **'최근 4주에 자주 드신 음식과 같은 종류 중에서, 칼로리만이 아니라 탄단지 구성까지 비슷하고, 단백질은 지키면서 당류·포화지방은 늘지 않는 음식만 골랐어요.'**
   String get swapsDesc;
+
+  /// No description provided for @swapCompare.
+  ///
+  /// In ko, this message translates to:
+  /// **'단백질 {from}→{to}g'**
+  String swapCompare(String from, String to);
+
+  /// No description provided for @swapCompareSugar.
+  ///
+  /// In ko, this message translates to:
+  /// **'단백질 {from}→{to}g · 당류 {sFrom}→{sTo}g'**
+  String swapCompareSugar(String from, String to, String sFrom, String sTo);
 
   /// No description provided for @swapTimes.
   ///
