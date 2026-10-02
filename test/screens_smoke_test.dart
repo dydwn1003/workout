@@ -119,6 +119,13 @@ void main() {
       _step = 'lounge';
       await tester.tap(find.text('운동 라운지').first);
       await settle(tester);
+      // The lounge opens first and was scrolled down above: back to its top.
+      await tester.drag(
+        find.byType(Scrollable).first,
+        const Offset(0, 4000),
+        warnIfMissed: false,
+      );
+      await settle(tester);
 
       // A lounge board, then the rest of the lounge.
       _step = 'running board';

@@ -31,8 +31,8 @@ class CommunityScreen extends StatefulWidget {
 }
 
 class _CommunityScreenState extends State<CommunityScreen> {
-  var _tab = 0; // 0: 내 헬스장, 1: 운동 라운지
-  var _loungeOpened = false;
+  // 0: 운동 라운지 (opens first), 1: 내 헬스장
+  var _tab = 0;
   final _query = TextEditingController();
   final _searchFocus = FocusNode();
   Timer? _debounce;
@@ -69,7 +69,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       final found = await c.repo.boards([id]);
       if (!mounted || found.isEmpty) return;
       final g = found.first;
-      if (g.isTopic) _setTab(1);
+      _setTab(g.isTopic ? 0 : 1);
       await _openGym(g);
     } catch (e) {
       debugPrint('invite board failed: $e');
@@ -82,7 +82,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
     FocusScope.of(context).unfocus();
     setState(() {
       _tab = i;
-      if (i == 1) _loungeOpened = true;
     });
   }
 
@@ -286,8 +285,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
               child: IndexedStack(
                 index: _tab,
                 children: [
+                  const LoungeView(),
                   _myGymsTab(t, c, app, searching),
-                  if (_loungeOpened) const LoungeView() else const SizedBox(),
                 ],
               ),
             ),
@@ -344,11 +343,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
           index: _tab,
           onChanged: _setTab,
           labels: [
+            (Icons.public_rounded, t.tabLounge),
             (
               Icons.bookmark_rounded,
               '${t.tabMyGyms} ${c.myGyms.length}/${CommunityLimits.myGyms}',
             ),
-            (Icons.public_rounded, t.tabLounge),
           ],
         ),
       ],
