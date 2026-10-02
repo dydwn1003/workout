@@ -296,11 +296,16 @@ class _CompTile extends StatelessWidget {
                 ),
               ],
             ),
+          if (points.length == 1)
+            Text(
+              t.compFirstOnly,
+              style: const TextStyle(fontSize: 11.5, color: AppColors.inkSoft),
+            ),
           const Spacer(),
           const SizedBox(height: 8),
           SizedBox(
             height: 40,
-            child: points.length < 2
+            child: points.isEmpty
                 ? const SizedBox()
                 : TweenAnimationBuilder<double>(
                     tween: Tween(begin: 0, end: 1),
@@ -377,6 +382,31 @@ class _SparkPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (values.length == 1) {
+      // First reading: a dot, then a dashed line to where the next one goes.
+      final y = size.height / 2;
+      final dash = Paint()
+        ..color = color.withValues(alpha: 0.45)
+        ..strokeWidth = 2
+        ..strokeCap = StrokeCap.round;
+      final end = (size.width - 6) * progress;
+      for (var x = 10.0; x < end; x += 9) {
+        canvas.drawLine(Offset(x, y), Offset(math.min(x + 4, end), y), dash);
+      }
+      canvas.drawCircle(Offset(4, y), 4.5, Paint()..color = Colors.white);
+      canvas.drawCircle(Offset(4, y), 3.2, Paint()..color = color);
+      if (progress >= 1) {
+        canvas.drawCircle(
+          Offset(size.width - 4, y),
+          3.5,
+          Paint()
+            ..color = color.withValues(alpha: 0.6)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.6,
+        );
+      }
+      return;
+    }
     final lo = values.reduce(math.min), hi = values.reduce(math.max);
     final span = math.max(hi - lo, 0.4); // flat-ish lines stay flat
     final mid = (hi + lo) / 2;

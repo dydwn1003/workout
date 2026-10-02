@@ -500,6 +500,9 @@ class LKo extends L {
   }
 
   @override
+  String get compFirstOnly => '다음 측정부터 변화가 그려져요';
+
+  @override
   String get compRecent => '최근 측정';
 
   @override

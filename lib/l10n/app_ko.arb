@@ -284,6 +284,7 @@
       }
     }
   },
+  "compFirstOnly": "다음 측정부터 변화가 그려져요",
   "compRecent": "최근 측정",
   "weightDeleted": "체중 기록을 지웠어요",
   "showAllN": "전체 보기 ({n})",

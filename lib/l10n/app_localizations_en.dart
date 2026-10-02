@@ -512,6 +512,9 @@ class LEn extends L {
   }
 
   @override
+  String get compFirstOnly => 'Your next reading draws the trend';
+
+  @override
   String get compRecent => 'Recent measurements';
 
   @override

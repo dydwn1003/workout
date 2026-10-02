@@ -997,6 +997,12 @@ abstract class L {
   /// **'{date}보다'**
   String compSince(String date);
 
+  /// No description provided for @compFirstOnly.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음 측정부터 변화가 그려져요'**
+  String get compFirstOnly;
+
   /// No description provided for @compRecent.
   ///
   /// In ko, this message translates to:

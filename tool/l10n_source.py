@@ -178,6 +178,7 @@ S = {
  "bodyFat": ("체지방률", "Body fat"),
  "smm": ("골격근량", "Skeletal muscle"),
  "compSince": ("{date}보다", "since {date}"),
+ "compFirstOnly": ("다음 측정부터 변화가 그려져요", "Your next reading draws the trend"),
  "compRecent": ("최근 측정", "Recent measurements"),
  "weightDeleted": ("체중 기록을 지웠어요", "Weigh-in removed"),
  "showAllN": ("전체 보기 ({n})", "Show all ({n})"),
