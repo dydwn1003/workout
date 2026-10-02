@@ -371,12 +371,16 @@ class _LoungeViewState extends State<LoungeView> {
             children: [
               _TopicChip(
                 label: t.allBoards,
+                icon: Icons.apps_rounded,
+                color: AppColors.ink,
                 selected: _topic == null,
                 onTap: () => _setTopic(null),
               ),
               for (final id in CommunityScope.of(context).loungeBoards)
                 _TopicChip(
                   label: topicName(t, id)!,
+                  icon: topicStyle(id).$1,
+                  color: topicStyle(id).$2,
                   selected: _topic == id,
                   onTap: () => _setTopic(id),
                 ),
@@ -444,7 +448,7 @@ class _TopicTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = L.of(context);
-    final (icon, _) = topicStyle(id);
+    final (icon, color) = topicStyle(id);
     return Squish(
       child: Material(
         color: Colors.transparent,
@@ -460,13 +464,13 @@ class _TopicTile extends StatelessWidget {
                   clipBehavior: Clip.none,
                   children: [
                     Container(
-                      width: 48,
-                      height: 48,
+                      width: 54,
+                      height: 54,
                       decoration: BoxDecoration(
-                        color: AppColors.neutralSoft,
-                        borderRadius: BorderRadius.circular(16),
+                        color: Color.lerp(color, Colors.white, 0.82),
+                        shape: BoxShape.circle,
                       ),
-                      child: Icon(icon, color: AppColors.ink, size: 23),
+                      child: Icon(icon, color: color, size: 26),
                     ),
                     // Starred boards (from the board's ☆) wear a small star.
                     if (favorite)
@@ -497,7 +501,8 @@ class _TopicTile extends StatelessWidget {
                     topicName(t, id)!,
                     maxLines: 1,
                     style: const TextStyle(
-                      fontWeight: FontWeight.w600,
+                      fontFamily: headingFont,
+                      fontWeight: FontWeight.w800,
                       fontSize: 12.5,
                       color: AppColors.ink,
                     ),
@@ -514,10 +519,14 @@ class _TopicTile extends StatelessWidget {
 
 class _TopicChip extends StatelessWidget {
   final String label;
+  final IconData icon;
+  final Color color;
   final bool selected;
   final VoidCallback onTap;
   const _TopicChip({
     required this.label,
+    required this.icon,
+    required this.color,
     required this.selected,
     required this.onTap,
   });
@@ -530,19 +539,31 @@ class _TopicChip extends StatelessWidget {
       child: AnimatedContainer(
         duration: Motion.fast,
         curve: Motion.ease,
-        padding: const EdgeInsets.symmetric(horizontal: 13),
+        padding: const EdgeInsets.fromLTRB(10, 0, 13, 0),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? AppColors.ink : AppColors.neutralSoft,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 13,
-            color: selected ? Colors.white : AppColors.inkSoft,
+          color: selected ? color : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? color : AppColors.line,
+            width: 1.2,
           ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: selected ? Colors.white : color),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: headingFont,
+                fontWeight: FontWeight.w800,
+                fontSize: 12.5,
+                color: selected ? Colors.white : AppColors.ink,
+              ),
+            ),
+          ],
         ),
       ),
     ),
@@ -558,6 +579,7 @@ class _HotRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = L.of(context);
+    final (icon, color) = topicStyle(post.gymId);
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -572,7 +594,7 @@ class _HotRow extends StatelessWidget {
                   fontFamily: headingFont,
                   fontWeight: FontWeight.w800,
                   fontSize: 18,
-                  color: rank <= 3 ? AppColors.ink : AppColors.inkSoft,
+                  color: rank == 1 ? AppColors.peach : AppColors.inkSoft,
                 ),
               ),
             ),
@@ -581,13 +603,20 @@ class _HotRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    postBoardName(t, post) ?? '',
-                    style: const TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.inkSoft,
-                    ),
+                  Row(
+                    children: [
+                      Icon(icon, size: 13, color: color),
+                      const SizedBox(width: 3),
+                      Text(
+                        postBoardName(t, post) ?? '',
+                        style: TextStyle(
+                          fontFamily: headingFont,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 11.5,
+                          color: color,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -605,9 +634,9 @@ class _HotRow extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             const Icon(
-              Icons.favorite_border_rounded,
+              Icons.favorite_rounded,
               size: 15,
-              color: AppColors.inkSoft,
+              color: AppColors.peach,
             ),
             const SizedBox(width: 3),
             Text(

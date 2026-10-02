@@ -322,6 +322,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               tooltip: t.inviteFriends,
               onTap: () => showInviteSheet(context),
             ),
+            const SizedBox(width: 8),
             _BellButton(
               count: c.badge,
               onTap: () => Navigator.of(context).push(
@@ -330,17 +331,23 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 ),
               ),
             ),
-            if (c.signedIn || app.auth != null)
+            if (c.signedIn || app.auth != null) ...[
+              const SizedBox(width: 8),
               _MeButton(profile: c.profile, onTap: _openMe),
+            ],
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 12),
         _Segments(
           index: _tab,
           onChanged: _setTab,
           labels: [
-            t.tabLounge,
-            '${t.tabMyGyms} ${c.myGyms.length}/${CommunityLimits.myGyms}',
+            (Icons.public_rounded, AppColors.peach, t.tabLounge),
+            (
+              Icons.bookmark_rounded,
+              const Color(0xFF6A7FE0),
+              '${t.tabMyGyms} ${c.myGyms.length}/${CommunityLimits.myGyms}',
+            ),
           ],
         ),
       ],
@@ -746,14 +753,19 @@ class _BellButton extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               Positioned.fill(
-                child: Center(
-                  child: Icon(icon, size: 24, color: AppColors.ink),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: AppColors.neutralSoft,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(icon, size: 21, color: AppColors.ink),
                 ),
               ),
               if (count > 0)
                 Positioned(
-                  top: 1,
-                  right: 0,
+                  top: -3,
+                  right: -3,
                   child: Container(
                     constraints: const BoxConstraints(minWidth: 17),
                     height: 17,
@@ -798,23 +810,26 @@ class _MeButton extends StatelessWidget {
       child: Squish(
         child: GestureDetector(
           onTap: onTap,
-          child: SizedBox(
+          child: Container(
             width: 40,
             height: 40,
-            child: Center(
-              child: p == null
-                  ? const Icon(
-                      Icons.account_circle_outlined,
-                      size: 26,
-                      color: AppColors.ink,
-                    )
-                  : NickAvatar(
-                      userId: p.userId,
-                      nickname: p.nickname,
-                      photoUrl: p.avatarUrl,
-                      size: 30,
-                    ),
+            padding: const EdgeInsets.all(2.5),
+            decoration: const BoxDecoration(
+              color: AppColors.peachSoft,
+              shape: BoxShape.circle,
             ),
+            child: p == null
+                ? const Icon(
+                    Icons.person_rounded,
+                    size: 21,
+                    color: AppColors.peach,
+                  )
+                : NickAvatar(
+                    userId: p.userId,
+                    nickname: p.nickname,
+                    photoUrl: p.avatarUrl,
+                    size: 35,
+                  ),
           ),
         ),
       ),
@@ -822,11 +837,11 @@ class _MeButton extends StatelessWidget {
   }
 }
 
-/// 운동 라운지 | 내 헬스장: plain text tabs with a sliding underline.
+/// 운동 라운지 | 내 헬스장: a round switch with a sliding white pill.
 class _Segments extends StatelessWidget {
   final int index;
   final ValueChanged<int> onChanged;
-  final List<String> labels;
+  final List<(IconData, Color, String)> labels;
   const _Segments({
     required this.index,
     required this.onChanged,
@@ -834,38 +849,43 @@ class _Segments extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 44,
+  Widget build(BuildContext context) => Container(
+    height: 46,
+    padding: const EdgeInsets.all(4),
+    decoration: BoxDecoration(
+      color: AppColors.neutralSoft,
+      borderRadius: BorderRadius.circular(23),
+    ),
     child: Stack(
       children: [
-        const Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: Divider(height: 1, thickness: 1, color: AppColors.line),
-        ),
         AnimatedAlign(
           duration: Motion.medium,
           curve: Motion.ease,
           alignment: Alignment(
             labels.length == 1 ? 0 : -1 + 2 * index / (labels.length - 1),
-            1,
+            0,
           ),
           child: FractionallySizedBox(
             widthFactor: 1 / labels.length,
+            heightFactor: 1,
             child: Container(
-              height: 2.5,
-              margin: const EdgeInsets.symmetric(horizontal: 28),
               decoration: BoxDecoration(
-                color: AppColors.ink,
-                borderRadius: BorderRadius.circular(2),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(19),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x128B6E5A),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ],
               ),
             ),
           ),
         ),
         Row(
           children: [
-            for (final (i, label) in labels.indexed)
+            for (final (i, (icon, color, label)) in labels.indexed)
               Expanded(
                 child: Semantics(
                   selected: i == index,
@@ -874,15 +894,27 @@ class _Segments extends StatelessWidget {
                     behavior: HitTestBehavior.opaque,
                     onTap: () => onChanged(i),
                     child: Center(
-                      child: AnimatedDefaultTextStyle(
-                        duration: Motion.fast,
-                        style: TextStyle(
-                          fontFamily: headingFont,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 15,
-                          color: i == index ? AppColors.ink : AppColors.inkSoft,
-                        ),
-                        child: Text(label),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            icon,
+                            size: 16,
+                            color: i == index ? color : AppColors.inkSoft,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            label,
+                            style: TextStyle(
+                              fontFamily: headingFont,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                              color: i == index
+                                  ? AppColors.ink
+                                  : AppColors.inkSoft,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

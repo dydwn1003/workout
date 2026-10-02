@@ -115,43 +115,70 @@ LinearGradient gymGradient(String id) {
   ),
 };
 
-/// A post's kind as a small grey word (feed cards).
+/// A post's kind as a small round colored chip (feed cards).
 class TagLabel extends StatelessWidget {
   final PostTag tag;
   const TagLabel(this.tag, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    final (label, _, _, _) = tagStyle(L.of(context), tag);
+    final (label, icon, fg, soft) = tagStyle(L.of(context), tag);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      padding: const EdgeInsets.fromLTRB(7, 3, 9, 3),
       decoration: BoxDecoration(
-        color: AppColors.neutralSoft,
-        borderRadius: BorderRadius.circular(6),
+        color: soft,
+        borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontWeight: FontWeight.w700,
-          fontSize: 11.5,
-          color: AppColors.inkSoft,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: fg),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: headingFont,
+              fontWeight: FontWeight.w800,
+              fontSize: 11.5,
+              color: fg,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-/// 인기, next to [TagLabel].
+/// 🔥 인기, next to [TagLabel].
 class HotLabel extends StatelessWidget {
   const HotLabel({super.key});
 
   @override
-  Widget build(BuildContext context) => Text(
-    L.of(context).hotBadge,
-    style: const TextStyle(
-      fontWeight: FontWeight.w800,
-      fontSize: 11.5,
-      color: AppColors.peach,
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.fromLTRB(6, 3, 9, 3),
+    decoration: BoxDecoration(
+      color: const Color(0xFFFFE4DA),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(
+          Icons.local_fire_department_rounded,
+          size: 12,
+          color: Color(0xFFF2643A),
+        ),
+        const SizedBox(width: 2),
+        Text(
+          L.of(context).hotBadge,
+          style: const TextStyle(
+            fontFamily: headingFont,
+            fontWeight: FontWeight.w800,
+            fontSize: 11.5,
+            color: Color(0xFFF2643A),
+          ),
+        ),
+      ],
     ),
   );
 }
@@ -181,7 +208,9 @@ class TagFilterBar extends StatelessWidget {
     final t = L.of(context);
     Widget chip(PostTag? tag) {
       final on = selected == tag;
-      final label = tag == null ? t.tagAll : tagStyle(t, tag).$1;
+      final (label, icon, fg, _) = tag == null
+          ? (t.tagAll, Icons.apps_rounded, AppColors.ink, AppColors.line)
+          : tagStyle(t, tag);
       return Padding(
         padding: const EdgeInsets.only(right: 6),
         child: GestureDetector(
@@ -192,18 +221,27 @@ class TagFilterBar extends StatelessWidget {
           child: AnimatedContainer(
             duration: Motion.fast,
             curve: Motion.ease,
-            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+            padding: const EdgeInsets.fromLTRB(10, 7, 13, 7),
             decoration: BoxDecoration(
-              color: on ? AppColors.ink : AppColors.neutralSoft,
-              borderRadius: BorderRadius.circular(18),
+              color: on ? fg : Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: on ? fg : AppColors.line, width: 1.2),
             ),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-                color: on ? Colors.white : AppColors.inkSoft,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 14, color: on ? Colors.white : fg),
+                const SizedBox(width: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: headingFont,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12.5,
+                    color: on ? Colors.white : AppColors.ink,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -228,6 +266,7 @@ class GymCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = L.of(context);
+    final (c, soft) = gymColors(gym.id);
     final last = gym.lastPostAt;
     final fresh = last != null && DateTime.now().difference(last).inHours < 24;
     return Squish(
@@ -238,8 +277,14 @@ class GymCard extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.line),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0DB98B6E),
+                blurRadius: 14,
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,17 +292,17 @@ class GymCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    width: 34,
-                    height: 34,
+                    width: 38,
+                    height: 38,
                     decoration: BoxDecoration(
-                      color: AppColors.neutralSoft,
-                      borderRadius: BorderRadius.circular(11),
+                      color: soft,
+                      shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
-                    child: const Icon(
+                    child: Icon(
                       Icons.fitness_center_rounded,
-                      color: AppColors.ink,
-                      size: 18,
+                      color: c,
+                      size: 19,
                     ),
                   ),
                   const Spacer(),
@@ -519,17 +564,23 @@ class PostCard extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.line),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0DB98B6E),
+            blurRadius: 14,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 6, 8),
+            padding: const EdgeInsets.fromLTRB(16, 14, 6, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -539,9 +590,9 @@ class PostCard extends StatelessWidget {
                       userId: post.authorId,
                       nickname: post.nickname,
                       photoUrl: post.avatarUrl,
-                      size: 30,
+                      size: 36,
                     ),
-                    const SizedBox(width: 9),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -551,8 +602,9 @@ class PostCard extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13.5,
+                              fontFamily: headingFont,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
                               color: AppColors.ink,
                             ),
                           ),
@@ -589,19 +641,19 @@ class PostCard extends StatelessWidget {
                         children: [
                           TagLabel(post.tag),
                           if (hot) ...[
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 5),
                             const HotLabel(),
                           ],
                         ],
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
                       Text(
                         post.body,
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 15,
-                          height: 1.55,
+                          height: 1.6,
                           color: AppColors.ink,
                         ),
                       ),
@@ -612,15 +664,14 @@ class PostCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 12),
                 Row(
                   children: [
-                    LikePill(post: post, onChanged: onChanged, plain: true),
-                    const SizedBox(width: 14),
+                    LikePill(post: post, onChanged: onChanged),
+                    const SizedBox(width: 6),
                     CountPill(
                       icon: Icons.chat_bubble_outline_rounded,
                       count: post.commentCount,
-                      plain: true,
                     ),
                   ],
                 ),

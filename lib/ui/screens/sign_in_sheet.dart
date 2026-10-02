@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../data/auth_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
+import '../brand_logos.dart';
 import '../motion.dart';
 import '../theme.dart';
 import '../widgets.dart';
@@ -78,25 +79,14 @@ class _SignInSheetState extends State<SignInSheet> {
           Colors.white,
           const Color(0xFF1F1F1F),
           const Color(0xFF747775),
-          const Text(
-            'G',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF4285F4),
-            ),
-          ),
+          const GoogleLogo(size: 20),
         ),
         AuthMethod.kakao => (
           t.signInKakao,
           const Color(0xFFFEE500),
           const Color(0xD9000000),
           const Color(0xFFFEE500),
-          const Icon(
-            Icons.chat_bubble_rounded,
-            color: Color(0xFF191919),
-            size: 20,
-          ),
+          const KakaoLogo(size: 19),
         ),
       };
       return Padding(

@@ -351,8 +351,12 @@ class _GymBoardScreenState extends State<GymBoardScreen> {
             SliverAppBar(
               pinned: true,
               stretch: true,
-              expandedHeight: 112,
-              backgroundColor: AppColors.bg,
+              expandedHeight: 132,
+              backgroundColor: Color.lerp(
+                gymColors(g.id).$1,
+                AppColors.bg,
+                0.86,
+              ),
               foregroundColor: AppColors.ink,
               surfaceTintColor: Colors.transparent,
               title: Text(
@@ -542,15 +546,31 @@ class _BoardHeader extends StatelessWidget {
       if (!gym.isTopic) t.gymMembers('${gym.memberCount}'),
       t.gymPosts('${gym.postCount}'),
     ].join(' · ');
+    final (color, _) = gymColors(gym.id);
     return ColoredBox(
-      color: AppColors.bg,
+      color: Color.lerp(color, AppColors.bg, 0.86)!,
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 56, 16, 8),
+          padding: const EdgeInsets.fromLTRB(20, 58, 16, 14),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  gym.isTopic
+                      ? topicStyle(gym.id).$1
+                      : Icons.fitness_center_rounded,
+                  size: 21,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   meta,
@@ -570,15 +590,16 @@ class _BoardHeader extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: mine ? AppColors.neutralSoft : AppColors.ink,
-                      borderRadius: BorderRadius.circular(18),
+                      color: mine ? Colors.white : color,
+                      borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       mine ? t.joinedGym : t.joinGym,
                       style: TextStyle(
-                        fontWeight: FontWeight.w700,
+                        fontFamily: headingFont,
+                        fontWeight: FontWeight.w800,
                         fontSize: 13,
-                        color: mine ? AppColors.inkSoft : Colors.white,
+                        color: mine ? color : Colors.white,
                       ),
                     ),
                   ),
