@@ -12,15 +12,32 @@ typedef C = CoachConstants;
 
 /// Exponential moving average of daily weights.
 ///
-/// Missing days carry the previous trend forward. Entries before the first
-/// weigh-in are null. The first weigh-in seeds the trend.
+/// Days between two weigh-ins are filled on a straight line between them
+/// first, so a weigh-in after a long gap moves the trend as far as daily
+/// weigh-ins over that time would have (a lone weigh-in a month later
+/// otherwise only moved it [alpha] of the way). Days after the last
+/// weigh-in carry the trend forward. Entries before the first weigh-in are
+/// null. The first weigh-in seeds the trend.
 List<double?> trendSeries(
   List<double?> weights, {
   double alpha = C.trendAlpha,
 }) {
+  final filled = List<double?>.of(weights);
+  int? prev;
+  for (var i = 0; i < weights.length; i++) {
+    final w = weights[i];
+    if (w == null) continue;
+    if (prev != null && i - prev > 1) {
+      final a = weights[prev]!;
+      for (var j = prev + 1; j < i; j++) {
+        filled[j] = a + (w - a) * (j - prev) / (i - prev);
+      }
+    }
+    prev = i;
+  }
   final out = <double?>[];
   double? trend;
-  for (final w in weights) {
+  for (final w in filled) {
     if (w != null) {
       trend = trend == null ? w : trend + alpha * (w - trend);
     }

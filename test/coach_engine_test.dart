@@ -18,12 +18,24 @@ List<DayLog> flatDays(int n, {double kg = 80, double kcal = 2500}) => [
 
 void main() {
   group('trendSeries', () {
-    test('seeds with first weight, carries forward on missing days', () {
-      final t = trendSeries([null, 80, null, 81]);
+    test('seeds with first weight, fills gaps between weigh-ins', () {
+      final t = trendSeries([null, 80, null, 81, null]);
       expect(t[0], isNull);
       expect(t[1], 80);
-      expect(t[2], 80);
-      expect(t[3], closeTo(80.1, 1e-9));
+      // The missing day counts as 80.5, halfway to the next weigh-in.
+      expect(t[2], closeTo(80.05, 1e-9));
+      expect(t[3], closeTo(80.145, 1e-9));
+      // After the last weigh-in the trend carries forward.
+      expect(t[4], t[3]);
+    });
+
+    test('a weigh-in after a long gap moves the trend most of the way', () {
+      // 110 kg, then one weigh-in a month later at 100 kg.
+      final t = trendSeries([110, ...List.filled(29, null), 100]);
+      // Daily weigh-ins on a straight line would leave it about 9 days
+      // (≈3 kg) behind, not 90% of the way back at 109 kg.
+      expect(t.last!, lessThan(104));
+      expect(t.last!, greaterThan(100));
     });
 
     test('dampens single-day spikes', () {
