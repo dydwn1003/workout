@@ -500,6 +500,11 @@ class LKo extends L {
   }
 
   @override
+  String compPointDate(String date) {
+    return '$date 측정';
+  }
+
+  @override
   String get compFirstOnly => '다음 측정부터 변화가 그려져요';
 
   @override

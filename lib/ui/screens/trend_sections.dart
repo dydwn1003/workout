@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/coach_engine/coach_engine.dart' show GoalType;
@@ -206,7 +207,9 @@ class _MiniValue extends StatelessWidget {
   );
 }
 
-class _CompTile extends StatelessWidget {
+/// A body-composition tile. With 2+ readings, tapping or dragging across it
+/// shows the reading under the finger in place of the latest one.
+class _CompTile extends StatefulWidget {
   final String label;
   final String unit;
   final String deltaUnit;
@@ -226,14 +229,110 @@ class _CompTile extends StatelessWidget {
   });
 
   @override
+  State<_CompTile> createState() => _CompTileState();
+}
+
+class _CompTileState extends State<_CompTile> {
+  int? _sel;
+  var _dragged = false;
+
+  int _indexAt(double dx) {
+    final box = context.findRenderObject() as RenderBox?;
+    final width = box?.size.width ?? 1;
+    // The graph spans the tile minus its side padding.
+    final f = ((dx - _CompTileView.padX) / (width - _CompTileView.padX * 2))
+        .clamp(0.0, 1.0);
+    return (f * (widget.points.length - 1)).round();
+  }
+
+  void _select(int i) {
+    if (i == _sel) return;
+    HapticFeedback.selectionClick();
+    setState(() => _sel = i);
+  }
+
+  @override
+  void didUpdateWidget(_CompTile old) {
+    super.didUpdateWidget(old);
+    if (_sel != null && _sel! >= widget.points.length) _sel = null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final view = _CompTileView(
+      label: widget.label,
+      unit: widget.unit,
+      deltaUnit: widget.deltaUnit,
+      points: widget.points,
+      color: widget.color,
+      soft: widget.soft,
+      lowerIsBetter: widget.lowerIsBetter,
+      selected: _sel,
+    );
+    if (widget.points.length < 2) return view;
+    return TapRegion(
+      onTapOutside: (_) {
+        if (_sel != null) setState(() => _sel = null);
+      },
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapUp: (d) {
+          final i = _indexAt(d.localPosition.dx);
+          if (i == _sel && !_dragged) {
+            setState(() => _sel = null);
+          } else {
+            _select(i);
+          }
+          _dragged = false;
+        },
+        onHorizontalDragStart: (d) {
+          _dragged = true;
+          _select(_indexAt(d.localPosition.dx));
+        },
+        onHorizontalDragUpdate: (d) => _select(_indexAt(d.localPosition.dx)),
+        onHorizontalDragEnd: (_) => _dragged = false,
+        child: view,
+      ),
+    );
+  }
+}
+
+class _CompTileView extends StatelessWidget {
+  static const padX = 14.0;
+  final int? selected;
+  final String label;
+  final String unit;
+  final String deltaUnit;
+  final List<(DateTime, double)> points;
+  final Color color;
+  final Color soft;
+  final bool lowerIsBetter;
+
+  const _CompTileView({
+    required this.label,
+    required this.unit,
+    required this.deltaUnit,
+    required this.points,
+    required this.color,
+    required this.soft,
+    required this.lowerIsBetter,
+    this.selected,
+  });
+
+  @override
   Widget build(BuildContext context) {
     final t = L.of(context);
     final locale = Localizations.localeOf(context).toString();
-    final last = points.isEmpty ? null : points.last.$2;
+    final sel = selected;
+    final last = points.isEmpty
+        ? null
+        : sel != null
+        ? points[sel].$2
+        : points.last.$2;
     final delta = points.length < 2 ? null : points.last.$2 - points.first.$2;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      padding: const EdgeInsets.fromLTRB(padX, 12, padX, 12),
       decoration: BoxDecoration(
         color: soft.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(18),
@@ -276,7 +375,16 @@ class _CompTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          if (delta != null)
+          if (sel != null)
+            Text(
+              t.compPointDate(DateFormat.MMMEd(locale).format(points[sel].$1)),
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            )
+          else if (delta != null)
             Wrap(
               spacing: 6,
               runSpacing: 4,
@@ -317,6 +425,7 @@ class _CompTile extends StatelessWidget {
                         [for (final p in points) p.$2],
                         color,
                         v,
+                        selected: sel,
                       ),
                     ),
                   ),
@@ -378,7 +487,8 @@ class _SparkPainter extends CustomPainter {
   final List<double> values;
   final Color color;
   final double progress;
-  _SparkPainter(this.values, this.color, this.progress);
+  final int? selected;
+  _SparkPainter(this.values, this.color, this.progress, {this.selected});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -448,15 +558,32 @@ class _SparkPainter extends CustomPainter {
     );
     canvas.restore();
     if (progress >= 1) {
-      final end = at(values.length - 1);
-      canvas.drawCircle(end, 4.5, Paint()..color = Colors.white);
-      canvas.drawCircle(end, 3, Paint()..color = color);
+      final sel = selected;
+      if (sel != null && sel < values.length) {
+        final p = at(sel);
+        canvas.drawLine(
+          Offset(p.dx, 0),
+          Offset(p.dx, size.height),
+          Paint()
+            ..color = color.withValues(alpha: 0.35)
+            ..strokeWidth = 1.5,
+        );
+        canvas.drawCircle(p, 6, Paint()..color = Colors.white);
+        canvas.drawCircle(p, 4.2, Paint()..color = color);
+      } else {
+        final end = at(values.length - 1);
+        canvas.drawCircle(end, 4.5, Paint()..color = Colors.white);
+        canvas.drawCircle(end, 3, Paint()..color = color);
+      }
     }
   }
 
   @override
   bool shouldRepaint(_SparkPainter old) =>
-      old.progress != progress || old.values != values || old.color != color;
+      old.progress != progress ||
+      old.values != values ||
+      old.color != color ||
+      old.selected != selected;
 }
 
 class _IconBadge extends StatelessWidget {

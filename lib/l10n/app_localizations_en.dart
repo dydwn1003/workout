@@ -512,6 +512,11 @@ class LEn extends L {
   }
 
   @override
+  String compPointDate(String date) {
+    return 'Measured $date';
+  }
+
+  @override
   String get compFirstOnly => 'Your next reading draws the trend';
 
   @override

@@ -997,6 +997,12 @@ abstract class L {
   /// **'{date}보다'**
   String compSince(String date);
 
+  /// No description provided for @compPointDate.
+  ///
+  /// In ko, this message translates to:
+  /// **'{date} 측정'**
+  String compPointDate(String date);
+
   /// No description provided for @compFirstOnly.
   ///
   /// In ko, this message translates to:

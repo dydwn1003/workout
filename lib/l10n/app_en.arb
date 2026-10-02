@@ -150,6 +150,7 @@
   "bodyFat": "Body fat",
   "smm": "Skeletal muscle",
   "compSince": "since {date}",
+  "compPointDate": "Measured {date}",
   "compFirstOnly": "Your next reading draws the trend",
   "compRecent": "Recent measurements",
   "weightDeleted": "Weigh-in removed",
