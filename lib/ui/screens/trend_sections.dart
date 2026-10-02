@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/coach_engine/models.dart' show GoalType;
+import '../../core/coach_engine/coach_engine.dart' show GoalType;
 import '../../data/entities.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/app_state.dart';
@@ -14,6 +14,53 @@ import 'weight_sheet.dart';
 
 /// 체성분 추이: one tile per measure (latest value, change since the first
 /// measurement, sparkline), then the latest few measurements.
+/// How the body-fat readings help and when the next one counts.
+class BodyCompGuide extends StatelessWidget {
+  final bool compact;
+  const BodyCompGuide({super.key, this.compact = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L.of(context);
+    final s = AppScope.of(context);
+    final st = s.bodyCompStatus;
+    final locale = Localizations.localeOf(context).toString();
+    final text = st.active
+        ? t.compGuideActive('${st.readings}')
+        : st.countsFrom != null
+        ? t.compGuideWaiting(DateFormat.MMMEd(locale).format(st.countsFrom!))
+        : t.compGuideNone;
+    return Container(
+      padding: EdgeInsets.all(compact ? 12 : 14),
+      decoration: BoxDecoration(
+        color: st.active ? AppColors.mintSoft : AppColors.lilacSoft,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            st.active ? Icons.check_circle_rounded : Icons.tune_rounded,
+            size: 18,
+            color: st.active ? AppColors.mint : AppColors.lilac,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: compact ? 12.5 : 13,
+                height: 1.5,
+                color: AppColors.ink,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class BodyCompCard extends StatelessWidget {
   /// Weigh-ins with body fat or muscle, oldest first.
   final List<WeightEntry> entries;

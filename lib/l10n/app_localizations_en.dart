@@ -135,7 +135,7 @@ class LEn extends L {
 
   @override
   String get bodyCompHint =>
-      'Measure body composition on the same device under the same conditions (weekly, morning, fasted).';
+      'Log body fat every 1–2 weeks (same device, morning, fasted) and the app tells fat from muscle in your change, tuning calories and protein more precisely.';
 
   @override
   String get stepTargetTitle => 'Set your target';
@@ -1309,6 +1309,20 @@ class LEn extends L {
 
   @override
   String get infoHistory => 'Your weigh-ins and body composition by date.';
+
+  @override
+  String get compGuideNone =>
+      'Log body fat every 1–2 weeks. Two readings 2+ weeks apart let the check-in split your change into fat and muscle and fine-tune calories, protein and pace.';
+
+  @override
+  String compGuideWaiting(String date) {
+    return 'Measure again from $date and the body-composition tuning starts (readings need to be 2+ weeks apart).';
+  }
+
+  @override
+  String compGuideActive(String n) {
+    return 'Body composition is in use ($n readings in 8 weeks). Keep measuring every 1–2 weeks: from the third reading the scale\'s noise is filtered out.';
+  }
 
   @override
   String get swapsTitle => 'Lighter swaps';

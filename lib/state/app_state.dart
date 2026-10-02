@@ -482,6 +482,32 @@ class AppState extends ChangeNotifier {
         BodyCompSample(parseDateKey(w.date), w.kg, w.bodyFatPct!),
   ];
 
+  /// Where the fat/lean split of the check-in stands: body-fat readings of
+  /// the last 8 weeks, whether the split is in use, and from when the next
+  /// reading counts (2 weeks after the first one in the window).
+  ({int readings, bool active, DateTime? countsFrom}) get bodyCompStatus {
+    final samples = bodyCompSamples;
+    final from = today.subtract(const Duration(days: C.compWindowDays));
+    final recent = [
+      for (final s in samples)
+        if (!s.date.isBefore(from)) s,
+    ]..sort((a, b) => a.date.compareTo(b.date));
+    final active =
+        compositionChange(
+          samples,
+          today: today,
+          goal: profile?.goalType ?? GoalType.lose,
+        ) !=
+        null;
+    return (
+      readings: recent.length,
+      active: active,
+      countsFrom: recent.isEmpty || active
+          ? null
+          : recent.first.date.add(const Duration(days: C.compMinSpanDays)),
+    );
+  }
+
   double? get latestBodyFat {
     for (final w in _data.weights.reversed) {
       if (w.bodyFatPct != null) return w.bodyFatPct;

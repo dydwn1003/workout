@@ -248,6 +248,37 @@ void main() {
       },
     );
 
+    test('body fat guidance: none, waiting, then in use', () async {
+      final s = AppState(MemoryCoachRepository(), clock: () => now);
+      await s.load();
+      expect(s.bodyCompStatus.readings, 0);
+      expect(s.bodyCompStatus.countsFrom, isNull);
+      await s.upsertWeight(
+        WeightEntry(
+          date: dateKey(now.subtract(const Duration(days: 5))),
+          kg: 80,
+          bodyFatPct: 25,
+        ),
+      );
+      final waiting = s.bodyCompStatus;
+      expect(waiting.active, isFalse);
+      expect(
+        dateKey(waiting.countsFrom!),
+        dateKey(
+          now.subtract(const Duration(days: 5)).add(const Duration(days: 14)),
+        ),
+      );
+      await s.upsertWeight(
+        WeightEntry(
+          date: dateKey(now.subtract(const Duration(days: 20))),
+          kg: 81,
+          bodyFatPct: 26,
+        ),
+      );
+      expect(s.bodyCompStatus.active, isTrue);
+      expect(s.bodyCompStatus.readings, 2);
+    });
+
     test('too little logged: the target stays exactly as it is', () async {
       final s = AppState(MemoryCoachRepository(), clock: () => now);
       await s.load();

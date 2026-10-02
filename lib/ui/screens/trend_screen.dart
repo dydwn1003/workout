@@ -230,6 +230,8 @@ class _TrendScreenState extends State<TrendScreen> {
                 ),
                 const SizedBox(height: 10),
               ],
+              const BodyCompGuide(),
+              const SizedBox(height: 10),
               BodyCompCard(entries: comp),
               const SizedBox(height: 8),
               SectionTitle(t.weightHistory, info: t.infoHistory),

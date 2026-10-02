@@ -334,7 +334,7 @@ abstract class L {
   /// No description provided for @bodyCompHint.
   ///
   /// In ko, this message translates to:
-  /// **'체성분은 같은 기기, 같은 조건(주 1회, 아침 공복)에서 재면 가장 정확해요.'**
+  /// **'체지방률을 1~2주에 한 번(같은 기기, 아침 공복) 재서 넣으면 빠진 체중이 지방인지 근육인지 나눠서, 섭취 칼로리와 단백질을 더 정확하게 맞춰 드려요.'**
   String get bodyCompHint;
 
   /// No description provided for @stepTargetTitle.
@@ -2321,6 +2321,24 @@ abstract class L {
   /// In ko, this message translates to:
   /// **'날짜별로 기록한 체중과 체성분이에요.'**
   String get infoHistory;
+
+  /// No description provided for @compGuideNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'체지방률을 1~2주에 한 번 재서 넣어 주세요. 2주 이상 간격으로 두 번 재면, 체크인이 빠진 체중을 지방과 근육으로 나눠서 섭취 칼로리·단백질·감량 속도를 더 정확하게 맞춰요.'**
+  String get compGuideNone;
+
+  /// No description provided for @compGuideWaiting.
+  ///
+  /// In ko, this message translates to:
+  /// **'{date} 이후에 한 번 더 재면 체성분 반영이 시작돼요. (첫 측정과 2주 이상 떨어져야 정확해요)'**
+  String compGuideWaiting(String date);
+
+  /// No description provided for @compGuideActive.
+  ///
+  /// In ko, this message translates to:
+  /// **'체성분 반영 중이에요 (최근 8주 {n}번 측정). 1~2주에 한 번씩 계속 재면, 세 번째부터는 측정 오차를 걸러서 더 정확해져요.'**
+  String compGuideActive(String n);
 
   /// No description provided for @swapsTitle.
   ///

@@ -7,6 +7,7 @@ import '../../state/app_state.dart';
 import '../motion.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'trend_sections.dart' show BodyCompGuide;
 
 Future<void> showWeightSheet(BuildContext context, {DateTime? date}) =>
     showModalBottomSheet(
@@ -250,14 +251,9 @@ class _WeightSheetState extends State<WeightSheet> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                t.bodyCompHint,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  color: AppColors.inkSoft,
-                ),
-              ),
+              const SizedBox(height: 10),
+              // How often to measure, and when the next one counts.
+              const BodyCompGuide(compact: true),
             ],
             const SizedBox(height: 18),
             FilledButton(
