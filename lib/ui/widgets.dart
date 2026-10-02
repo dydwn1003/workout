@@ -645,8 +645,13 @@ class SectionTitle extends StatelessWidget {
     padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
     child: Row(
       children: [
+        // Short titles: shrink a little on narrow screens rather than wrap.
         Flexible(
-          child: Text(text, style: Theme.of(context).textTheme.titleLarge),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(text, style: Theme.of(context).textTheme.titleLarge),
+          ),
         ),
         if (info != null) InfoTip(info!),
         const Spacer(),
