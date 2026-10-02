@@ -58,7 +58,9 @@ class TodayScreenState extends State<TodayScreen> {
   Future<void> _pickDate(AppState s) async {
     s.analytics.log('date_picker');
     final today = s.today;
-    final start = s.logStart;
+    // Any day in the last two years: logs from before signing up count too
+    // (the ◀ arrow already goes there).
+    final start = DateTime(today.year - 2, today.month, today.day);
     final cur = _date ?? today;
     final picked = await showDatePicker(
       context: context,
