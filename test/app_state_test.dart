@@ -192,6 +192,70 @@ void main() {
       expect(s.meals.firstWhere((m) => m.name == 'manual').satFatG, isNull);
     });
 
+    group('weight records and trend', () {
+      DateTime ago(int d) => DateTime(now.year, now.month, now.day - d);
+      Future<void> weigh(AppState s, int daysAgo, double kg) => s.upsertWeight(
+        WeightEntry(date: dateKey(ago(daysAgo)), kg: kg),
+        notify: false,
+      );
+
+      test(
+        'a weigh-in before the first one starts the history there',
+        () async {
+          final s = await dieter([80, 80, 80]);
+          await weigh(s, 60, 86);
+          expect(s.weights.first.kg, 86); // kept in date order
+          expect(dateKey(s.dayLogs().first.date), dateKey(ago(60)));
+          // The trend follows the line down from 86, not stuck near it.
+          expect(s.trendWeight!, closeTo(80, 1.2));
+        },
+      );
+
+      test('same day replaces, delete recomputes', () async {
+        final s = await dieter(List.filled(10, 80.0));
+        await weigh(s, 0, 79);
+        expect(s.weights.where((w) => w.date == dateKey(now)).length, 1);
+        final withLow = s.trendWeight!;
+        await s.deleteWeight(dateKey(now));
+        expect(s.trendWeight!, greaterThan(withLow));
+      });
+
+      test('sparse weigh-ins: trend stays close to the scale', () async {
+        final s = await dieter([110], target: 85);
+        // Seeded 110 today by onboarding; move it to 4 months back.
+        await s.deleteWeight(dateKey(now));
+        await weigh(s, 113, 110.5);
+        await weigh(s, 74, 101);
+        await weigh(s, 39, 97);
+        await weigh(s, 22, 94);
+        await weigh(s, 3, 92.6);
+        await weigh(s, 1, 92.2);
+        await weigh(s, 0, 91.8);
+        expect(s.trendWeight!, closeTo(92.5, 1.0));
+        expect(s.weeklyTrendChange!, inInclusiveRange(-1.5, 0));
+        // ~7 kg to go at ~0.5–1 kg a week.
+        final eta = s.eta!;
+        expect(eta.minWeeks, greaterThan(4));
+        expect(eta.maxWeeks, lessThan(30));
+      });
+
+      test(
+        'no weigh-in this week: no weekly change, ETA from the last pace',
+        () async {
+          final s = await dieter([for (var i = 0; i < 28; i++) 90 - i * 0.1]);
+          final pace = s.eta!;
+          // Two weeks without weighing: the trend just carries forward.
+          for (var d = 0; d < 14; d++) {
+            await s.deleteWeight(dateKey(ago(d)));
+          }
+          expect(s.weeklyTrendChange, isNull);
+          final later = s.eta!;
+          // Same pace as before the break, not slowed down by the flat part.
+          expect(later.minWeeks, lessThan(pace.minWeeks * 2));
+        },
+      );
+    });
+
     test('onboarding creates profile, weight and initial plan', () async {
       final s = AppState(MemoryCoachRepository(), clock: () => now);
       await s.load();

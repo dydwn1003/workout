@@ -856,12 +856,15 @@ class AppState extends ChangeNotifier {
     return pts.isEmpty ? null : pts.last.$3;
   }
 
-  /// Trend change over the last 7 days (kg).
+  /// Trend change over the last 7 days (kg). Null without a weigh-in in
+  /// those 7 days: the trend just carries forward then, and "0.0kg" would
+  /// read as no progress.
   double? get weeklyTrendChange {
     final pts = trendPoints();
     if (pts.length < 8 ||
         pts.last.$3 == null ||
-        pts[pts.length - 8].$3 == null) {
+        pts[pts.length - 8].$3 == null ||
+        !pts.skip(pts.length - 7).any((p) => p.$2 != null)) {
       return null;
     }
     return pts.last.$3! - pts[pts.length - 8].$3!;
@@ -872,8 +875,11 @@ class AppState extends ChangeNotifier {
     final target = p?.targetWeightKg;
     if (p == null || target == null) return null;
     final pts = trendPoints();
+    // The pace up to the last weigh-in: after it the trend only carries
+    // forward, which would read as slowing down.
+    final last = pts.lastIndexWhere((e) => e.$2 != null);
     return etaWeeks(
-      trend: pts.map((e) => e.$3).toList(),
+      trend: [for (final e in pts.take(last + 1)) e.$3],
       targetKg: target,
       plannedKgPerWeek: plannedKgPerWeek(
         p.goalType,
