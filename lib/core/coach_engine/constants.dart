@@ -77,6 +77,38 @@ class CoachConstants {
   static const double kcalPerGCarb = 4;
   static const double kcalPerGFat = 9;
 
+  // --- Body composition (body fat measurements) ---
+  /// Energy in a kg of body fat and of lean mass (Hall, 2008), for
+  /// weight change split by measured body fat.
+  static const double kcalPerKgFat = 9440;
+  static const double kcalPerKgLean = 1816;
+
+  /// Measurements from the last 8 weeks, at least 2 weeks apart.
+  static const int compWindowDays = 56;
+  static const int compMinSpanDays = 14;
+
+  /// Weight must move this much before the split means anything (body-fat
+  /// scales are off by a kg or so of fat on any one day).
+  static const double compMinChangeKg = 1.0;
+  static const double compMinLeanLossKg = 0.5;
+  static const double compRecompLeanGainKg = 0.3;
+  static const double compMinKcalPerKg = 5000;
+
+  /// Losing: more than this share of the loss as lean mass slows the pace.
+  static const double leanLossShareLimit = 0.35;
+
+  /// Gaining: more than this share of the gain as fat slows the pace.
+  static const double fatGainShareLimit = 0.7;
+
+  /// The pace kept when the split says slow down (30% slower).
+  static const double compSlowPace = 0.7;
+
+  /// Protein per kg lean mass while lean mass is being lost.
+  static const double proteinLeanLossPerKgLbm = 2.5;
+
+  /// Digesting food burns about 10% of what's eaten.
+  static const double digestionShare = 0.1;
+
   // --- Confidence (per 7-day week) ---
   static const int minLoggedDaysPerWeek = 5;
   static const int minWeighInsPerWeek = 3;

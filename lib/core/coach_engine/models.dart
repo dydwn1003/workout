@@ -1,3 +1,5 @@
+import 'body_composition.dart';
+
 enum Sex { male, female }
 
 enum GoalType { lose, maintain, gain, recomp }
@@ -134,6 +136,15 @@ class CheckinResult {
   final int loggedDaysLastWeek;
   final int weighInsLastWeek;
 
+  /// Fat/lean split of the recent change (null without body fat data).
+  final CompositionChange? composition;
+
+  /// What the split changed in this proposal.
+  final CompositionAdvice compositionAdvice;
+
+  /// Resting / digestion / activity parts of [tdeeEstimate].
+  final BurnBreakdown? burn;
+
   const CheckinResult({
     required this.avgIntake,
     required this.trendChangeKg,
@@ -149,6 +160,9 @@ class CheckinResult {
     required this.trendWeightKg,
     required this.loggedDaysLastWeek,
     required this.weighInsLastWeek,
+    this.composition,
+    this.compositionAdvice = CompositionAdvice.none,
+    this.burn,
   });
 
   CheckinResult copyWith({Macros? proposal, bool? floorHit}) => CheckinResult(
@@ -166,5 +180,11 @@ class CheckinResult {
     trendWeightKg: trendWeightKg,
     loggedDaysLastWeek: loggedDaysLastWeek,
     weighInsLastWeek: weighInsLastWeek,
+    composition: composition,
+    // A kept target wasn't changed by the composition either.
+    compositionAdvice: proposal == null
+        ? compositionAdvice
+        : CompositionAdvice.none,
+    burn: burn,
   );
 }

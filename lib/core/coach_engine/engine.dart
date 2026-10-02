@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'body_composition.dart';
 import 'constants.dart';
 import 'models.dart';
 
@@ -85,7 +86,14 @@ bool isLoggedDay(DayLog d) =>
 /// Uses a 14-day window, shrinking to as few as 10 days for short histories
 /// and widening to 21 days when logging in the 14-day window is sparse.
 /// Returns null when there is not enough data.
-ObservedTdee? observedTdee(List<DayLog> days, {List<double?>? trend}) {
+///
+/// [kcalPerKg] is the energy in a kg of the weight change (7,700 unless body
+/// fat measurements say otherwise, see [compositionChange]).
+ObservedTdee? observedTdee(
+  List<DayLog> days, {
+  List<double?>? trend,
+  double kcalPerKg = C.kcalPerKg,
+}) {
   trend ??= trendSeries(days.map((d) => d.weightKg).toList());
   final n = days.length;
   final span = n - 1; // intervals available
@@ -108,7 +116,7 @@ ObservedTdee? observedTdee(List<DayLog> days, {List<double?>? trend}) {
   final avgIntake =
       valid.map((d) => d.intakeKcal!).reduce((a, b) => a + b) / valid.length;
   final delta = end - start;
-  final imbalance = delta * C.kcalPerKg / window;
+  final imbalance = delta * kcalPerKg / window;
   return ObservedTdee(
     avgIntake: avgIntake,
     trendChangeKg: delta,
@@ -172,9 +180,14 @@ TargetResult targetKcal({
   required CoachGoal goal,
   required double trendWeightKg,
   required Sex sex,
+  // Below 1 slows the planned change (body composition says so).
+  double paceFactor = 1,
 }) {
   final dailyImbalance =
-      plannedKgPerWeek(goal.type, goal.pace, trendWeightKg) * C.kcalPerKg / 7;
+      plannedKgPerWeek(goal.type, goal.pace, trendWeightKg) *
+      paceFactor *
+      C.kcalPerKg /
+      7;
   final raw = tdee + dailyImbalance;
   final floor = kcalFloor(sex);
   if (raw < floor) return TargetResult(floor, floorHit: true);
@@ -190,11 +203,17 @@ Macros macrosFor({
   required double weightKg,
   required GoalType goalType,
   double? bodyFatPct,
+  // Lean mass is being lost: the high end of the protein range.
+  bool protectLean = false,
 }) {
   final losing = goalType == GoalType.lose || goalType == GoalType.recomp;
   final protein = bodyFatPct != null
       ? leanMass(weightKg, bodyFatPct) *
-            (losing ? C.proteinLossPerKgLbm : C.proteinMaintainPerKgLbm)
+            (protectLean
+                ? C.proteinLeanLossPerKgLbm
+                : losing
+                ? C.proteinLossPerKgLbm
+                : C.proteinMaintainPerKgLbm)
       : weightKg * (losing ? C.proteinLossPerKgBw : C.proteinMaintainPerKgBw);
   final fat = math.max(
     C.fatMinPerKgBw * weightKg,
@@ -388,6 +407,8 @@ CheckinResult weeklyCheckin({
   required DateTime today,
   double? previousTdee,
   double? bodyFatPct,
+  // Fat/lean split of the last weeks' change, from body fat measurements.
+  CompositionChange? composition,
 }) {
   final trend = trendSeries(days.map((d) => d.weightKg).toList());
   final trendNow = lastNonNull(trend);
@@ -407,7 +428,11 @@ CheckinResult weeklyCheckin({
   final weighIns = lastWeek.where((d) => d.weightKg != null).length;
   final confidence = confidenceFor(loggedDays: logged, weighIns: weighIns);
 
-  final observed = observedTdee(days, trend: trend);
+  final observed = observedTdee(
+    days,
+    trend: trend,
+    kcalPerKg: composition?.kcalPerKg ?? C.kcalPerKg,
+  );
   final totalValid = days.where(isLoggedDay).length;
 
   var tdee = prev;
@@ -443,17 +468,41 @@ CheckinResult weeklyCheckin({
     }
   }
 
+  // Body composition: slow down when the change is the wrong kind (only
+  // once the numbers move this week, like the rest of the check-in).
+  final advice = adjusted
+      ? composition?.advice ?? CompositionAdvice.none
+      : CompositionAdvice.none;
+  final slow =
+      advice == CompositionAdvice.leanLoss ||
+      advice == CompositionAdvice.fatGain;
   final target = targetKcal(
     tdee: tdee,
     goal: goal,
     trendWeightKg: weight,
     sex: profile.sex,
+    paceFactor: slow ? C.compSlowPace : 1,
   );
   final macros = macrosFor(
     kcal: target.kcal,
     weightKg: weight,
     goalType: goal.type,
     bodyFatPct: bodyFatPct,
+    protectLean: advice == CompositionAdvice.leanLoss,
+  );
+  final lean = bodyFatPct != null;
+  final burn = burnBreakdown(
+    tdee: tdee,
+    bmr: lean
+        ? bmrKatchMcArdle(leanMassKg: leanMass(weight, bodyFatPct))
+        : bmrMifflin(
+            sex: profile.sex,
+            weightKg: weight,
+            heightCm: profile.heightCm,
+            age: profile.ageOn(today),
+          ),
+    intake: observed?.avgIntake ?? target.kcal,
+    fromLeanMass: lean,
   );
 
   return CheckinResult(
@@ -471,5 +520,8 @@ CheckinResult weeklyCheckin({
     trendWeightKg: trendNow,
     loggedDaysLastWeek: logged,
     weighInsLastWeek: weighIns,
+    composition: composition,
+    compositionAdvice: advice,
+    burn: burn,
   );
 }

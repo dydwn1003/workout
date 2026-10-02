@@ -749,6 +749,9 @@ class _CheckinScreenState extends State<CheckinScreen> {
       ),
       WeeklyFocusKind.keepGoing => t.focusKeepGoing,
     };
+    final comp = r.composition;
+    final weeks = comp == null ? '' : '${(comp.days / 7).round()}';
+    final burn = r.burn;
     final steps = <(String, String)>[
       if (o != null) ...[
         (t.reportAte, t.reportAteValue('${o.windowDays}', fmt0(o.avgIntake))),
@@ -760,6 +763,16 @@ class _CheckinScreenState extends State<CheckinScreen> {
             o.dailyImbalance < 0 ? t.reportDeficit : t.reportSurplus,
           ),
         ),
+        if (comp != null)
+          (
+            t.reportComp,
+            (comp.kcalPerKg != null ? t.reportCompValue : t.reportCompSmall)(
+              signed1(comp.fatChangeKg),
+              signed1(comp.leanChangeKg),
+              weeks,
+              fmt0(comp.kcalPerKg ?? C.kcalPerKg),
+            ),
+          ),
         (
           t.reportObserved,
           t.reportObservedValue(
@@ -778,6 +791,32 @@ class _CheckinScreenState extends State<CheckinScreen> {
           ),
         ),
       ],
+      if (burn != null)
+        (
+          t.reportBurn,
+          t.reportBurnValue(
+            burn.fromLeanMass ? t.burnBmrLean : t.burnBmr,
+            fmt0(burn.bmr),
+            fmt0(burn.activity),
+            fmt0(burn.digestion),
+          ),
+        ),
+      if (comp != null && r.compositionAdvice != CompositionAdvice.none)
+        (
+          t.reportCompAdvice,
+          switch (r.compositionAdvice) {
+            CompositionAdvice.leanLoss => t.compLeanLoss(
+              fmt0(comp.leanShare * 100),
+            ),
+            CompositionAdvice.fatGain => t.compFatGain(
+              fmt0((1 - comp.leanShare) * 100),
+            ),
+            _ => t.compRecomp(
+              signed1(comp.fatChangeKg),
+              signed1(comp.leanChangeKg),
+            ),
+          },
+        ),
       (
         t.reportTarget,
         (gap >= 0 ? t.reportTargetValue : t.reportTargetSurplus)(

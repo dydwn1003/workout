@@ -82,6 +82,8 @@ class _TrendScreenState extends State<TrendScreen> {
                     ),
                     const SizedBox(width: 8),
                   ],
+                  const Spacer(),
+                  InfoTip(t.infoChart),
                 ],
               ),
               const SizedBox(height: 12),
@@ -158,6 +160,7 @@ class _TrendScreenState extends State<TrendScreen> {
                       trend == null ? '—' : '${fmt1(trend)}kg',
                       AppColors.peach,
                       AppColors.peachSoft,
+                      info: t.infoTrend,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -167,6 +170,7 @@ class _TrendScreenState extends State<TrendScreen> {
                       change == null ? '—' : '${signed1(change)}kg',
                       AppColors.sky,
                       AppColors.skySoft,
+                      info: t.infoWeekly,
                     ),
                   ),
                 ],
@@ -195,7 +199,7 @@ class _TrendScreenState extends State<TrendScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      InfoTip(t.infoEta),
                       Pill(
                         text: etaText(t, s.eta),
                         color: AppColors.mint,
@@ -206,18 +210,18 @@ class _TrendScreenState extends State<TrendScreen> {
                 ),
               ],
               const SizedBox(height: 8),
-              SectionTitle(t.intakeTrendTitle),
+              SectionTitle(t.intakeTrendTitle, info: t.infoIntake),
               IntakeTrendCard(key: ValueKey(_range), days: logs),
               const SizedBox(height: 8),
               if (s.foodSwaps() case final swaps when swaps.isNotEmpty) ...[
-                SectionTitle(t.swapsTitle),
+                SectionTitle(t.swapsTitle, info: t.infoSwaps),
                 FoodSwapsCard(swaps: swaps),
                 const SizedBox(height: 8),
               ],
-              SectionTitle(t.workoutTrendTitle),
+              SectionTitle(t.workoutTrendTitle, info: t.infoWorkout),
               const WorkoutTrendCard(),
               const SizedBox(height: 8),
-              SectionTitle(t.bodyCompTitle),
+              SectionTitle(t.bodyCompTitle, info: t.infoBodyComp),
               if (s.muscleWarning) ...[
                 MascotSays(
                   text: t.muscleWarn,
@@ -228,7 +232,7 @@ class _TrendScreenState extends State<TrendScreen> {
               ],
               BodyCompCard(entries: comp),
               const SizedBox(height: 8),
-              SectionTitle(t.weightHistory),
+              SectionTitle(t.weightHistory, info: t.infoHistory),
               const WeightHistoryCard(),
             ],
           ),
@@ -237,14 +241,30 @@ class _TrendScreenState extends State<TrendScreen> {
     );
   }
 
-  Widget _stat(String label, String value, Color c, Color soft) => SoftCard(
-    padding: const EdgeInsets.all(16),
+  Widget _stat(
+    String label,
+    String value,
+    Color c,
+    Color soft, {
+    String? info,
+  }) => SoftCard(
+    padding: const EdgeInsets.fromLTRB(16, 10, 8, 16),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12.5, color: AppColors.inkSoft),
+        Row(
+          children: [
+            Flexible(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  color: AppColors.inkSoft,
+                ),
+              ),
+            ),
+            if (info != null) InfoTip(info, size: 15),
+          ],
         ),
         const SizedBox(height: 4),
         Text(

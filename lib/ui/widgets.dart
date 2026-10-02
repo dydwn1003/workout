@@ -635,18 +635,217 @@ class CountStepper extends StatelessWidget {
 class SectionTitle extends StatelessWidget {
   final String text;
   final Widget? trailing;
-  const SectionTitle(this.text, {super.key, this.trailing});
+
+  /// A short explanation behind a small ? next to the title.
+  final String? info;
+  const SectionTitle(this.text, {super.key, this.trailing, this.info});
 
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
     child: Row(
       children: [
-        Expanded(
+        Flexible(
           child: Text(text, style: Theme.of(context).textTheme.titleLarge),
         ),
+        if (info != null) InfoTip(info!),
+        const Spacer(),
         ?trailing,
       ],
     ),
   );
+}
+
+/// A small ? that opens a speech bubble with [message] pointing at it.
+/// Tapping anywhere (or waiting a few seconds) closes it.
+class InfoTip extends StatefulWidget {
+  final String message;
+  final double size;
+  const InfoTip(this.message, {super.key, this.size = 17});
+
+  @override
+  State<InfoTip> createState() => _InfoTipState();
+}
+
+class _InfoTipState extends State<InfoTip> {
+  OverlayEntry? _entry;
+
+  void _close() {
+    _entry?.remove();
+    _entry = null;
+  }
+
+  void _open() {
+    if (_entry != null) return _close();
+    final box = context.findRenderObject() as RenderBox?;
+    final overlay = Overlay.of(context);
+    final overlayBox = overlay.context.findRenderObject() as RenderBox?;
+    if (box == null || overlayBox == null) return;
+    final at = box.localToGlobal(
+      box.size.center(Offset.zero),
+      ancestor: overlayBox,
+    );
+    final top = box.localToGlobal(Offset.zero, ancestor: overlayBox).dy;
+    final bottom = top + box.size.height;
+    final screen = overlayBox.size;
+    // Below the ? unless that runs off the screen.
+    final below = bottom + 160 < screen.height;
+    _entry = OverlayEntry(
+      builder: (_) => _InfoBubble(
+        message: widget.message,
+        anchorX: at.dx,
+        anchorY: below ? bottom + 4 : top - 4,
+        below: below,
+        screen: screen,
+        onClose: _close,
+      ),
+    );
+    overlay.insert(_entry!);
+    Future.delayed(const Duration(seconds: 8), () {
+      if (mounted) _close();
+    });
+  }
+
+  @override
+  void dispose() {
+    _close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: widget.message,
+    excludeSemantics: true,
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _open,
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Icon(
+          Icons.help_outline_rounded,
+          size: widget.size,
+          color: AppColors.inkSoft.withValues(alpha: 0.75),
+        ),
+      ),
+    ),
+  );
+}
+
+class _InfoBubble extends StatelessWidget {
+  final String message;
+  final double anchorX;
+  final double anchorY;
+  final bool below;
+  final Size screen;
+  final VoidCallback onClose;
+  const _InfoBubble({
+    required this.message,
+    required this.anchorX,
+    required this.anchorY,
+    required this.below,
+    required this.screen,
+    required this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const margin = 16.0;
+    const tail = 8.0;
+    final width = math.min(300.0, screen.width - margin * 2);
+    final left = (anchorX - width / 2).clamp(
+      margin,
+      screen.width - margin - width,
+    );
+    final bubble = Material(
+      color: Colors.transparent,
+      child: Container(
+        width: width,
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        decoration: BoxDecoration(
+          color: AppColors.ink,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x33000000),
+              blurRadius: 16,
+              offset: Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Text(
+          message,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            height: 1.5,
+          ),
+        ),
+      ),
+    );
+    final arrow = CustomPaint(
+      size: const Size(16, tail),
+      painter: _TailPainter(up: below),
+    );
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: onClose,
+          ),
+        ),
+        Positioned(
+          left: left,
+          top: below ? anchorY : null,
+          bottom: below ? null : screen.height - anchorY,
+          child: GestureDetector(
+            onTap: onClose,
+            child: FadeSlideIn(
+              dy: below ? -4 : 4,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (below)
+                    Padding(
+                      padding: EdgeInsets.only(left: anchorX - left - 8),
+                      child: arrow,
+                    ),
+                  bubble,
+                  if (!below)
+                    Padding(
+                      padding: EdgeInsets.only(left: anchorX - left - 8),
+                      child: arrow,
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TailPainter extends CustomPainter {
+  final bool up;
+  const _TailPainter({required this.up});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = up
+        ? (Path()
+            ..moveTo(0, size.height)
+            ..lineTo(size.width / 2, 0)
+            ..lineTo(size.width, size.height))
+        : (Path()
+            ..moveTo(0, 0)
+            ..lineTo(size.width / 2, size.height)
+            ..lineTo(size.width, 0));
+    canvas.drawPath(path..close(), Paint()..color = AppColors.ink);
+  }
+
+  @override
+  bool shouldRepaint(_TailPainter old) => old.up != up;
 }

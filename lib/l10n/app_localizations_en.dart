@@ -1226,6 +1226,91 @@ class LEn extends L {
   }
 
   @override
+  String get reportComp => 'Body composition';
+
+  @override
+  String reportCompValue(String fat, String lean, String weeks, String kcal) {
+    return 'Fat $fat kg · lean $lean kg (last $weeks wk) → $kcal kcal per kg';
+  }
+
+  @override
+  String reportCompSmall(String fat, String lean, String weeks, String kcal) {
+    return 'Fat $fat kg · lean $lean kg (last $weeks wk) · too small to change $kcal kcal per kg';
+  }
+
+  @override
+  String get reportBurn => 'Where the burn goes';
+
+  @override
+  String reportBurnValue(
+    String bmrLabel,
+    String bmr,
+    String activity,
+    String digestion,
+  ) {
+    return '$bmrLabel $bmr · activity $activity · digestion $digestion kcal';
+  }
+
+  @override
+  String get burnBmr => 'Resting';
+
+  @override
+  String get burnBmrLean => 'Resting (from lean mass)';
+
+  @override
+  String get reportCompAdvice => 'Composition coaching';
+
+  @override
+  String compLeanLoss(String pct) {
+    return '$pct% of the recent loss was lean mass. To keep muscle, the pace is 30% slower and protein is higher.';
+  }
+
+  @override
+  String compFatGain(String pct) {
+    return '$pct% of the recent gain was fat, so the surplus is 30% smaller.';
+  }
+
+  @override
+  String compRecomp(String fat, String lean) {
+    return 'Fat $fat kg, lean $lean kg — the recomposition is working!';
+  }
+
+  @override
+  String get infoChart =>
+      'Dots are each weigh-in; the line is the trend with water and food swings filtered out; the green dashes are your goal. Tap the chart to see that day\'s weight, food and workouts.';
+
+  @override
+  String get infoTrend =>
+      'Your weigh-ins smoothed out. It\'s closer to the real change than any single day, so the targets use it.';
+
+  @override
+  String get infoWeekly =>
+      'Trend now minus a week ago. When losing, 0.5–1% of body weight a week is a comfortable pace.';
+
+  @override
+  String get infoEta =>
+      'Estimated from the last 3–4 weeks\' trend (or your chosen pace). It sharpens as logs build up.';
+
+  @override
+  String get infoIntake =>
+      'Calories on the days you logged, against the target. Days without logs are left out of the average. Tap a bar for that day.';
+
+  @override
+  String get infoSwaps =>
+      'Same kind as foods you ate often in the last 4 weeks, with fewer calories per serving and similar protein.';
+
+  @override
+  String get infoWorkout =>
+      'Strength and cardio sessions and minutes. Workout calories aren\'t added to the target: the energy shows up in your weight change and the weekly burn estimate.';
+
+  @override
+  String get infoBodyComp =>
+      'Compare body fat and muscle from the same device under the same conditions (morning, fasted). Measured 2+ weeks apart, the check-in splits your change into fat and muscle to fine-tune the target and protein.';
+
+  @override
+  String get infoHistory => 'Your weigh-ins and body composition by date.';
+
+  @override
   String get swapsTitle => 'Lighter swaps';
 
   @override

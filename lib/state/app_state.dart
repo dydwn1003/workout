@@ -475,6 +475,13 @@ class AppState extends ChangeNotifier {
   WeightEntry? get latestWeight =>
       _data.weights.isEmpty ? null : _data.weights.last;
 
+  /// Weigh-ins that came with body fat, for the fat/lean split.
+  List<BodyCompSample> get bodyCompSamples => [
+    for (final w in _data.weights)
+      if (w.bodyFatPct != null)
+        BodyCompSample(parseDateKey(w.date), w.kg, w.bodyFatPct!),
+  ];
+
   double? get latestBodyFat {
     for (final w in _data.weights.reversed) {
       if (w.bodyFatPct != null) return w.bodyFatPct;
@@ -1209,6 +1216,11 @@ class AppState extends ChangeNotifier {
       today: today,
       previousTdee: plan.tdeeEst,
       bodyFatPct: latestBodyFat,
+      composition: compositionChange(
+        bodyCompSamples,
+        today: today,
+        goal: p.goalType,
+      ),
     );
     // Too little logged to adjust: the target stays exactly as it is
     // (recomputing it from today's trend weight drifted it by a few kcal).

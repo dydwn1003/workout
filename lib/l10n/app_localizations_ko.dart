@@ -1199,6 +1199,90 @@ class LKo extends L {
   }
 
   @override
+  String get reportComp => '체성분 반영';
+
+  @override
+  String reportCompValue(String fat, String lean, String weeks, String kcal) {
+    return '지방 ${fat}kg · 제지방 ${lean}kg (최근 $weeks주) → 1kg당 $kcal kcal로 계산';
+  }
+
+  @override
+  String reportCompSmall(String fat, String lean, String weeks, String kcal) {
+    return '지방 ${fat}kg · 제지방 ${lean}kg (최근 $weeks주) · 변화가 작아 1kg당 $kcal kcal 그대로';
+  }
+
+  @override
+  String get reportBurn => '소비량 구성';
+
+  @override
+  String reportBurnValue(
+    String bmrLabel,
+    String bmr,
+    String activity,
+    String digestion,
+  ) {
+    return '$bmrLabel $bmr · 활동 $activity · 소화 $digestion kcal';
+  }
+
+  @override
+  String get burnBmr => '기초대사';
+
+  @override
+  String get burnBmrLean => '기초대사(제지방 기준)';
+
+  @override
+  String get reportCompAdvice => '체성분 코칭';
+
+  @override
+  String compLeanLoss(String pct) {
+    return '최근 빠진 체중의 $pct%가 제지방(근육·수분)이에요. 근육을 지키도록 감량 속도를 30% 늦추고 단백질을 늘렸어요.';
+  }
+
+  @override
+  String compFatGain(String pct) {
+    return '최근 늘어난 체중의 $pct%가 지방이에요. 증량 속도를 30% 늦췄어요.';
+  }
+
+  @override
+  String compRecomp(String fat, String lean) {
+    return '지방 ${fat}kg, 제지방 ${lean}kg — 체성분 개선이 잘 되고 있어요!';
+  }
+
+  @override
+  String get infoChart =>
+      '점은 그날 잰 체중, 선은 수분·음식 때문에 출렁이는 값을 걸러 낸 추세예요. 초록 점선은 목표 체중이에요. 그래프를 누르면 그날의 체중·섭취·운동을 볼 수 있어요.';
+
+  @override
+  String get infoTrend =>
+      '최근 체중 기록을 부드럽게 이은 값이에요. 하루 체중보다 실제 변화에 가까워서 목표 계산에 이 값을 써요.';
+
+  @override
+  String get infoWeekly =>
+      '7일 전 추세와 지금 추세의 차이예요. 감량이라면 일주일에 체중의 0.5~1%가 무리 없는 속도예요.';
+
+  @override
+  String get infoEta => '최근 3~4주 추세(없으면 정한 속도)로 계산한 예상 기간이에요. 기록이 쌓일수록 정확해져요.';
+
+  @override
+  String get infoIntake =>
+      '기록한 날의 섭취 칼로리를 목표와 비교해요. 기록하지 않은 날은 평균에서 빠져요. 막대를 누르면 그날 섭취량이 보여요.';
+
+  @override
+  String get infoSwaps =>
+      '최근 4주에 자주 드신 음식과 같은 종류 중, 1회분 칼로리는 낮고 단백질은 비슷한 음식이에요.';
+
+  @override
+  String get infoWorkout =>
+      '근력운동·유산소 횟수와 시간이에요. 운동 칼로리는 목표에 따로 더하지 않아요. 쓴 에너지는 체중 변화에 이미 담겨서 매주 소비량 계산에 들어가요.';
+
+  @override
+  String get infoBodyComp =>
+      '체지방률·골격근량은 같은 기기, 같은 조건(아침 공복)에서 잰 값끼리 비교해야 정확해요. 2주 이상 간격으로 재면 체크인이 빠진 체중을 지방과 근육으로 나눠서 목표와 단백질을 더 정확히 맞춰요.';
+
+  @override
+  String get infoHistory => '날짜별로 기록한 체중과 체성분이에요.';
+
+  @override
   String get swapsTitle => '가볍게 바꿔 볼까요?';
 
   @override
