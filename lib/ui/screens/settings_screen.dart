@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -18,6 +19,35 @@ const privacyPolicyUrl = String.fromEnvironment(
   'PRIVACY_URL',
   defaultValue: 'https://dydwn1003.github.io/workout/privacy.html',
 );
+
+/// The terms of use, community rules included (web/terms.html).
+const termsUrl = String.fromEnvironment(
+  'TERMS_URL',
+  defaultValue: 'https://dydwn1003.github.io/workout/terms.html',
+);
+
+/// Where 문의하기 writes to (also on the privacy page).
+const supportEmail = String.fromEnvironment(
+  'SUPPORT_EMAIL',
+  defaultValue: 'dydwn1003@gmail.com',
+);
+
+/// Opens a mail to [supportEmail] with the app version in the subject.
+Future<void> contactSupport(BuildContext context) async {
+  final t = L.of(context);
+  final uri = Uri(
+    scheme: 'mailto',
+    path: supportEmail,
+    query: 'subject=${Uri.encodeComponent(t.contactSubject)}',
+  );
+  final ok = await launchUrl(uri).catchError((_) => false);
+  if (!ok && context.mounted) {
+    await Clipboard.setData(const ClipboardData(text: supportEmail));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(t.contactCopied(supportEmail))));
+  }
+}
 
 /// Picks one of [options] (value, label) in a bottom sheet; null when
 /// dismissed. The sheet closes with a short pause so the check lands first.
@@ -506,6 +536,30 @@ class SettingsScreen extends StatelessWidget {
                     Uri.parse(privacyPolicyUrl),
                     mode: LaunchMode.externalApplication,
                   ),
+                ),
+                ListTile(
+                  leading: icon(
+                    Icons.description_rounded,
+                    AppColors.sky,
+                    AppColors.skySoft,
+                  ),
+                  title: Text(t.termsOfUse),
+                  trailing: const Icon(Icons.open_in_new_rounded, size: 18),
+                  onTap: () => launchUrl(
+                    Uri.parse(termsUrl),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                ),
+                ListTile(
+                  leading: icon(
+                    Icons.mail_rounded,
+                    AppColors.peach,
+                    AppColors.peachSoft,
+                  ),
+                  title: Text(t.contactUs),
+                  subtitle: Text(t.contactUsSub),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => contactSupport(context),
                 ),
                 if (s.settings.consentedAt != null)
                   ListTile(

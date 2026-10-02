@@ -1823,11 +1823,35 @@ class LEn extends L {
   String get nicknameTaken => 'That nickname is taken';
 
   @override
+  String get bannedError =>
+      'This account can no longer post for breaking the community rules. Reach us via Settings → Contact us.';
+
+  @override
+  String get termsOfUse => 'Terms of use';
+
+  @override
+  String get readTerms => 'Read the full terms';
+
+  @override
+  String get contactUs => 'Contact us';
+
+  @override
+  String get contactUsSub => 'Bugs, reports and ideas';
+
+  @override
+  String get contactSubject => '알아서핏 feedback';
+
+  @override
+  String contactCopied(String email) {
+    return 'No mail app, so the address was copied: $email';
+  }
+
+  @override
   String get rulesTitle => 'Community rules';
 
   @override
   String get rulesBody =>
-      '· No abuse, harassment, sexual content, or illegal or commercial ads.\n· Don\'t post other people\'s contact details, photos or other personal info.\n· Don\'t pressure anyone to meet or make people uncomfortable.\n· Posts that break the rules are hidden when reported, and accounts can be restricted.';
+      '· No abuse, harassment, sexual content, or illegal or commercial ads.\n· Don\'t post other people\'s contact details, photos or other personal info.\n· Don\'t pressure anyone to meet or make people uncomfortable.\n· Posts that break the rules are removed without warning and their authors are banned (zero tolerance). Reports are reviewed within 24 hours.';
 
   @override
   String get agreeRules => 'Agree and start';

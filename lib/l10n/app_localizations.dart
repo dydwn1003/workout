@@ -3163,6 +3163,48 @@ abstract class L {
   /// **'이미 쓰고 있는 닉네임이에요'**
   String get nicknameTaken;
 
+  /// No description provided for @bannedError.
+  ///
+  /// In ko, this message translates to:
+  /// **'커뮤니티 규칙 위반으로 글쓰기가 중단된 계정이에요. 설정 → 문의하기로 알려 주세요.'**
+  String get bannedError;
+
+  /// No description provided for @termsOfUse.
+  ///
+  /// In ko, this message translates to:
+  /// **'이용약관'**
+  String get termsOfUse;
+
+  /// No description provided for @readTerms.
+  ///
+  /// In ko, this message translates to:
+  /// **'이용약관 전체 보기'**
+  String get readTerms;
+
+  /// No description provided for @contactUs.
+  ///
+  /// In ko, this message translates to:
+  /// **'문의하기'**
+  String get contactUs;
+
+  /// No description provided for @contactUsSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'버그, 신고, 제안 모두 보내 주세요'**
+  String get contactUsSub;
+
+  /// No description provided for @contactSubject.
+  ///
+  /// In ko, this message translates to:
+  /// **'알아서핏 문의'**
+  String get contactSubject;
+
+  /// No description provided for @contactCopied.
+  ///
+  /// In ko, this message translates to:
+  /// **'메일 앱이 없어서 주소를 복사했어요: {email}'**
+  String contactCopied(String email);
+
   /// No description provided for @rulesTitle.
   ///
   /// In ko, this message translates to:
@@ -3172,7 +3214,7 @@ abstract class L {
   /// No description provided for @rulesBody.
   ///
   /// In ko, this message translates to:
-  /// **'· 욕설, 비하, 괴롭힘, 음란물, 불법·상업 광고는 허용되지 않아요.\n· 다른 사람의 연락처나 사진 같은 개인정보를 올리지 마세요.\n· 만남을 강요하거나 불쾌감을 주는 행동은 금지예요.\n· 규칙을 어긴 글은 신고로 가려지고, 이용이 제한될 수 있어요.'**
+  /// **'· 욕설, 비하, 괴롭힘, 음란물, 불법·상업 광고는 허용되지 않아요.\n· 다른 사람의 연락처나 사진 같은 개인정보를 올리지 마세요.\n· 만남을 강요하거나 불쾌감을 주는 행동은 금지예요.\n· 규칙을 어긴 글은 경고 없이 지워지고, 작성자는 이용이 중단돼요(무관용). 신고는 24시간 안에 확인해요.'**
   String get rulesBody;
 
   /// No description provided for @agreeRules.

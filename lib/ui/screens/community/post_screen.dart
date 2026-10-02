@@ -303,14 +303,19 @@ class _PostScreenState extends State<PostScreen> {
                 ],
               ),
             ),
-            if (post.likeCount >= CommunityLimits.hotLikes) ...[
-              const HotChip(),
-              const SizedBox(width: 4),
-            ],
-            TagChip(post.tag),
           ],
         ),
         const SizedBox(height: 14),
+        Row(
+          children: [
+            TagLabel(post.tag),
+            if (post.likeCount >= CommunityLimits.hotLikes) ...[
+              const SizedBox(width: 10),
+              const HotLabel(),
+            ],
+          ],
+        ),
+        const SizedBox(height: 6),
         SelectableText(
           post.body,
           style: const TextStyle(fontSize: 16, height: 1.65),

@@ -315,6 +315,9 @@ enum CommunityError {
 
   /// Already 3 gyms in 내 헬스장.
   gymLimit,
+
+  /// The operator stopped this account from posting (community_bans).
+  banned,
 }
 
 class CommunityException implements Exception {
@@ -530,6 +533,9 @@ class SupabaseCommunity implements CommunityRepository {
       }
       if (e.message.contains('gym_limit')) {
         throw const CommunityException(CommunityError.gymLimit);
+      }
+      if (e.message.contains('banned')) {
+        throw const CommunityException(CommunityError.banned);
       }
       if (e.code == '23505') {
         throw const CommunityException(CommunityError.nicknameTaken);

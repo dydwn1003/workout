@@ -196,7 +196,6 @@ class _LoungeViewState extends State<LoungeView> {
             },
             child: CustomScrollView(
               slivers: [
-                SliverToBoxAdapter(child: _banner(t)),
                 if (_failed)
                   SliverToBoxAdapter(
                     child: Center(
@@ -222,69 +221,6 @@ class _LoungeViewState extends State<LoungeView> {
     );
   }
 
-  Widget _banner(L t) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-    child: Container(
-      padding: const EdgeInsets.fromLTRB(20, 18, 12, 18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF7C6BD6), Color(0xFF5C9BE6)],
-        ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF6A84E0).withValues(alpha: 0.35),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.public_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      t.loungeTitle,
-                      style: const TextStyle(
-                        fontFamily: headingFont,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 20,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  t.loungeSubtitle,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    height: 1.4,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.withValues(alpha: 0.95),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Mascot(size: 64, mood: MascotMood.happy),
-        ],
-      ),
-    ),
-  );
-
   Widget _categories(L t) {
     final boards = _boards;
     final c = CommunityScope.of(context);
@@ -297,10 +233,17 @@ class _LoungeViewState extends State<LoungeView> {
             ...topicIds.where((id) => !c.isFavorite(id)),
           ];
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, 6),
+            child: Text(
+              t.loungeSubtitle,
+              style: const TextStyle(fontSize: 13, color: AppColors.inkSoft),
+            ),
+          ),
           SectionTitle(
             t.loungeCategories,
             trailing: _FavOnlySwitch(
@@ -322,7 +265,7 @@ class _LoungeViewState extends State<LoungeView> {
             ),
           LayoutBuilder(
             builder: (context, box) {
-              const gap = 8.0;
+              const gap = 6.0;
               final w = (box.maxWidth - 8 - gap * 3) / 4;
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -340,10 +283,6 @@ class _LoungeViewState extends State<LoungeView> {
                           child: _TopicTile(
                             id: id,
                             favorite: c.isFavorite(id),
-                            onFavorite: () {
-                              HapticFeedback.selectionClick();
-                              c.toggleFavorite(id);
-                            },
                             posts: boards == null
                                 ? null
                                 : boards
@@ -506,122 +445,81 @@ class _TopicTile extends StatelessWidget {
   final int? posts;
   final VoidCallback onTap;
   final bool favorite;
-
-  /// Null hides the star (the board picker).
-  final VoidCallback? onFavorite;
   const _TopicTile({
     required this.id,
     required this.posts,
     required this.onTap,
     this.favorite = false,
-    this.onFavorite,
   });
 
   @override
   Widget build(BuildContext context) {
     final t = L.of(context);
     final (icon, color) = topicStyle(id);
-    return Stack(
-      children: [
-        Squish(
-          child: SizedBox(
-            width: double.infinity,
-            child: Material(
-              color: favorite
-                  ? Color.lerp(color, Colors.white, 0.9)
-                  : Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-                side: BorderSide(
-                  color: favorite
-                      ? color.withValues(alpha: 0.45)
-                      : const Color(0xFFF0E6DD),
-                  width: favorite ? 1.5 : 1,
-                ),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: onTap,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 12, 4, 10),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Color.lerp(color, Colors.white, 0.25)!,
-                              color,
-                            ],
+    return Squish(
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(2, 8, 2, 8),
+            child: Column(
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: Color.lerp(color, Colors.white, 0.84),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Icon(icon, color: color, size: 26),
+                    ),
+                    // Starred boards (from the board's ☆) wear a small star.
+                    if (favorite)
+                      const Positioned(
+                        right: -4,
+                        top: -4,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: color.withValues(alpha: 0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
+                          child: Padding(
+                            padding: EdgeInsets.all(1.5),
+                            child: Icon(
+                              Icons.star_rounded,
+                              size: 16,
+                              color: Color(0xFFF5B400),
                             ),
-                          ],
-                        ),
-                        child: Icon(icon, color: Colors.white, size: 22),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        topicName(t, id)!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontFamily: headingFont,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12.5,
-                          color: AppColors.ink,
-                        ),
-                      ),
-                      if (posts != null)
-                        Text(
-                          t.gymPosts('$posts'),
-                          style: const TextStyle(
-                            fontSize: 10.5,
-                            color: AppColors.inkSoft,
                           ),
                         ),
-                    ],
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 7),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    topicName(t, id)!,
+                    maxLines: 1,
+                    style: const TextStyle(
+                      fontFamily: headingFont,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12.5,
+                      color: AppColors.ink,
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
-        if (onFavorite != null)
-          Positioned(
-            right: 0,
-            top: 0,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: onFavorite,
-              child: Padding(
-                padding: const EdgeInsets.all(6),
-                child: AnimatedSwitcher(
-                  duration: Motion.fast,
-                  transitionBuilder: (child, a) =>
-                      ScaleTransition(scale: a, child: child),
-                  child: Icon(
-                    favorite ? Icons.star_rounded : Icons.star_outline_rounded,
-                    key: ValueKey(favorite),
-                    size: 20,
-                    color: favorite
-                        ? const Color(0xFFF5B400)
-                        : AppColors.inkSoft.withValues(alpha: 0.5),
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
+      ),
     );
   }
 }

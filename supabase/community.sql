@@ -577,3 +577,98 @@ create policy "community photos: list own" on storage.objects for select to auth
   using (bucket_id = 'community' and (storage.foldername(name))[1] = auth.uid()::text);
 
 notify pgrst, 'reload schema';
+
+-- 운영: 신고 처리와 이용 정지 (operator) -------------------------------------------
+-- Reports are reviewed within 24 hours (web/terms.html). The operator works
+-- in the SQL Editor: docs/community-ops.md has the steps.
+
+alter table public.reports add column if not exists reviewed_at timestamptz;
+
+-- Banned from the community: can't post or comment any more. Only the
+-- operator (SQL Editor / service role) reads or writes it.
+create table if not exists public.community_bans (
+  user_id    uuid primary key references auth.users (id) on delete cascade,
+  reason     text not null default '',
+  created_at timestamptz not null default now()
+);
+alter table public.community_bans enable row level security;
+revoke all on public.community_bans from anon, authenticated;
+
+create or replace function public.community_ban_check()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if exists (select 1 from public.community_bans where user_id = new.author) then
+    raise exception 'banned' using errcode = 'P0001';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists posts_ban on public.posts;
+create trigger posts_ban before insert or update of body, images, tag on public.posts
+  for each row execute function public.community_ban_check();
+drop trigger if exists comments_ban on public.comments;
+create trigger comments_ban before insert or update of body on public.comments
+  for each row execute function public.community_ban_check();
+
+-- What still waits for a look: one row per reported post or comment.
+create or replace view public.report_queue
+with (security_invoker = true) as
+select
+  r.target_type,
+  r.target_id,
+  count(*)::int                          as reports,
+  min(r.created_at)                      as first_reported,
+  string_agg(distinct r.reason, ' / ')   as reasons,
+  coalesce(p.body, c.body)               as body,
+  coalesce(p.author, c.author)           as author,
+  pr.nickname                            as author_nickname,
+  coalesce(p.hidden, c.hidden)           as hidden
+from public.reports r
+left join public.posts p on r.target_type = 'post' and p.id = r.target_id
+left join public.comments c on r.target_type = 'comment' and c.id = r.target_id
+left join public.community_profiles pr on pr.user_id = coalesce(p.author, c.author)
+where r.reviewed_at is null
+group by r.target_type, r.target_id, p.body, c.body, p.author, c.author,
+  pr.nickname, p.hidden, c.hidden
+order by min(r.created_at);
+revoke all on public.report_queue from anon, authenticated;
+
+-- One step for a report: remove (delete) or keep it, and optionally ban the
+-- author. Marks every report on it reviewed. Operator only.
+create or replace function public.community_resolve(
+  kind text, target uuid, remove boolean default true, ban boolean default false
+) returns text language plpgsql security definer set search_path = '' as $$
+declare who uuid;
+begin
+  if kind = 'post' then
+    select author into who from public.posts where id = target;
+    if remove then delete from public.posts where id = target;
+    else update public.posts set hidden = false where id = target; end if;
+  elsif kind = 'comment' then
+    select author into who from public.comments where id = target;
+    if remove then delete from public.comments where id = target;
+    else update public.comments set hidden = false where id = target; end if;
+  else
+    raise exception 'kind is post or comment';
+  end if;
+  update public.reports set reviewed_at = now()
+    where target_type = kind and target_id = target and reviewed_at is null;
+  if ban and who is not null then
+    insert into public.community_bans (user_id, reason)
+      values (who, 'report ' || kind || ' ' || target)
+      on conflict (user_id) do nothing;
+  end if;
+  return case when remove then 'removed' else 'kept' end
+    || case when ban and who is not null then ', author banned' else '' end;
+end $$;
+revoke all on function public.community_resolve(text, uuid, boolean, boolean)
+  from public, anon, authenticated;
+
+-- How many reports wait (for the notifier, with the service role key).
+create or replace function public.community_open_reports()
+returns int language sql security definer set search_path = '' as $$
+  select count(distinct (target_type, target_id))::int
+  from public.reports where reviewed_at is null
+$$;
+revoke all on function public.community_open_reports() from public, anon, authenticated;
+grant execute on function public.community_open_reports() to service_role;

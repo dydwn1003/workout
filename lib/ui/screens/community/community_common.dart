@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../data/community.dart';
 import '../../../l10n/app_localizations.dart';
@@ -8,6 +9,7 @@ import '../../../state/community_state.dart';
 import '../../motion.dart';
 import '../../theme.dart';
 import '../../widgets.dart';
+import '../settings_screen.dart' show termsUrl;
 import '../sign_in_sheet.dart';
 import 'community_sheets.dart';
 
@@ -27,6 +29,7 @@ String communityErrorText(L t, Object e) => switch (e) {
   CommunityException(error: CommunityError.blockedWords) => t.blockedWordsError,
   CommunityException(error: CommunityError.badImage) => t.badImage,
   CommunityException(error: CommunityError.gymLimit) => t.gymLimitError,
+  CommunityException(error: CommunityError.banned) => t.bannedError,
   _ => t.communityError,
 };
 
@@ -310,6 +313,21 @@ class _SetupSheetState extends State<_SetupSheet> {
                         ],
                       ),
                     ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(0, 32),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () => launchUrl(
+                        Uri.parse(termsUrl),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                      child: Text(t.readTerms),
+                    ),
+                  ),
                 ],
               ),
             ),

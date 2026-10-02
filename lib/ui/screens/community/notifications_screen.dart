@@ -179,29 +179,47 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   ),
                 )
               else
-                for (final (i, n) in items.indexed)
-                  FadeSlideIn(
-                    key: ValueKey(n.id),
-                    delay: stagger(i),
-                    dy: 6,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: _NotificationTile(
-                        item: n,
-                        onTap: n.postId == null
-                            ? null
-                            : () => _open(
-                                n.postId!,
-                                commentId: switch (n.kind) {
-                                  NotificationKind.comment ||
-                                  NotificationKind.reply ||
-                                  NotificationKind.commentLike => n.commentId,
-                                  _ => null,
-                                },
-                              ),
-                      ),
-                    ),
+                // One list, unread rows lightly tinted.
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFF0E6DD)),
                   ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    children: [
+                      for (final (i, n) in items.indexed) ...[
+                        if (i > 0)
+                          const Divider(
+                            height: 1,
+                            indent: 64,
+                            color: Color(0xFFF3ECE6),
+                          ),
+                        FadeSlideIn(
+                          key: ValueKey(n.id),
+                          delay: stagger(i),
+                          dy: 6,
+                          child: _NotificationTile(
+                            item: n,
+                            onTap: n.postId == null
+                                ? null
+                                : () => _open(
+                                    n.postId!,
+                                    commentId: switch (n.kind) {
+                                      NotificationKind.comment ||
+                                      NotificationKind.reply ||
+                                      NotificationKind.commentLike =>
+                                        n.commentId,
+                                      _ => null,
+                                    },
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
             ],
           ),
         ),
@@ -373,20 +391,11 @@ class _NotificationTile extends StatelessWidget {
       _ => null,
     };
     return Material(
-      color: n.read ? Colors.white : const Color(0xFFFFF1EC),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(
-          color: n.read
-              ? const Color(0xFFF0E6DD)
-              : AppColors.peach.withValues(alpha: 0.35),
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
+      color: n.read ? Colors.white : const Color(0xFFFFF6F2),
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

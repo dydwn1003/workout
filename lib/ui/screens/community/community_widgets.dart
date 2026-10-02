@@ -115,72 +115,57 @@ LinearGradient gymGradient(String id) {
   ),
 };
 
-class TagChip extends StatelessWidget {
+/// A post's kind as a quiet colored word (feed cards).
+class TagLabel extends StatelessWidget {
   final PostTag tag;
-  const TagChip(this.tag, {super.key});
+  const TagLabel(this.tag, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    final (label, icon, fg, bg) = tagStyle(L.of(context), tag);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(7, 3, 9, 3),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: fg),
-          const SizedBox(width: 3),
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: headingFont,
-              fontWeight: FontWeight.w800,
-              fontSize: 11.5,
-              color: fg,
-            ),
+    final (label, icon, fg, _) = tagStyle(L.of(context), tag);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: fg),
+        const SizedBox(width: 3),
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: headingFont,
+            fontWeight: FontWeight.w800,
+            fontSize: 12.5,
+            color: fg,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-/// 🔥 HOT on posts with [CommunityLimits.hotLikes] likes or more.
-class HotChip extends StatelessWidget {
-  const HotChip({super.key});
+/// 🔥 인기, next to [TagLabel].
+class HotLabel extends StatelessWidget {
+  const HotLabel({super.key});
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.fromLTRB(6, 3, 8, 3),
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        colors: [Color(0xFFFF7A6B), Color(0xFFF28B30)],
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      const Icon(
+        Icons.local_fire_department_rounded,
+        size: 14,
+        color: Color(0xFFF2643A),
       ),
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(
-          Icons.local_fire_department_rounded,
-          size: 13,
-          color: Colors.white,
+      const SizedBox(width: 2),
+      Text(
+        L.of(context).hotBadge,
+        style: const TextStyle(
+          fontFamily: headingFont,
+          fontWeight: FontWeight.w800,
+          fontSize: 12.5,
+          color: Color(0xFFF2643A),
         ),
-        const SizedBox(width: 2),
-        Text(
-          L.of(context).hotBadge,
-          style: const TextStyle(
-            fontFamily: headingFont,
-            fontWeight: FontWeight.w800,
-            fontSize: 11,
-            color: Colors.white,
-          ),
-        ),
-      ],
-    ),
+      ),
+    ],
   );
 }
 
@@ -271,7 +256,8 @@ class TagFilterBar extends StatelessWidget {
   }
 }
 
-/// A gym in the "내 헬스장" carousel: its color, name, area and activity.
+/// A gym in the "내 헬스장" row: a white card with the gym's color mark,
+/// its name and how lively it is.
 class GymCard extends StatelessWidget {
   final Gym gym;
   final VoidCallback onTap;
@@ -280,113 +266,89 @@ class GymCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = L.of(context);
-    final (c, _) = gymColors(gym.id);
+    final (c, soft) = gymColors(gym.id);
     final last = gym.lastPostAt;
     final fresh = last != null && DateTime.now().difference(last).inHours < 24;
     return Squish(
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          width: 196,
-          padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+          width: 172,
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
           decoration: BoxDecoration(
-            gradient: gymGradient(gym.id),
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: const [
               BoxShadow(
-                color: c.withValues(alpha: 0.35),
+                color: Color(0x14B98B6E),
                 blurRadius: 18,
-                offset: const Offset(0, 8),
+                offset: Offset(0, 6),
               ),
             ],
           ),
-          child: Stack(
-            clipBehavior: Clip.none,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Positioned(
-                right: -14,
-                top: -22,
-                child: Text(
-                  gym.name.characters.first,
-                  style: TextStyle(
-                    fontFamily: headingFont,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 96,
-                    height: 1,
-                    color: Colors.white.withValues(alpha: 0.12),
-                  ),
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.fitness_center_rounded,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ),
-                      const Spacer(),
-                      if (fresh)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            t.newBadge,
-                            style: TextStyle(
-                              fontFamily: headingFont,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 11,
-                              color: c,
-                            ),
-                          ),
-                        ),
-                    ],
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: soft,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.fitness_center_rounded,
+                      color: c,
+                      size: 19,
+                    ),
                   ),
                   const Spacer(),
-                  Text(
-                    gym.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: headingFont,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                      height: 1.25,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(color: Color(0x33000000), blurRadius: 6),
-                      ],
+                  if (fresh)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.peachSoft,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        t.newBadge,
+                        style: const TextStyle(
+                          fontFamily: headingFont,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 11,
+                          color: AppColors.peach,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    [
-                      t.gymMembers('${gym.memberCount}'),
-                      t.gymPosts('${gym.postCount}'),
-                    ].join(' · '),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white.withValues(alpha: 0.9),
-                    ),
-                  ),
                 ],
+              ),
+              const Spacer(),
+              Text(
+                gym.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: headingFont,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                  color: AppColors.ink,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                [
+                  t.gymMembers('${gym.memberCount}'),
+                  t.gymPosts('${gym.postCount}'),
+                ].join(' · '),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),
               ),
             ],
           ),
@@ -406,11 +368,11 @@ class FindGymCard extends StatelessWidget {
     child: GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 120,
+        width: 112,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.line, width: 2),
+          color: Colors.white.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: AppColors.line, width: 1.5),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -598,101 +560,124 @@ class PostCard extends StatelessWidget {
       if (showGym) ?postBoardName(t, post),
       timeAgo(t, post.createdAt),
     ].join(' · ');
-    return Material(
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: Color(0xFFF0E6DD)),
+    final hot = post.likeCount >= CommunityLimits.hotLikes;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x10B98B6E),
+            blurRadius: 16,
+            offset: Offset(0, 5),
+          ),
+        ],
       ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 12, 4, 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  NickAvatar(
-                    userId: post.authorId,
-                    nickname: post.nickname,
-                    photoUrl: post.avatarUrl,
-                    size: 30,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          post.nickname,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontFamily: headingFont,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 13.5,
-                            color: AppColors.ink,
-                          ),
-                        ),
-                        Text(
-                          meta,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.inkSoft,
-                          ),
-                        ),
-                      ],
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(22),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 6, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    NickAvatar(
+                      userId: post.authorId,
+                      nickname: post.nickname,
+                      photoUrl: post.avatarUrl,
+                      size: 34,
                     ),
-                  ),
-                  if (post.likeCount >= CommunityLimits.hotLikes) ...[
-                    const HotChip(),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            post.nickname,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontFamily: headingFont,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                              color: AppColors.ink,
+                            ),
+                          ),
+                          const SizedBox(height: 1),
+                          Text(
+                            meta,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.inkSoft,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      width: 36,
+                      child: PostMenuButton(
+                        post: post,
+                        onChanged: onChanged,
+                        onBlocked: onBlocked,
+                      ),
+                    ),
                   ],
-                  TagChip(post.tag),
-                  SizedBox(
-                    width: 34,
-                    child: PostMenuButton(
-                      post: post,
-                      onChanged: onChanged,
-                      onBlocked: onBlocked,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: Text(
-                  post.body,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    height: 1.5,
-                    color: AppColors.ink,
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          TagLabel(post.tag),
+                          if (hot) ...[
+                            const SizedBox(width: 10),
+                            const HotLabel(),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        post.body,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          height: 1.55,
+                          color: AppColors.ink,
+                        ),
+                      ),
+                      if (post.images.isNotEmpty) ...[
+                        const SizedBox(height: 10),
+                        PhotoThumbs(urls: post.images),
+                      ],
+                    ],
                   ),
                 ),
-              ),
-              if (post.images.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                PhotoThumbs(urls: post.images),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    LikePill(post: post, onChanged: onChanged, plain: true),
+                    const SizedBox(width: 14),
+                    CountPill(
+                      icon: Icons.chat_bubble_outline_rounded,
+                      count: post.commentCount,
+                      plain: true,
+                    ),
+                  ],
+                ),
               ],
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  LikePill(post: post, onChanged: onChanged),
-                  const SizedBox(width: 6),
-                  CountPill(
-                    icon: Icons.chat_bubble_outline_rounded,
-                    count: post.commentCount,
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -826,33 +811,37 @@ class CountPill extends StatelessWidget {
   final int count;
   final Color color;
   final Color bg;
+  final bool plain;
   const CountPill({
     super.key,
     required this.icon,
     required this.count,
     this.color = AppColors.inkSoft,
     this.bg = const Color(0xFFF7F1EC),
+    this.plain = false,
   });
 
   @override
   Widget build(BuildContext context) => AnimatedContainer(
     duration: Motion.fast,
-    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+    padding: plain
+        ? const EdgeInsets.symmetric(horizontal: 2, vertical: 6)
+        : const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
     decoration: BoxDecoration(
-      color: bg,
+      color: plain ? Colors.transparent : bg,
       borderRadius: BorderRadius.circular(20),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 15, color: color),
+        Icon(icon, size: plain ? 17 : 15, color: color),
         const SizedBox(width: 4),
         Text(
           '$count',
           style: TextStyle(
             fontFamily: headingFont,
             fontWeight: FontWeight.w800,
-            fontSize: 12.5,
+            fontSize: plain ? 13.5 : 12.5,
             color: color,
           ),
         ),
@@ -866,11 +855,15 @@ class LikePill extends StatefulWidget {
   final Post post;
   final ValueChanged<Post?> onChanged;
   final bool large;
+
+  /// Just the heart and number (feed cards); the pill when false.
+  final bool plain;
   const LikePill({
     super.key,
     required this.post,
     required this.onChanged,
     this.large = false,
+    this.plain = false,
   });
 
   @override
@@ -921,12 +914,18 @@ class _LikePillState extends State<LikePill>
         onTap: _toggle,
         child: AnimatedContainer(
           duration: Motion.fast,
-          padding: EdgeInsets.symmetric(
-            horizontal: big ? 16 : 9,
-            vertical: big ? 9 : 4,
-          ),
+          padding: widget.plain
+              ? const EdgeInsets.symmetric(horizontal: 2, vertical: 6)
+              : EdgeInsets.symmetric(
+                  horizontal: big ? 16 : 9,
+                  vertical: big ? 9 : 4,
+                ),
           decoration: BoxDecoration(
-            color: liked ? AppColors.peachSoft : const Color(0xFFF7F1EC),
+            color: widget.plain
+                ? Colors.transparent
+                : liked
+                ? AppColors.peachSoft
+                : const Color(0xFFF7F1EC),
             borderRadius: BorderRadius.circular(22),
           ),
           child: Row(
@@ -949,7 +948,7 @@ class _LikePillState extends State<LikePill>
                   liked
                       ? Icons.favorite_rounded
                       : Icons.favorite_border_rounded,
-                  size: big ? 20 : 15,
+                  size: big ? 20 : (widget.plain ? 18 : 15),
                   color: liked ? AppColors.peach : AppColors.inkSoft,
                 ),
               ),
@@ -972,7 +971,7 @@ class _LikePillState extends State<LikePill>
                   style: TextStyle(
                     fontFamily: headingFont,
                     fontWeight: FontWeight.w800,
-                    fontSize: big ? 15 : 12.5,
+                    fontSize: big ? 15 : (widget.plain ? 13.5 : 12.5),
                     color: liked ? AppColors.peach : AppColors.inkSoft,
                   ),
                 ),

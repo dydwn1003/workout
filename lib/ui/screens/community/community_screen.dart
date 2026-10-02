@@ -318,6 +318,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
               ),
             ),
             _BellButton(
+              count: 0,
+              icon: Icons.person_add_alt_1_rounded,
+              tooltip: t.inviteFriends,
+              onTap: () => showInviteSheet(context),
+            ),
+            const SizedBox(width: 6),
+            _BellButton(
               count: c.badge,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
@@ -330,38 +337,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
               _MeButton(profile: c.profile, onTap: _openMe),
               const SizedBox(width: 8),
             ],
-            Squish(
-              child: GestureDetector(
-                onTap: () => showInviteSheet(context),
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(10, 7, 12, 7),
-                  decoration: BoxDecoration(
-                    color: AppColors.peachSoft,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.person_add_alt_1_rounded,
-                        size: 17,
-                        color: AppColors.peach,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        t.inviteFriends,
-                        style: const TextStyle(
-                          fontFamily: headingFont,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13,
-                          color: AppColors.peach,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -391,7 +366,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
           child: CustomScrollView(
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             slivers: [
-              SliverToBoxAdapter(child: _header(t, c)),
               SliverToBoxAdapter(child: _searchField(t, searching)),
               if (searching)
                 ..._resultSlivers(t, c)
@@ -407,88 +381,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
         ),
       );
 
-  Widget _header(L t, CommunityState c) {
-    final today = (_feed ?? const <Post>[])
-        .where((p) => DateTime.now().difference(p.createdAt).inHours < 24)
-        .length;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(20, 18, 12, 18),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFFFF8E7F), Color(0xFFFFB38A)],
-              ),
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.peach.withValues(alpha: 0.35),
-                  blurRadius: 24,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        t.heroTitle,
-                        style: const TextStyle(
-                          fontFamily: headingFont,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 20,
-                          height: 1.3,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [
-                          _HeroPill(
-                            Icons.bookmark_rounded,
-                            t.heroMyGyms('${c.myGyms.length}'),
-                          ),
-                          _HeroPill(
-                            Icons.local_fire_department_rounded,
-                            t.heroNewToday('$today'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const Mascot(size: 76, mood: MascotMood.cheer),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _searchField(L t, bool searching) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+    padding: const EdgeInsets.fromLTRB(16, 2, 16, 18),
     child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x12B98B6E),
-            blurRadius: 16,
-            offset: Offset(0, 6),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFF0E6DD), width: 1.2),
       ),
       child: TextField(
         controller: _query,
@@ -501,8 +400,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 16),
-          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.peach),
+          contentPadding: const EdgeInsets.symmetric(vertical: 13),
+          hintStyle: const TextStyle(fontSize: 14, color: AppColors.inkSoft),
+          prefixIcon: const Icon(
+            Icons.search_rounded,
+            color: AppColors.inkSoft,
+          ),
           suffixIcon: searching
               ? IconButton(
                   tooltip: MaterialLocalizations.of(context).clearButtonTooltip,
@@ -641,7 +544,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
           child: SectionTitle(t.myGyms),
         ),
         SizedBox(
-          height: 150,
+          // Icon and paddings, plus the two text lines growing with the
+          // phone's text size.
+          height: 80 + MediaQuery.textScalerOf(context).scale(36),
           child: ListView(
             scrollDirection: Axis.horizontal,
             clipBehavior: Clip.none,
@@ -823,14 +728,22 @@ class _CommunityScreenState extends State<CommunityScreen> {
 }
 
 /// 🔔 with the number of unread notifications and new 인기글.
+/// A round icon button of the top bar (알림, 친구 초대), with a count.
 class _BellButton extends StatelessWidget {
   final int count;
   final VoidCallback onTap;
-  const _BellButton({required this.count, required this.onTap});
+  final IconData icon;
+  final String? tooltip;
+  const _BellButton({
+    required this.count,
+    required this.onTap,
+    this.icon = Icons.notifications_none_rounded,
+    this.tooltip,
+  });
 
   @override
   Widget build(BuildContext context) => Tooltip(
-    message: L.of(context).notificationsTitle,
+    message: tooltip ?? L.of(context).notificationsTitle,
     child: Squish(
       child: GestureDetector(
         onTap: onTap,
@@ -851,11 +764,7 @@ class _BellButton extends StatelessWidget {
                     ),
                   ),
                   alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.notifications_none_rounded,
-                    size: 21,
-                    color: AppColors.ink,
-                  ),
+                  child: Icon(icon, size: 21, color: AppColors.ink),
                 ),
               ),
               if (count > 0)
@@ -1025,37 +934,6 @@ class _Segments extends StatelessWidget {
                 ),
               ),
           ],
-        ),
-      ],
-    ),
-  );
-}
-
-class _HeroPill extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  const _HeroPill(this.icon, this.text);
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-    decoration: BoxDecoration(
-      color: Colors.white.withValues(alpha: 0.25),
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: Colors.white),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: const TextStyle(
-            fontFamily: headingFont,
-            fontWeight: FontWeight.w800,
-            fontSize: 12.5,
-            color: Colors.white,
-          ),
         ),
       ],
     ),

@@ -372,23 +372,15 @@ class _BoardHeader extends StatelessWidget {
         children: [
           Positioned(
             right: -20,
-            bottom: gym.isTopic ? -30 : -40,
-            child: gym.isTopic
-                ? Icon(
-                    topicStyle(gym.id).$1,
-                    size: 170,
-                    color: Colors.white.withValues(alpha: 0.14),
-                  )
-                : Text(
-                    gym.name.characters.first,
-                    style: TextStyle(
-                      fontFamily: headingFont,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 180,
-                      height: 1,
-                      color: Colors.white.withValues(alpha: 0.12),
-                    ),
-                  ),
+            bottom: -30,
+            // The board's own mark, faint: the sport, or a dumbbell for gyms.
+            child: Icon(
+              gym.isTopic
+                  ? topicStyle(gym.id).$1
+                  : Icons.fitness_center_rounded,
+              size: 170,
+              color: Colors.white.withValues(alpha: 0.12),
+            ),
           ),
           SafeArea(
             bottom: false,
