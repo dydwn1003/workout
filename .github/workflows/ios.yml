@@ -130,6 +130,9 @@ jobs:
           # Plugins still on CocoaPods (the rest come through Swift
           # Package Manager, which Xcode fetches by itself).
           if [ -f ios/Podfile ]; then (cd ios && pod install); fi
+          # The log goes to a file too: on failure its error lines become
+          # annotations (readable without downloading the whole log).
+          set -o pipefail
           xcodebuild archive \
             -workspace ios/Runner.xcworkspace \
             -scheme Runner \
@@ -141,7 +144,12 @@ jobs:
             -authenticationKeyID "$ASC_KEY" \
             -authenticationKeyIssuerID "$ASC_ISSUER" \
             DEVELOPMENT_TEAM="$TEAM_ID" \
-            CODE_SIGN_STYLE=Automatic
+            CODE_SIGN_STYLE=Automatic 2>&1 | tee "$RUNNER_TEMP/xcodebuild.log" || {
+            grep -E "error:|Error:|ERROR|Failed|failed|Exception" "$RUNNER_TEMP/xcodebuild.log" \
+              | grep -v "^warning" | sort -u | head -40 \
+              | while IFS= read -r line; do echo "::error::${line:0:900}"; done
+            exit 1
+          }
           echo "VERSION_NAME=$NAME" >> "$GITHUB_ENV"
           echo "BUILD_NUMBER=$CODE" >> "$GITHUB_ENV"
 
