@@ -145,8 +145,9 @@ jobs:
             -authenticationKeyIssuerID "$ASC_ISSUER" \
             DEVELOPMENT_TEAM="$TEAM_ID" \
             CODE_SIGN_STYLE=Automatic 2>&1 | tee "$RUNNER_TEMP/xcodebuild.log" || {
-            grep -E "error:|Error:|ERROR|Failed|failed|Exception" "$RUNNER_TEMP/xcodebuild.log" \
-              | grep -v "^warning" | sort -u | head -40 \
+            # GitHub keeps 10 annotations a step: the real errors only.
+            grep -E "(^|: )error:|Error \(Xcode\)|\.dart:[0-9]+:[0-9]+: Error|ARCHIVE FAILED|Command [A-Za-z]+ failed" "$RUNNER_TEMP/xcodebuild.log" \
+              | grep -v "^ *export " | awk '!seen[$0]++' | head -9 \
               | while IFS= read -r line; do echo "::error::${line:0:900}"; done
             exit 1
           }
