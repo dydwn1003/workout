@@ -95,6 +95,49 @@ jobs:
           sed -i '' "s/com\.googleusercontent\.apps\.REPLACE_WITH_IOS_CLIENT_ID/$REVERSED/" ios/Runner/Info.plist
           grep -q "$REVERSED" ios/Runner/Info.plist
 
+      # Every run is a fresh Mac, so automatic signing makes a new Apple
+      # Development certificate each time and the account's limit fills up
+      # ("Your account has reached the maximum number of certificates").
+      # Revokes the ones earlier runs made ("Created via API"); distribution
+      # certificates and ones made by hand are left alone.
+      - name: Free a development certificate slot
+        run: |
+          python3 -m pip install --quiet --break-system-packages pyjwt cryptography 2>/dev/null \
+            || python3 -m pip install --quiet pyjwt cryptography
+          python3 - <<'PY'
+          import json, os, time, urllib.request
+          import jwt
+
+          key = open(os.environ["ASC_KEY_PATH"]).read()
+          token = jwt.encode(
+              {"iss": os.environ["ASC_ISSUER"], "iat": int(time.time()),
+               "exp": int(time.time()) + 600, "aud": "appstoreconnect-v1"},
+              key, algorithm="ES256",
+              headers={"kid": os.environ["ASC_KEY"], "typ": "JWT"})
+          api = "https://api.appstoreconnect.apple.com/v1/certificates"
+
+          def call(url, method="GET"):
+              req = urllib.request.Request(
+                  url, method=method, headers={"Authorization": f"Bearer {token}"})
+              with urllib.request.urlopen(req) as r:
+                  body = r.read()
+                  return json.loads(body) if body else None
+
+          certs = call(api + "?limit=200")["data"]
+          dev = [c for c in certs
+                 if c["attributes"].get("certificateType") in ("DEVELOPMENT", "IOS_DEVELOPMENT")]
+          ours = [c for c in dev
+                  if "via API" in (c["attributes"].get("displayName") or "")
+                  or "via API" in (c["attributes"].get("name") or "")]
+          print(f"development certificates: {len(dev)}, made by earlier runs: {len(ours)}")
+          if dev and not ours:
+              names = sorted({c["attributes"].get("displayName") or c["attributes"].get("name") or "?" for c in dev})
+              print("::notice::development certificates: " + ", ".join(names))
+          for c in ours:
+              call(f"{api}/{c['id']}", "DELETE")
+              print("revoked", c["attributes"].get("displayName"), c["attributes"].get("expirationDate"))
+          PY
+
       - name: Build and sign
         env:
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
