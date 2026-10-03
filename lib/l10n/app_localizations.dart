@@ -3639,7 +3639,7 @@ abstract class L {
   /// No description provided for @myGymsNews.
   ///
   /// In ko, this message translates to:
-  /// **'내 헬스장 소식'**
+  /// **'📣 내 헬스장 소식'**
   String get myGymsNews;
 
   /// No description provided for @feedEmpty.
@@ -3747,19 +3747,19 @@ abstract class L {
   /// No description provided for @loungeCategories.
   ///
   /// In ko, this message translates to:
-  /// **'운동별 게시판'**
+  /// **'💪 운동별 게시판'**
   String get loungeCategories;
 
   /// No description provided for @loungeHot.
   ///
   /// In ko, this message translates to:
-  /// **'이번 주 인기글'**
+  /// **'🔥 이번 주 인기글'**
   String get loungeHot;
 
   /// No description provided for @loungeLatest.
   ///
   /// In ko, this message translates to:
-  /// **'라운지 최신글'**
+  /// **'✨ 라운지 최신글'**
   String get loungeLatest;
 
   /// No description provided for @loungeEmpty.

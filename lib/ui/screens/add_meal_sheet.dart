@@ -586,6 +586,18 @@ class _SearchTabState extends State<_SearchTab>
         onCreated: (f) => _go(_View.detail, food: f),
       ),
     };
+    // Back button on a food's detail (or the new-food form): the list,
+    // not the whole sheet closing.
+    return PopScope(
+      canPop: _view == _View.list,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _view != _View.list) _go(_View.list);
+      },
+      child: _switcher(child),
+    );
+  }
+
+  Widget _switcher(Widget child) {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 380),
       reverseDuration: const Duration(milliseconds: 160),

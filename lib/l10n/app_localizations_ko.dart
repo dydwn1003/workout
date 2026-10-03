@@ -2075,7 +2075,7 @@ class LKo extends L {
   String get findGym => '헬스장 찾기';
 
   @override
-  String get myGymsNews => '내 헬스장 소식';
+  String get myGymsNews => '📣 내 헬스장 소식';
 
   @override
   String get feedEmpty => '아직 새 글이 없어요. 먼저 인사를 남겨 보세요!';
@@ -2135,13 +2135,13 @@ class LKo extends L {
   String get loungeSubtitle => '헬스장 상관없이 모든 회원이 함께 이야기해요';
 
   @override
-  String get loungeCategories => '운동별 게시판';
+  String get loungeCategories => '💪 운동별 게시판';
 
   @override
-  String get loungeHot => '이번 주 인기글';
+  String get loungeHot => '🔥 이번 주 인기글';
 
   @override
-  String get loungeLatest => '라운지 최신글';
+  String get loungeLatest => '✨ 라운지 최신글';
 
   @override
   String get loungeEmpty => '아직 글이 없어요. 첫 글을 남겨 보세요!';

@@ -2116,7 +2116,7 @@ class LEn extends L {
   String get findGym => 'Find a gym';
 
   @override
-  String get myGymsNews => 'From my gyms';
+  String get myGymsNews => '📣 From my gyms';
 
   @override
   String get feedEmpty => 'Nothing new yet. Say hi first!';
@@ -2176,13 +2176,13 @@ class LEn extends L {
   String get loungeSubtitle => 'Talk with everyone, whatever your gym';
 
   @override
-  String get loungeCategories => 'Boards by workout';
+  String get loungeCategories => '💪 Boards by workout';
 
   @override
-  String get loungeHot => 'Hot this week';
+  String get loungeHot => '🔥 Hot this week';
 
   @override
-  String get loungeLatest => 'Latest in the lounge';
+  String get loungeLatest => '✨ Latest in the lounge';
 
   @override
   String get loungeEmpty => 'No posts yet. Be the first!';

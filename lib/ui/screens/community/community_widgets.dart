@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -42,7 +43,7 @@ const _palette = [
   't-climbing' => (Icons.terrain_rounded, const Color(0xFFB9825A)),
   't-cycling' => (Icons.directions_bike_rounded, const Color(0xFF62AE42)),
   't-combat' => (Icons.sports_mma_rounded, const Color(0xFFE0524B)),
-  _ => (Icons.forum_rounded, const Color(0xFF8A7F95)),
+  _ => (CupertinoIcons.chat_bubble_2_fill, const Color(0xFF8A7F95)),
 };
 
 /// A 라운지 board's name in the app's language; null for gyms.
@@ -109,7 +110,7 @@ LinearGradient gymGradient(String id) {
   ),
   PostTag.free => (
     t.tagFree,
-    Icons.chat_bubble_rounded,
+    CupertinoIcons.chat_bubble_fill,
     AppColors.peach,
     AppColors.peachSoft,
   ),
@@ -670,7 +671,7 @@ class PostCard extends StatelessWidget {
                     LikePill(post: post, onChanged: onChanged),
                     const SizedBox(width: 6),
                     CountPill(
-                      icon: Icons.chat_bubble_outline_rounded,
+                      icon: CupertinoIcons.chat_bubble,
                       count: post.commentCount,
                     ),
                   ],

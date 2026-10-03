@@ -467,8 +467,22 @@ class _TopicTile extends StatelessWidget {
                       width: 54,
                       height: 54,
                       decoration: BoxDecoration(
-                        color: Color.lerp(color, Colors.white, 0.82),
                         shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color.lerp(color, Colors.white, 0.9)!,
+                            Color.lerp(color, Colors.white, 0.72)!,
+                          ],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: color.withValues(alpha: 0.18),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Icon(icon, color: color, size: 26),
                     ),
@@ -586,19 +600,33 @@ class _HotRow extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
         child: Row(
           children: [
-            SizedBox(
-              width: 22,
+            // Rank in a round badge: the top one filled.
+            Container(
+              width: 26,
+              height: 26,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: rank == 1
+                    ? const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFFFFA36C), AppColors.peach],
+                      )
+                    : null,
+                color: rank == 1 ? null : AppColors.peachSoft,
+              ),
               child: Text(
                 '$rank',
                 style: TextStyle(
                   fontFamily: headingFont,
                   fontWeight: FontWeight.w800,
-                  fontSize: 18,
-                  color: rank == 1 ? AppColors.peach : AppColors.inkSoft,
+                  fontSize: 13,
+                  color: rank == 1 ? Colors.white : AppColors.peach,
                 ),
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

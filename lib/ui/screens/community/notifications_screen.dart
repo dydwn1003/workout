@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../../data/community.dart';
@@ -365,7 +366,7 @@ class _NotificationTile extends StatelessWidget {
       ),
       NotificationKind.comment => (
         t.notifComment(who),
-        Icons.chat_bubble_rounded,
+        CupertinoIcons.chat_bubble_fill,
         AppColors.sky,
       ),
       NotificationKind.reply => (

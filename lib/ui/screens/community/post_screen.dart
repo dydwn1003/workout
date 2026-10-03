@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -334,7 +335,7 @@ class _PostScreenState extends State<PostScreen> {
             ),
             const SizedBox(width: 8),
             CountPill(
-              icon: Icons.chat_bubble_outline_rounded,
+              icon: CupertinoIcons.chat_bubble,
               count: _comments?.length ?? post.commentCount,
             ),
           ],
@@ -399,7 +400,11 @@ class _PostScreenState extends State<PostScreen> {
     padding: const EdgeInsets.symmetric(horizontal: 4),
     child: Row(
       children: [
-        const Icon(Icons.forum_rounded, size: 18, color: AppColors.peach),
+        const Icon(
+          CupertinoIcons.chat_bubble_2_fill,
+          size: 18,
+          color: AppColors.peach,
+        ),
         const SizedBox(width: 6),
         Text(
           t.commentsN('${_comments?.length ?? post.commentCount}'),
@@ -441,10 +446,7 @@ class _PostScreenState extends State<PostScreen> {
           ),
           child: Column(
             children: [
-              const Icon(
-                Icons.chat_bubble_outline_rounded,
-                color: AppColors.inkSoft,
-              ),
+              const Icon(CupertinoIcons.chat_bubble, color: AppColors.inkSoft),
               const SizedBox(height: 6),
               Text(
                 t.noComments,

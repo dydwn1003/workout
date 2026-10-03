@@ -362,6 +362,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final showHeader = _step != _Step.welcome;
     final progressIndex = widget.editing ? _index : _index - 1;
     final progressTotal = widget.editing ? steps.length : steps.length - 1;
+    // Back button: the step before, like the ← in the header.
+    return PopScope(
+      canPop: _index == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop || _index == 0) return;
+        setState(() {
+          _forward = false;
+          _index--;
+        });
+      },
+      child: _scaffold(
+        context,
+        t,
+        steps,
+        showHeader,
+        progressIndex,
+        progressTotal,
+      ),
+    );
+  }
+
+  Widget _scaffold(
+    BuildContext context,
+    L t,
+    List<_Step> steps,
+    bool showHeader,
+    int progressIndex,
+    int progressTotal,
+  ) {
     return Scaffold(
       body: SafeArea(
         child: Center(
