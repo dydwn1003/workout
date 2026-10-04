@@ -24,9 +24,12 @@ void main() {
     await state.updateSettings(state.settings.copyWith(language: () => 'ko'));
     await tester.pumpWidget(CoachApp(state: state));
     await settle(tester);
-    await tester.tap(find.byType(Checkbox).first);
-    await settle(tester);
+    // Start, then the agreements sheet: 전체 동의 and on.
     await tester.tap(find.text('시작해볼까요?'));
+    await settle(tester);
+    await tester.tap(find.text('전체 동의'));
+    await settle(tester);
+    await tester.tap(find.text('동의하고 시작하기'));
     await settle(tester);
     expect(find.text('시작해볼까요?'), findsNothing, reason: 'on the goal step');
     final handled = await tester.binding.handlePopRoute();

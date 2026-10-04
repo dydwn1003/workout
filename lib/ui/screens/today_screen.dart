@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/coach_engine/coach_engine.dart';
 import '../../data/entities.dart';
@@ -11,6 +12,7 @@ import '../widgets.dart';
 import 'add_meal_sheet.dart';
 import 'home_shell.dart';
 import 'log_calendar_sheet.dart';
+import 'sign_in_sheet.dart';
 import 'weight_sheet.dart';
 import 'workout_sheet.dart';
 import 'workout_tips.dart';
@@ -305,6 +307,9 @@ class _DayBody extends StatelessWidget {
           enter(_DailyTipCard(tip: tip)),
           const SizedBox(height: 12),
         ],
+        if (isToday && s.auth != null && !s.signedIn) ...[
+          enter(const _SignInNudge()),
+        ],
         if (isToday && s.shouldOfferReminders) ...[
           enter(const _RemindersOffer()),
           const SizedBox(height: 12),
@@ -573,6 +578,131 @@ class _DayBody extends StatelessWidget {
 }
 
 /// Offered once after the first meal: reminder pushes when logging stops.
+/// Signed out: a card to sign in so the log isn't only on this phone.
+/// 닫기 hides it for a week.
+class _SignInNudge extends StatefulWidget {
+  const _SignInNudge();
+
+  @override
+  State<_SignInNudge> createState() => _SignInNudgeState();
+}
+
+class _SignInNudgeState extends State<_SignInNudge> {
+  static const _key = 'nudge.signIn.hiddenAt';
+  var _hidden = true; // until the saved choice is read
+
+  @override
+  void initState() {
+    super.initState();
+    _read();
+  }
+
+  Future<void> _read() async {
+    var hidden = false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final at = prefs.getInt(_key);
+      hidden =
+          at != null &&
+          DateTime.now()
+                  .difference(DateTime.fromMillisecondsSinceEpoch(at))
+                  .inDays <
+              7;
+    } catch (_) {}
+    if (mounted) setState(() => _hidden = hidden);
+  }
+
+  Future<void> _hide() async {
+    setState(() => _hidden = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_key, DateTime.now().millisecondsSinceEpoch);
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L.of(context);
+    return AnimatedSize(
+      duration: Motion.medium,
+      curve: Motion.ease,
+      child: _hidden
+          ? const SizedBox(width: double.infinity)
+          : Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: SoftCard(
+                color: AppColors.skySoft,
+                padding: const EdgeInsets.fromLTRB(16, 14, 8, 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.cloud_done_rounded,
+                        color: AppColors.sky,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t.signInNudgeTitle,
+                            style: const TextStyle(
+                              fontFamily: headingFont,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            t.signInNudgeBody,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              height: 1.5,
+                              color: AppColors.inkSoft,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          FilledButton(
+                            onPressed: () => showSignInSheet(context),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.sky,
+                              visualDensity: VisualDensity.compact,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: Text(t.signInNudgeAction),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: MaterialLocalizations.of(context)
+                          .closeButtonTooltip,
+                      onPressed: _hide,
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        size: 20,
+                        color: AppColors.inkSoft,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+    );
+  }
+}
+
 class _RemindersOffer extends StatelessWidget {
   const _RemindersOffer();
 

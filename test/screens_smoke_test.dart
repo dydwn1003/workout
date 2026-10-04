@@ -45,10 +45,12 @@ void main() {
     _step = 'onboarding';
     await settle(tester);
     await scrollAll(tester);
-    // Consent, then on to the goal step.
-    await tester.tap(find.byType(Checkbox).first);
-    await settle(tester);
+    // Start, then the agreements sheet: 전체 동의 and on.
     await tester.tap(find.text('시작해볼까요?'));
+    await settle(tester);
+    await tester.tap(find.text('전체 동의'));
+    await settle(tester);
+    await tester.tap(find.text('동의하고 시작하기'));
     await settle(tester);
     await scrollAll(tester);
     await tester.pumpWidget(const SizedBox());

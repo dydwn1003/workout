@@ -1382,6 +1382,108 @@ abstract class L {
   /// **'이 빌드에서는 로그인을 쓸 수 없어요.'**
   String get signInUnavailable;
 
+  /// No description provided for @signInAndStart.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인하고 시작하기'**
+  String get signInAndStart;
+
+  /// No description provided for @signInPerks.
+  ///
+  /// In ko, this message translates to:
+  /// **'Apple · Google · 카카오로 바로 시작해요. 기록이 계정에 저장돼서 폰을 바꿔도 그대로예요.'**
+  String get signInPerks;
+
+  /// No description provided for @startWithoutSignIn.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인 없이 시작하기'**
+  String get startWithoutSignIn;
+
+  /// No description provided for @consentTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'시작하기 전에 동의해 주세요'**
+  String get consentTitle;
+
+  /// No description provided for @consentAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 동의'**
+  String get consentAll;
+
+  /// No description provided for @consentRequired.
+  ///
+  /// In ko, this message translates to:
+  /// **'필수'**
+  String get consentRequired;
+
+  /// No description provided for @consentOptional.
+  ///
+  /// In ko, this message translates to:
+  /// **'선택'**
+  String get consentOptional;
+
+  /// No description provided for @consentAge.
+  ///
+  /// In ko, this message translates to:
+  /// **'만 14세 이상이에요'**
+  String get consentAge;
+
+  /// No description provided for @consentTerms.
+  ///
+  /// In ko, this message translates to:
+  /// **'이용약관 동의'**
+  String get consentTerms;
+
+  /// No description provided for @consentPrivacy.
+  ///
+  /// In ko, this message translates to:
+  /// **'개인정보 수집·이용 동의'**
+  String get consentPrivacy;
+
+  /// No description provided for @consentHealth.
+  ///
+  /// In ko, this message translates to:
+  /// **'체중·체성분 같은 건강 정보 저장 동의 (민감정보)'**
+  String get consentHealth;
+
+  /// No description provided for @consentNotify.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록을 쉬면 알림 받기'**
+  String get consentNotify;
+
+  /// No description provided for @consentView.
+  ///
+  /// In ko, this message translates to:
+  /// **'보기'**
+  String get consentView;
+
+  /// No description provided for @consentAgree.
+  ///
+  /// In ko, this message translates to:
+  /// **'동의하고 시작하기'**
+  String get consentAgree;
+
+  /// No description provided for @signInNudgeTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인하고 기록 지키기'**
+  String get signInNudgeTitle;
+
+  /// No description provided for @signInNudgeBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금은 이 폰에만 저장돼요. 로그인하면 폰을 바꾸거나 앱을 지워도 기록이 그대로예요.'**
+  String get signInNudgeBody;
+
+  /// No description provided for @signInNudgeAction.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인'**
+  String get signInNudgeAction;
+
   /// No description provided for @haveAccount.
   ///
   /// In ko, this message translates to:

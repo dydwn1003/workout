@@ -10,8 +10,8 @@ import '../motion.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'labels.dart';
+import 'consent_sheet.dart';
 import 'sign_in_sheet.dart';
-import '../app_dialog.dart';
 
 enum _Step { welcome, goal, body, target, pace, activity, result }
 
@@ -300,28 +300,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           .showSnackBar(SnackBar(content: Text(t.restoreFailed)));
       return;
     }
-    final go = await showAppDialog<bool>(
+    // A new account: the agreements, then the setup questions.
+    final go = await showConsentSheet(
       context,
-      builder: (context) => AppDialog(
-        icon: Icons.cloud_off_rounded,
-        title: t.noSavedDataTitle,
-        message: t.noSavedDataBody,
-        content: Text(
-          t.consentLabel,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 12.5,
-            height: 1.4,
-            color: AppColors.inkSoft,
-          ),
-        ),
-        cancelLabel: t.cancel,
-        confirmLabel: t.agreeAndStart,
-        onCancel: () => Navigator.pop(context, false),
-        onConfirm: () => Navigator.pop(context, true),
-      ),
+      note: '${t.noSavedDataTitle}. ${t.noSavedDataBody}',
     );
     if (go != true || !mounted) return;
+    setState(() {
+      _consent = true;
+      _forward = true;
+      _index = _steps.indexOf(_Step.goal);
+    });
+  }
+
+  /// 로그인 없이 시작하기 (or the only way when sign-in isn't set up):
+  /// the agreements, then the setup questions.
+  Future<void> _startWithoutSignIn() async {
+    if (!_consent && !await showConsentSheet(context)) return;
+    if (!mounted) return;
     setState(() {
       _consent = true;
       _forward = true;
@@ -478,58 +474,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
                   child: Column(
                     children: [
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          onPressed: _canNext && !_busy ? _next : null,
-                          child: Text(
-                            _step == _Step.welcome
-                                ? t.getStarted
-                                : _step == _Step.result
-                                ? (widget.editing ? t.save : t.startApp)
-                                : t.next,
+                      if (_step == _Step.welcome)
+                        _welcomeButtons(t)
+                      else
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: _canNext && !_busy ? _next : null,
+                            child: Text(
+                              _step == _Step.result
+                                  ? (widget.editing ? t.save : t.startApp)
+                                  : t.next,
+                            ),
                           ),
                         ),
-                      ),
-                      if (_step == _Step.welcome) ...[
-                        const SizedBox(height: 8),
-                        if (AppScope.of(context).auth != null)
-                          AnimatedSwitcher(
-                            duration: Motion.fast,
-                            child: _busy
-                                ? Padding(
-                                    key: const ValueKey('restoring'),
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          t.restoringData,
-                                          style: const TextStyle(
-                                            color: AppColors.inkSoft,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                : TextButton(
-                                    key: const ValueKey('account'),
-                                    onPressed: _signInExisting,
-                                    child: Text(t.haveAccount),
-                                  ),
-                          ),
-                      ],
                     ],
                   ),
                 ),
@@ -538,6 +496,74 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Signing in first (the records then follow the account), with 로그인
+  /// 없이 시작하기 under it; only 시작해볼까요? where sign-in isn't set up.
+  Widget _welcomeButtons(L t) {
+    final canSignIn = AppScope.of(context).auth != null;
+    if (_busy) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              t.restoringData,
+              style: const TextStyle(
+                color: AppColors.inkSoft,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    if (!canSignIn) {
+      return SizedBox(
+        width: double.infinity,
+        child: FilledButton(
+          onPressed: _startWithoutSignIn,
+          child: Text(t.getStarted),
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          t.signInPerks,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 12.5,
+            height: 1.45,
+            color: AppColors.inkSoft,
+          ),
+        ),
+        const SizedBox(height: 10),
+        FilledButton.icon(
+          onPressed: _signInExisting,
+          icon: const Icon(Icons.login_rounded),
+          label: Text(t.signInAndStart),
+        ),
+        TextButton(
+          onPressed: _startWithoutSignIn,
+          child: Text(
+            t.startWithoutSignIn,
+            style: const TextStyle(
+              color: AppColors.inkSoft,
+              decoration: TextDecoration.underline,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -624,32 +650,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
             ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => setState(() => _consent = !_consent),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              children: [
-                Checkbox(
-                  value: _consent,
-                  activeColor: AppColors.peach,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  onChanged: (v) => setState(() => _consent = v ?? false),
-                ),
-                Expanded(
-                  child: Text(
-                    t.consentLabel,
-                    style: const TextStyle(fontSize: 14, height: 1.4),
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
       ],

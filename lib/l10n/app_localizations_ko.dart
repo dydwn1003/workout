@@ -725,6 +725,59 @@ class LKo extends L {
   String get signInUnavailable => '이 빌드에서는 로그인을 쓸 수 없어요.';
 
   @override
+  String get signInAndStart => '로그인하고 시작하기';
+
+  @override
+  String get signInPerks =>
+      'Apple · Google · 카카오로 바로 시작해요. 기록이 계정에 저장돼서 폰을 바꿔도 그대로예요.';
+
+  @override
+  String get startWithoutSignIn => '로그인 없이 시작하기';
+
+  @override
+  String get consentTitle => '시작하기 전에 동의해 주세요';
+
+  @override
+  String get consentAll => '전체 동의';
+
+  @override
+  String get consentRequired => '필수';
+
+  @override
+  String get consentOptional => '선택';
+
+  @override
+  String get consentAge => '만 14세 이상이에요';
+
+  @override
+  String get consentTerms => '이용약관 동의';
+
+  @override
+  String get consentPrivacy => '개인정보 수집·이용 동의';
+
+  @override
+  String get consentHealth => '체중·체성분 같은 건강 정보 저장 동의 (민감정보)';
+
+  @override
+  String get consentNotify => '기록을 쉬면 알림 받기';
+
+  @override
+  String get consentView => '보기';
+
+  @override
+  String get consentAgree => '동의하고 시작하기';
+
+  @override
+  String get signInNudgeTitle => '로그인하고 기록 지키기';
+
+  @override
+  String get signInNudgeBody =>
+      '지금은 이 폰에만 저장돼요. 로그인하면 폰을 바꾸거나 앱을 지워도 기록이 그대로예요.';
+
+  @override
+  String get signInNudgeAction => '로그인';
+
+  @override
   String get haveAccount => '이미 계정이 있어요 · 로그인해서 불러오기';
 
   @override

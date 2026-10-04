@@ -739,6 +739,60 @@ class LEn extends L {
   String get signInUnavailable => 'Sign-in isn\'t available in this build.';
 
   @override
+  String get signInAndStart => 'Sign in and start';
+
+  @override
+  String get signInPerks =>
+      'Start with Apple, Google or Kakao. Your log is saved to your account and moves with you to a new phone.';
+
+  @override
+  String get startWithoutSignIn => 'Start without signing in';
+
+  @override
+  String get consentTitle => 'Before you start';
+
+  @override
+  String get consentAll => 'Agree to all';
+
+  @override
+  String get consentRequired => 'Required';
+
+  @override
+  String get consentOptional => 'Optional';
+
+  @override
+  String get consentAge => 'I\'m 14 or older';
+
+  @override
+  String get consentTerms => 'Terms of use';
+
+  @override
+  String get consentPrivacy => 'Collection and use of personal data';
+
+  @override
+  String get consentHealth =>
+      'Storing health data such as weight and body composition (sensitive)';
+
+  @override
+  String get consentNotify => 'Reminders when I skip logging';
+
+  @override
+  String get consentView => 'View';
+
+  @override
+  String get consentAgree => 'Agree and start';
+
+  @override
+  String get signInNudgeTitle => 'Keep your log safe';
+
+  @override
+  String get signInNudgeBody =>
+      'Right now it\'s only on this phone. Sign in and your log survives a new phone or a reinstall.';
+
+  @override
+  String get signInNudgeAction => 'Sign in';
+
+  @override
   String get haveAccount => 'I have an account · sign in to restore';
 
   @override
