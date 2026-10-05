@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart' show closeInAppWebView;
 
 enum AuthMethod { google, kakao, apple }
 
@@ -12,8 +14,9 @@ enum AuthMethod { google, kakao, apple }
 ///
 /// - Google: the native Google sign-in sheet on Android/iOS, exchanged for a
 ///   Supabase session with its ID token; the Supabase OAuth page on the web.
-/// - Kakao: the Supabase OAuth page (Kakao's login in the browser/app),
-///   returning to the app through [mobileRedirect].
+/// - Kakao: the Supabase OAuth page (Kakao's login in an in-app browser on
+///   iPhone, the browser app on Android), returning to the app through
+///   [mobileRedirect].
 /// - Apple: the native Sign in with Apple sheet, iOS/macOS only. The ID token
 ///   flow needs no client secret, so nothing has to be rotated.
 ///
@@ -63,15 +66,34 @@ class AuthService {
   /// finish later through [changes]; the native ones finish here.
   Future<void> signIn(AuthMethod m) => switch (m) {
     AuthMethod.google => _google(),
-    AuthMethod.kakao => client.auth.signInWithOAuth(
+    AuthMethod.kakao => _kakao(),
+    AuthMethod.apple => _appleSignIn(),
+  };
+
+  /// Closes the in-app browser once the Kakao sign-in comes back.
+  StreamSubscription<AuthState>? _closeBrowser;
+
+  /// On iPhone the Kakao page opens inside the app (Safari View
+  /// Controller): App Review rejects sending people out to Safari to sign
+  /// in (guideline 4). It's closed once the app has the session. Android
+  /// keeps the browser app, and the web stays on the page.
+  Future<void> _kakao() async {
+    final ios = _iosApp;
+    if (ios) {
+      _closeBrowser ??= changes.listen((s) {
+        if (s.event == AuthChangeEvent.signedIn) closeInAppWebView();
+      });
+    }
+    await client.auth.signInWithOAuth(
       OAuthProvider.kakao,
       redirectTo: kIsWeb ? _webRedirect : mobileRedirect,
       authScreenLaunchMode: kIsWeb
           ? LaunchMode.platformDefault
+          : ios
+          ? LaunchMode.inAppBrowserView
           : LaunchMode.externalApplication,
-    ),
-    AuthMethod.apple => _appleSignIn(),
-  };
+    );
+  }
 
   /// GoogleSignIn may be initialized only once per app run.
   static Future<void>? _googleReady;
